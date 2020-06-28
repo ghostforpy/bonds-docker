@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=bonds
+POSTGRES_USER=ahLYDrWZEqDgextpPJuwwDxUQVQDssNL
+POSTGRES_PASSWORD=Di4b4ydKOyybQAoFpZCmlPUQeBn5ffVZeYnytCFOQh6y5uksTbfPH2d1jp7HSsmV
