@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% load static %}
+{% load moex_extras %}
+
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'css/daterangepicker/daterangepicker.css' %}">
+  <link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
+{% endblock page_css %}
+
+{% block content %}
+<div class="container">
+  <h3 class="mb-3">Портфель: {{portfolio.title}}</h3>
+    <div class="row">
+      <div class="col-sm-4">
+        {% if portfolio != None %}
+          {% if request.user != portfolio.owner %}<p>Владелец: <a href="{{ portfolio.owner.get_absolute_url }}">{{portfolio.owner.name}}</a></p>{% endif %}
+          <p>Всего инвестиций (руб.): <span id="invest_cash">{{portfolio.invest_cash}}</span></p>
+          {% if request.user == portfolio.owner %}
+            <div class="form-group row">
+              <label for="id_today_cash" class="col-sm-12 col-form-label">Текущий баланс (руб.):</label>
+              <div class="col-sm-12">
+                <input type="number" value="{{ form_refresh.today_cash.value|int_to_str }}" class="form-control form-control-sm mt-1 mb-2" name="today_cash" step="0.01" required="" id="id_today_cash"{% if not portfolio.manual %} readonly{% endif %}>
+              </div>
+            </div>
+          {%else%}
+            <p>Текущий баланс (руб.): <span class="today_cash">{{portfolio.today_cash}}</span></p>
+          {%endif%}
+          <p id="manual" hidden="true">{{ portfolio.manual }}</p>
+          <p>Остаток (руб.): <span id="ostatok">{{portfolio.ostatok}}</span></p>
+          <p>Доходность (%): <span id="percent_profit">{{portfolio.percent_profit}}</span></p>
+          <p>Годовая доходность (%): <span id="year_percent_profit">{{portfolio.year_percent_profit}}</span></p>
+          {% if request.user == portfolio.owner %}
+            <div class="form-group mb-2">
+              <label for="id_private">Приватность:</label>
+              <select class="form-control form-control-sm" id="id_private">
+                <option {% if portfolio.private == 'da' %}selected {% endif %}value="da">Всем запрещено</option>
+                <option {% if portfolio.private == 'af' %}selected {% endif %}value="af">Разрешено друзьям</option>
+                <option {% if portfolio.private == 'al' %}selected {% endif %}value="al">Разрешено авторизованным</option>
+                <option {% if portfolio.private == 'aa' %}selected {% endif %}value="aa">Разрешено всем</option>
+              </select>
+            </div>
+          {%endif%}
+          <p class="mt-3">Стратегия: <span>{{ portfolio.strategia }}</span></p>
+          <p class="mt-3">Создан: {{portfolio.created}}</p>
+          {% if request.user == portfolio.owner %}
+            <a class="mb-4 refresh-portfolio btn btn-info btn-sm" href="{% url 'portfolio:refresh_portfolio' portfolio.id %}">Обновить</a>
+            <a class="mb-4 delete-portfolio btn btn-danger btn-sm" href="{% url 'portfolio:delete_portfolio' portfolio.id %}">Удалить портфель</a>
+           {%endif%}
+         {% else %}
+          <p>Портфель приватный, обратитесь к владельцу для предоставления доступа.</p> <a href="{{ owner_url }}"> Владелец - {{owner}}.</a>
+        {% endif %}
+      </div>
+
+        <div class="col-sm-8 history-table">
+
+        {% if portfolio.owner == request.user %}
+        <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyPortfolioButton" data-toggle="collapse" data-target="#collapseHistoryPortfolio" aria-expanded="false" aria-controls="collapseHistoryPortfolio">
+            История пополнений
+            </button>
+              <div class="collapse" id="collapseHistoryPortfolio"> 
+              {% if history != None %}
+                {% for i in history %}
+                  <div class="row align-items-center">
+                    <div class="col-9">
+                      <div class="row">
+                        <div class="col-md-4">
+                          {{ i.date }}
+                        </div>
+                        <div class="col-md-4">
+                          {{ i.cash }}
+                        </div>
+                        <div class="col-md-4">
+                         {% if i.action == 'vp' %}На портфель{% elif i.action == 'pv' %}На вклад{%else%}Доход{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                      <div class="col-3">
+                        <a class="delete-invest btn btn-danger btn-sm" href="{% url 'portfolio:del_invest' i.id %}">Удалить</a>
+                      </div>
+                  </div>
+                  <div class="dropdown-divider"></div>
+                {% endfor %}
+              {%endif%}
+              <div class="row align-items-center">
+                <div class="col-9">
+                  <div class="row align-items-center">
+                    <div class="col-md-4"><input type="text" class="form-control form-control-sm mt-1 mb-2" name="date" required="" id="id_date"></div>
+                    <div class="col-md-4"><input placeholder="Введите сумму" type="number" class="form-control form-control-sm mt-1 mb-2" name="cash" step="0.01" required="" id="id_cash"></div>
+                    <div class="col-md-4">
+                      <select id="id_action" class="form-control form-control-sm mt-1 mb-2">
+                        <option value="tp">Доход</option>
+                        <option selected value="vp">На портфель</option>
+                        <option value="pv">На вклад</option>
+                       </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-3">
+                  <a id="add_invest" class="btn btn-success btn-sm mt-1 mb-2" href="{% url 'portfolio:add_invest' portfolio.id %}">Добавить</a>
+                </div>
+              </div>
+            </div>
+          {% if portfolio.securities.count > 0 %}  
+          <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapsePortfolio" aria-expanded="false" aria-controls="collapsePortfolio">
+            Состав портфеля
+            </button>
+            <div class="collapse" id="collapsePortfolio">
+              {% for security in portfolio.securities.all %}
+                <div class="row align-items-center mt-2">
+                      <div class="col-lg-3 col-12 mb-1 mt-1">
+                          <a class="btn btn-warning btn-sm" href="{{ security.security.get_absolute_url }}">{{ security.security.name }}</a>
+                        </div>
+                        <div class="col-lg-3 col-12 mb-1 mt-1">
+                          <span class="d-md-none">Количество: </span><span>{{ security.count }} шт.</span>
+                        </div>
+                        <div class="col-lg-2 col-12 mb-1 mt-1">
+                          <span class="d-md-none">Цена: </span><span>{{ security.today_price }} руб.</span>
+                        </div>
+                        <div class="col-lg-2 col-4 mb-1 mt-1">
+                          <a class="btn btn-success btn-sm" href="{% url 'moex:buy' security.security.id %}?portfolio={{ portfolio.id }}&buy=true">Купить</a>
+                        </div>
+                        <div class="col-lg-1 col-4 mb-1 mt-1">
+                          <a class="btn btn-danger btn-sm" href="{% url 'moex:buy' security.security.id %}?portfolio={{ portfolio.id }}&buy=false">Продать</a>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if portfolio.trade_securities.count > 0 %}
+            <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapseHistory" aria-expanded="false" aria-controls="collapseHistory">
+            История покупок
+            </button>
+            <div class="collapse" id="collapseHistory">
+              <div class="row">
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Наименование</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Количество</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Цена</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Комиссия</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Действие</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Дата</p>
+                </div>
+              </div>
+              <div class="dropdown-divider d-none d-md-block"></div>
+            {% for security in portfolio.trade_securities.all %}
+              <div class="row align-items-center mt-2">
+                  <div class="col-md-2 col-12 mb-1 mt-1">
+                    <a class="btn btn-warning btn-sm" href="{{ security.security.get_absolute_url }}">{{ security.security.name }}</a>
+                  </div>
+                  <div class="col-md-2 col-12 mb-1 mt-1">
+                    <span class="d-md-none">Количество: </span><span>{{ security.count }} шт.</span>
+                  </div>
+                  <div class="col-md-2 col-12 mb-1 mt-1">
+                    <span class="d-md-none">Цена: </span><span>{{ security.price }} руб.</span>
+                  </div>
+                  <div class="col-md-2 col-12 mb-1 mt-1">
+                    <span class="d-md-none">Комиссия: </span><span>{{ security.commission }} руб.</span>
+                  </div>
+                  <div class="col-md-2 col-12 mb-1 mt-1">
+                    <span class="d-md-none">Действие: </span><span>{% if security.buy %}Покупка{% else %}Продажа{% endif %}</span>
+                  </div>
+                  <div class="col-md-2 col-12 mb-1 mt-1">
+                    <span class="d-md-none">Дата: </span><span>{{ security.date }}</span>
+                  </div>
+              </div>
+              <a class="btn btn-danger btn-sm mb-1 mt-1 del-history" href="{% url 'moex:delete_history' security.id %}?portfolio={{ security.portfolio.id }}">Удалить запись</a>
+              <div class="dropdown-divider"></div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block domready %}
+{% endblock domready %}
+
+
+{% block page_javascript %}
+      {% if request.user == portfolio.owner %}
+        <script src="{% static 'js/portfolio_detail.js' %}"></script>
+      {% endif %}
+    <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'js/toast/toast.js' %}"></script>
+{% endblock page_javascript %}

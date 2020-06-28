@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+{% load moex_extras %}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'css/daterangepicker/daterangepicker.css' %}">
+  <link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
+{% endblock page_css %}
+
+{% block content %}
+<div class="container">
+  <h3 class="mb-3">{{ security.name }}</h3>
+    <div class="row">
+      <div class="col-md-4">
+        <a href="{{ security.url }}">Перейти на сайт</a>
+        <p>Полное наименование: {{ security.fullname }}</p>
+        {% if security.code %}
+          <p>Код: {{ security.code }}</p>
+        {% endif %}
+        {% if security.code %}
+          <p>Рег.номер: {{ security.regnumber }}</p>
+        {% endif %}
+        {% if security.code %}
+          <p>CESID: {{ security.secid }}</p>
+        {% endif %}
+        {% if security.code %}
+          <p>ISIN: {{ security.isina }}</p>
+        {% endif %}
+        <p>Эмитент: {{ security.emitent }}</p>
+        <p>Тип: {{ security.get_security_type_display }}</p>
+        <p>Цена: {{ security.today_price }} руб.</p>
+        <p>Описание: {{ security.description }}</p>
+      </div>
+
+      <div class="col-md-8">
+          <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyBondButton" data-toggle="collapse" data-target="#collapseHistoryBond" aria-expanded="false" aria-controls="collapseHistoryBond">
+            История цен
+            </button>
+        <div class="collapse" id="collapseHistoryBond">
+          <div class="row">
+              <div class="col-lg-4 .offset-lg-1 d-none d-md-block">
+                <p>Дата</p>
+              </div>
+              <div class="col-lg-4 d-none d-md-block">
+                <p>Цена</p>
+              </div>
+              <div class="col-lg-2 d-none d-md-block">
+              </div>
+          </div>
+          <div id="preHistory" class="dropdown-divider d-none d-md-block"></div>
+          <div id="spinnerHistory" class="row">
+            <div class="col d-flex justify-content-center">
+              <div class="spinner-border text-secondary" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </div>
+          </div>
+          
+                <a hidden id="load" class="btn btn-success btn-sm" href="{% url 'moex:get_security_history' security.id %}">Загрузить</a>
+        </div>
+      {% if security_in_user_portfolios %}
+        <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="portfolioButton" data-toggle="collapse" data-target="#collapsePortfolio" aria-expanded="false" aria-controls="collapsePortfolio">
+            Ваши портфели
+            </button>
+        <div class="collapse" id="collapsePortfolio">
+          <div class="row">
+              <div class="col-md-4 d-none d-md-block">
+                <p>Портфель</p>
+              </div>
+              <div class="col-md-4 d-none d-md-block">
+                <p>Количество</p>
+              </div>
+              <div class="col-md-2 d-none d-md-block">
+              </div>
+              <div class="col-md-2 d-none d-md-block">
+              </div>
+          </div>
+          <div class="dropdown-divider d-none d-md-block"></div>
+            {% for portfolio in security_in_user_portfolios %}
+                <div class="row align-items-center">
+                      <div class="col-lg-4 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" href="{{ portfolio.portfolio.get_absolute_url }}">{{ portfolio.portfolio.title}}</a>
+                      </div>
+                      <div class="col-lg-4 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Количество: </span><span>{{ portfolio.count }} шт.</span>
+                      </div>
+                      <div class="col-lg-2 col-4 mb-1 mt-1">
+                        <a class="btn btn-success btn-sm" href="{% url 'moex:buy' security.id %}?portfolio={{ portfolio.portfolio.id }}&buy=true">Купить</a>
+                      </div>
+                      <div class="col-lg-2 col-4 mb-1 mt-1">
+                        <a class="btn btn-danger btn-sm" href="{% url 'moex:buy' security.id %}?portfolio={{ portfolio.portfolio.id }}&buy=false">Продать</a>
+                      </div>
+                </div>
+                <div class="dropdown-divider"></div>
+              {% endfor %}
+        
+        </div>
+        {% else %}
+          <h6 class="mt-4 mb-2 col-12">У вас в портфелях пока нет этой ценной бумаги.</h6>
+        {% endif %}
+
+        {% if request.user|user_trades_security:security %}
+            <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapseHistory" aria-expanded="false" aria-controls="collapseHistory">
+            История покупок
+            </button>
+            <div class="collapse" id="collapseHistory">
+              <div class="row">
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Количество</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Цена</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Комиссия</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Действие</p>
+                </div>
+                <div class="col-md-2 d-none d-md-block">
+                  <p>Дата</p>
+                </div>
+              </div>
+              <div class="dropdown-divider d-none d-md-block"></div>
+            {% for security in request.user|user_trades_security:security %}
+              <div class="row align-items-center mt-2">
+                      <div class="col-md-2 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Количество: </span><span>{{ security.count }} шт.</span>
+                      </div>
+                      <div class="col-md-2 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Цена: </span><span>{{ security.price }} руб.</span>
+                      </div>
+                      <div class="col-md-2 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Комиссия: </span><span>{{ security.commission }} руб.</span>
+                      </div>
+                      <div class="col-md-2 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Действие: </span><span>{% if security.buy %}Покупка{% else %}Продажа{% endif %}</span>
+                      </div>
+                      <div class="col-md-2 col-12 mb-1 mt-1">
+                        <span class="d-md-none">Дата: </span><span>{{ security.date }}</span>
+                      </div>
+                  </div>
+                  <a class="btn btn-danger btn-sm mb-1 mt-1" href="{% url 'moex:delete_history' security.id %}">Удалить запись</a>
+                  <div class="dropdown-divider"></div>
+            {% endfor %}
+            </div>
+        {% endif %}
+      </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block domready %}
+{% endblock domready %}
+
+
+{% block page_javascript %}
+    <script src="{% static 'js/toast/toast.js' %}"></script>
+    <script src="{% static 'js/securyties_detail.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/daterangepicker.js' %}"></script>
+{% endblock page_javascript %}

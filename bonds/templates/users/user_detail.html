@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static %}{% load friends_extras %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/daterangepicker/daterangepicker.css' %}">
+<link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
+{% endblock page_css %}
 
 {% block title %}User: {{ object.username }}{% endblock %}
 
@@ -16,21 +21,58 @@
     </div>
   </div>
 
-{% if object == request.user %}
-<!-- Action buttons -->
-<div class="row">
+    {% if object == request.user %}
+    <!-- Action buttons -->
+        <div class="row">
 
-  <div class="col-sm-12">
-    <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
-    <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>
-    <!-- Your Stuff: Custom user template urls -->
-  </div>
+            <div class="col-sm-12">
+                <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
+                <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>
+                <!-- Your Stuff: Custom user template urls -->
+            </div>
 
-</div>
-<!-- End Action buttons -->
-{% endif %}
+        </div>
+        </br>
+    {% else %}
+        <div class="row">
 
+            <div class="col-sm-12">
+          {% if request.user|is_friends:object %}
+
+                <a class="friends btn btn-primary" href="{% url 'friends:friends_delete' object.id %}" role="button">Удалить из друзей</a>
+                
+          {% else %}
+            {% if request.user|request_already_exist:object %}
+              <a class="friends btn btn-primary" href="{% url 'friends:friends_request_cancel' request.user|request_friends_id:object %}" role="button">Отменить запрос в друзья</a>
+            {% elif object|request_already_exist:request.user %}
+            <a class="friends btn btn-primary" href="{% url 'friends:friends_request_accept' object|request_friends_id:request.user %}" role="button">Добавить в друзья</a>
+            <a class="friends btn btn-primary" href="{% url 'friends:friends_request_reject' object|request_friends_id:request.user %}" role="button">Отклонить запрос в друзья</a>
+            {% else %}
+            <a class="friends btn btn-primary" href="{% url 'friends:friends_send_request' object.id %}" role="button">Направить запрос в друзья</a>
+            {% endif %}
+          {% endif %}
+                <!-- Your Stuff: Custom user template urls -->
+            </div>
+
+        </div>
+    <!-- End Action buttons -->
+    {% endif %}
 
 </div>
 {% endblock content %}
 
+{% block page_javascript %}
+    <script src="{% static 'js/friends.js' %}"></script>
+    <script src="{% static 'js/toast/toast.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/daterangepicker.js' %}"></script>
+   <script> $(function(){
+        $('#id_date').daterangepicker({
+            singleDatePicker: true,
+                locale: {
+                    format: 'DD.MM.YYYY'
+                                        }
+                                    });
+                });
+   </script>
+{% endblock page_javascript %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+
+
+
+{% block content %}
+<div class="container">
+  <div class="row">
+  	<div class="col-md-6">
+    	<p>Вы уверены, что хотите удалить портфель "{{ portfolio.title }}"?</p>
+			<form action="." method="post" class="d-flex justify-content-around">
+			  {% csrf_token %}
+			  <button type="submit" class="btn btn-danger">Удалить</button>
+				<a class="btn btn-info" href="{% url 'portfolio:detail' portfolio.id %}">Отменить</a>
+			</form>
+		</div>
+	</div>
+</div>
+
+{% endblock content %}

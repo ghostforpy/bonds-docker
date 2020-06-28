@@ -69,10 +69,16 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "django_celery_beat",
+    'import_export',
+    'rest_framework',
 ]
 
 LOCAL_APPS = [
     "bonds.users.apps.UsersConfig",
+    "portfolio.apps.PortfolioConfig",
+    "vklad.apps.VkladConfig",
+    "friends.apps.FriendsConfig",
+    "moex.apps.MoexConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/daterangepicker/daterangepicker.css' %}">
+<link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
+
+{% endblock page_css %}
+
+{% block content %}
+<div class="container">
+    <h3>Мой кошелёк:</h3>
+    <div class="row">
+        <div class="col-md-4">
+            <p>Всего инвестиций: <span id="invest_cash">{{vklad.invest_cash}}</span></p>
+            <p>Текущий баланс: <span id="today_cash">{{vklad.today_cash}}</span></p>
+            <p>Остаток: <span id="ostatok">{{vklad.ostatok}}</span></p>
+            <p>Доходность: <span id="percent_profit">{{vklad.percent_profit}}</span></p>
+            <p>Годовая доходность: <span id="year_percent_profit">{{vklad.year_percent_profit}}</span></p>
+            <a class="mb-4 refresh-vklad btn btn-info btn-sm" href="{% url 'vklad:refresh_vklad' vklad.id %}">Обновить</a>
+</div>
+
+        <div class="col-md-8 history-table">
+            <p>История пополнений и снятий:</p>
+                {% for i in vklad.vklads.all %}
+                    <div class="row align-items-center">
+                        <div class="col-9">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {{ i.date }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ i.cash }}
+                                </div>
+                                <div class="col-md-4">
+                                    {% if i.popolnenie %}Пополнение{% else %}Снятие{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <a class="delete-vklad btn btn-danger btn-sm" href="{% url 'vklad:del_vklad' i.id %}">Удалить</a>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                {% endfor %}
+                <div class="row align-items-center">
+                    <div class="col-9">
+                            <div class="row align-items-center">
+                                <div class="col-md-4"><input type="text" name="date" required="" id="id_date" class="form-control form-control-sm mt-1 mb-2"></div>
+                                <div class="col-md-4"><input type="number" name="cash" step="0.01" required="" id="id_cash" class="form-control form-control-sm mt-1 mb-2" placeholder="Введите сумму"></div>
+                                <div class="col-md-4"><input type="checkbox" name="popolnenie" id="id_popolnenie"> <label for="id_popolnenie">Пополнение</label></div>
+                            </div>
+                    </div>
+                    <div class="col-3">
+                        <a id="add_vklad" class="btn btn-success btn-sm mt-1 mb-2" href="{% url 'vklad:add_vklad' vklad.id %}">Добавить</a>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}
+
+
+{% block domready %}
+        
+{% endblock domready %}
+
+{% block page_javascript %}
+
+    <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'js/toast/toast.js' %}"></script>
+    <script src="{% static 'js/vklad_detail.js' %}"></script>
+    
+{% endblock page_javascript %}
+

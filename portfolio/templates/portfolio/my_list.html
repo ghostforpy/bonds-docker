@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+
+
+
+{% block content %}
+<a class="btn btn-dark mt-3 mb-3" href="{% url 'portfolio:create' %}">
+			Создать портфель
+		</a>
+	{% if portfolios %}
+		<h3>Мои портфели:</h3>
+	        <div class="row">
+		          <div class="col-md-2 d-none d-md-block">
+		            <p>Наименование</p>
+		          </div>
+		          <div class="col-md-2 d-none d-md-block">
+		            <p>Стратегия</p>
+		          </div>
+		          <div class="col-md-2 d-none d-md-block">
+		            <p>Инвестиции</p>
+		          </div>
+		          <div class="col-md-2 d-none d-md-block">
+		            <p>Текущий баланс</p>
+		          </div>
+		          <div class="col-md-2 d-none d-md-block">
+		            Доходность
+		          </div>
+		          <div class="col-md-2 d-none d-md-block">
+		           Годовая доходность
+		          </div>
+	        </div>
+
+	    <div class="dropdown-divider d-none d-md-block"></div>
+		{% for portfolio in portfolios %}
+	                    <div class="row">
+	                      <div class="col-md-2 mt-1 mb-1">
+	                        <a class="btn btn-secondary btn-sm" href="{{ portfolio.get_absolute_url }}">{{ portfolio.title}}</a>
+	                      </div>
+	                      <div class="col-md-2 mt-1 mb-1">
+	                        <span class="d-md-none">Стратегия: </span>{{ portfolio.strategia }}
+	                      </div>
+	                      <div class="col-md-2 mt-1 mb-1">
+	                        <span class="d-md-none">Инвестиции: </span>{{ portfolio.invest_cash}}
+	                      </div>
+	                      <div class="col-md-2 mt-1 mb-1">
+	                        <span class="d-md-none">Текущий баланс: </span>{{ portfolio.today_cash}}
+	                      </div>
+	                      <div class="col-md-2 mt-1 mb-1">
+	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }} %</span>
+	                      </div>
+	                      <div class="col-md-2 mt-1 mb-1">
+	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }} %</span>
+	                      </div>
+	                    </div>
+	                <div class="dropdown-divider"></div>
+	    {% endfor %}
+	{% else %}
+		<h2>У вас пока нет портфелей.</h2>
+	{% endif %}
+
+{% endblock content %}

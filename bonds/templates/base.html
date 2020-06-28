@@ -1,4 +1,4 @@
-{% load static i18n %}<!DOCTYPE html>
+{% load static i18n %}{% load friends_extras %}<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -19,7 +19,7 @@
     
     <!-- Latest compiled and minified Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    
+        
 
     <!-- Your stuff: Third-party CSS libraries go here -->
     
@@ -29,7 +29,9 @@
     
     
     {% endblock %}
+{% block page_css%}
 
+{%endblock page_css%}
   </head>
 
   <body>
@@ -43,32 +45,52 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
+            <li>
+              <a class="nav-link" href="{% url 'portfolio:list' %}">Портфели</a>
+            </li>
+            <li>
+              <a class="nav-link" href="{% url 'moex:list' %}">Рынок</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{% url 'about' %}">About</a>
             </li>
+          <li class="nav-item d-md-none">
             {% if request.user.is_authenticated %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% trans "My Profile" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
-              </li>
+              <div class="dropdown-divider"></div>
+              <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="{% url 'users:detail' request.user.username  %}">Мой профиль</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'vklad:detail_vklad' %}">Мой кошелёк</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'portfolio:my_portfolios' %}">Мои портфели</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'friends:list' %}">Мои друзья <span class="badge badge-pill badge-secondary">{{ request.user|new_friends_count }}</span></a></li>
+                <div class="dropdown-divider"></div>
+                <li class="nav-item"><a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a></li>
+              </ul>  
             {% else %}
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a>
-              </li>
-              <li class="nav-item">
-                {# URL provided by django-allauth/account/urls.py #}
-                <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
-              </li>
+              <div class="dropdown-divider"></div>
+              <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a></li>
             {% endif %}
+          </li>
           </ul>
+          <div class="nav-item btn-group btn d-none d-md-block">
+                {% if request.user.is_authenticated %}
+                  <button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {{request.user.username}}
+                  </button>
+                  <ul id="login-btn" class="dropdown-menu dropdown-menu-right">
+                    <li><a href="{% url 'users:detail' request.user.username  %}" class="btn btn-warning dropdown-item">Мой профиль</a></li>
+                    <li><a href="{% url 'vklad:detail_vklad' %}" class="btn btn-warning dropdown-item">Мой кошелёк</a></li>
+                    <li><a href="{% url 'portfolio:my_portfolios' %}" class="btn btn-warning dropdown-item">Мои портфели</a></li>
+                    <li><a href="{% url 'friends:list' %}" class="btn btn-warning dropdown-item">Мои друзья <span class="badge badge-pill badge-secondary">{{ request.user|new_friends_count }}</span></a></li>
+                    <div class="dropdown-divider"></div>
+                    <li><a href="{% url 'account_logout' %}" class="btn btn-sm btn-warning dropdown-item">{% trans "Sign Out" %}</a></li>                  
+                  </ul>
+                {% else %}
+                <button type="button" class="btn btn-warning">
+                  <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
+                </button>
+                {% endif %}
+                
+              </div>
         </div>
       </nav>
 
@@ -85,8 +107,61 @@
       {% block content %}
         <p>Use this document as a way to quick start any new project.</p>
       {% endblock content %}
-
+      
+      
     </div> <!-- /container -->
+
+<!-- Footer -->
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<footer class="">
+
+     <div class="navbar-fixed-bottom container-fluid bg-primary py-3 mt-3">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-7">
+            <div class="row py-0">
+          <div class="col-sm-1 hidden-md-down">
+              <a class="bg-circle bg-info" href="#">
+                <i class="fa fa-2x fa-fw fa-address-card" aria-hidden="true "></i>
+              </a>
+            </div>
+            <div class="col-sm-11 text-white">
+                <div><h4>  Contact</h4>
+                    <p>   <span class="header-font">mybonds.space</span></p>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+          <div class="d-inline-block">
+            <div class="bg-circle-outline d-inline-block" style="background-color:#3b5998">
+              <a href="https://www.facebook.com/"><i class="fa fa-2x fa-fw fa-facebook text-white"></i>
+    </a>
+            </div>
+            <div class="bg-circle-outline d-inline-block" style="background-color:#4099FF">
+              <a href="https://twitter.com/">
+                <i class="fa fa-2x fa-fw fa-twitter text-white"></i></a>
+            </div>
+
+            <div class="bg-circle-outline d-inline-block" style="background-color:#0077B5">
+              <a href="https://www.linkedin.com/company/">
+                <i class="fa fa-2x fa-fw fa-linkedin text-white"></i></a>
+            </div>
+            <div class="bg-circle-outline d-inline-block" style="background-color:#d34836">
+              <a href="https://www.google.com/">
+                <i class="fa fa-2x fa-fw fa-google text-white"></i></a>
+            </div>
+            <!-- DO NOT EDIT - GlobalSign SSL Site Seal Code - DO NOT EDIT -->
+            <table width=125 border=0 cellspacing=0 cellpadding=0 title="CLICK TO VERIFY: This site uses a GlobalSign SSL Certificate to secure your personal information." ><tr><td><span id="ss_img_wrapper_gmogs_image_110-45_en_white"><a href="https://www.globalsign.com/" target=_blank title="GlobalSign Site Seal" rel="nofollow"><img alt="SSL" border=0 id="ss_img" src="//seal.globalsign.com/SiteSeal/images/gs_noscript_110-45_en.gif"></a></span><script type="text/javascript" src="//seal.globalsign.com/SiteSeal/gmogs_image_110-45_en_white.js"></script></td></tr></table>
+            <!-- DO NOT EDIT - GlobalSign SSL Site Seal Code - DO NOT EDIT -->
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+</footer>
+<!-- /Footer -->
 
     {% block modal %}{% endblock modal %}
 
@@ -98,7 +173,8 @@
       <!-- Bootstrap JS and its dependencies-->
       <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+      <!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script> -->
+
 
       <!-- Your stuff: Third-party javascript libraries go here -->
       
@@ -106,9 +182,32 @@
       <!-- place project specific Javascript in this file -->
       
       <script src="{% static 'js/project.js' %}"></script>
-      
 
+      <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+      <script type="text/javascript">
+        var csrftoken = '{{ csrf_token }}';
+        function csrfSafeMethod(method){
+          return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+          }
+        $.ajaxSetup({
+          beforeSend:function(xhr, settings){
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain){
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+          }
+        });
+
+        $(document).ready(function(){
+          {% block domready %}{% endblock %}
+        });
+      
+      </script>
     {% endblock javascript %}
+    {% block page_javascript %}
+    {% endblock page_javascript %}
+    <!-- bootstrap dependens -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
   </body>
 </html>
  

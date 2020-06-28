@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_css %}
+            {% if request.user.is_staff %}
+                <link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
+            {% endif %}
+{% endblock page_css %}
+
+{% block content %}
+<form action="." method="get">
+    <div class="input-group mb-3">
+      <input type="text" class="form-control" placeholder="Название" aria-label="search" aria-describedby="basic-addon2" name="query" {% if query %}value="{{ query }}"{% endif %}>
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="submit">Поиск</button>
+      </div>
+    </div>
+</form>
+{% if securities %}
+    <h3 class="mt-3 mb-3">Ценные бумаги:</h3>
+    		<div class="row">
+    		          <div class="col-md-4 d-none d-md-block">
+    		            <p>Наименование</p>
+    		          </div>
+    		          <div class="col-md-4 d-none d-md-block">
+    		            <p>Эмитент</p>
+    		          </div>
+    		          <div class="col-md-4 d-none d-md-block">
+    		            <p>Цена</p>
+    		          </div>
+    	        </div>
+    	    <div class="dropdown-divider d-none d-md-block"></div>
+    		{% for security in securities %}
+            <div class="row">
+                  <div class="col-md-4 mb-1 mt-1">
+                    <span class="d-md-none">Наименование: </span><a class="btn btn-warning btn-sm" href="{{ security.get_absolute_url }}">{{ security.name }}</a>
+                  </div>
+                  <div class="col-md-4 mb-1 mt-1">
+                    <span class="d-md-none">Эмитент: </span><span>{{ security.emitent }}</span>
+                  </div>
+                	{% if request.user.is_staff %}<div class="col-md-2 mb-1 mt-1">{% else %}<div class="col-md-4 mb-1 mt-1">{% endif %}
+                    <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price }}</span><span> руб.</span>
+                  </div>
+                  {% if request.user.is_staff %}
+                    <div class="col-md-2 mb-1 mt-1">
+                    <a class="refresh_security btn btn-success btn-sm mt-1 mb-2" href="{% url 'moex:refresh_security' security.id %}">Обновить</a>
+                  </div>
+                  {% endif %}
+            </div>
+            <div class="dropdown-divider"></div>
+        {% endfor %}
+    {% if securities.has_other_pages %}
+      <div class="pagination">
+        <span class="step-links">
+            {% if securities.has_previous %}
+            		{% if securities.previous_page_number != 1 %}
+                	<a href="?page=1">&laquo; Первая</a>
+                {% endif %}
+                <a href="?page={{ securities.previous_page_number }}">Предыдущая</a>
+            {% endif %}
+
+            <span class="current">
+                {{ securities.number }} из {{ securities.paginator.num_pages }}.
+            </span>
+
+            {% if securities.has_next %}
+                <a href="?page={{ securities.next_page_number }}">Следующая</a>
+                {% if securities.next_page_number != securities.paginator.num_pages %}
+                	<a href="?page={{ securities.paginator.num_pages }}">Последняя &raquo;</a>
+                {% endif %}
+            {% endif %}
+        </span>
+    	</div>
+    {% endif %}
+{% else %}
+<h3 class="mt-3 mb-3">По вашему запросу ничего не найдено.</h3>
+{% endif %}
+{% endblock content %}
+
+{% block page_javascript %}
+            {% if request.user.is_staff %}
+                <script src="{% static 'js/securyties_list.js' %}"></script>
+                <script src="{% static 'js/toast/toast.js' %}"></script>
+            {% endif %}
+{% endblock page_javascript %}

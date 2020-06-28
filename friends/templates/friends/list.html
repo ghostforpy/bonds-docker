@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_css %}
+	<link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
+{% endblock page_css %}
+{% block content %}
+<h3 class="mt-3 mb-3">Мои друзья:</h3>
+	{% if friends %}	
+		{% for friend in friends %}
+			<div class="row">
+				<div class="col-8 mb-1 mt-1">
+					<a class="btn btn-warning btn-sm" href="{{ friend.get_absolute_url }}">{{ friend }}</a>
+				</div>
+				<div class="col-3 mb-1 mt-1">
+					<a class="friends btn btn-danger btn-sm" href="{% url 'friends:friends_delete' friend.user.id %}">Удалить</a>
+				</div>
+			</div>
+			<div class="dropdown-divider"></div>
+		{% endfor %}
+	{% else %}
+		<p>У вас пока нет друзей.</p>
+	{% endif %}
+
+	{% if request_friends_from %}
+		<h3 class="mt-3 mb-3">Мои запросы:</h3>
+		{% for req in request_friends_from %}
+						<div class="row">
+									<div class="col-8 mb-1 mt-1">
+										<a class="btn btn-warning btn-sm" href="{{ req.user_to.get_absolute_url }}">{{ req.user_to }}</a>
+									</div>
+									<div class="col-3 mb-1 mt-1">
+										<a class="friends btn btn-secondary btn-sm" href="{% url 'friends:friends_request_cancel' req.id %}">Отменить</a>
+									</div>
+						</div>
+						<div class="dropdown-divider"></div>
+			{% endfor %}
+	{% endif %}
+
+		{% if request_friends_to %}
+		<h3 class="mt-3 mb-3">Запросы ко мне:</h3>
+		{% for req in request_friends_to %}
+			<div class="row align-items-center">
+				<div class="col-8 mb-1 mt-1">
+					<a class="btn btn-warning btn-sm" href="{{ req.user_from.get_absolute_url }}">{{ req.user_from }}</a>{% if req.new %} <span class="badge badge-secondary">New</span>{% endif %}
+				</div>
+				<div class="col-3 mb-1 mt-1">
+					<a class="friends btn btn-success btn-sm" href="{% url 'friends:friends_request_accept' req.id %}">Принять</a>
+					<a class="friends btn btn-danger btn-sm mb-1 mt-1" href="{% url 'friends:friends_request_reject' req.id %}">Отклонить</a>
+				</div>
+			</div>
+			<div class="dropdown-divider"></div>
+		 {% endfor %}
+	{% endif %} 
+{% endblock content %}
+
+
+{% block page_javascript %}
+
+			{% if request.user == user %}
+				<script src="{% static 'js/friends.js' %}"></script>
+			{% endif %}
+		<script src="{% static 'js/toast/toast.js' %}"></script>
+{% endblock page_javascript %}

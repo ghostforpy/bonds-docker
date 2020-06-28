@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load static %}
+{% load moex_extras%}
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'css/daterangepicker/daterangepicker.css' %}">
+  {% endblock page_css %}
+
+{% block content %}
+<h3>{% if buy %}Покупка{% else %}Продажа{% endif %}</h3>
+<form action="." method="post">
+  <div class="form-group row">
+    <label for="portfolio" class="col-sm-2 col-form-label">Портфель:</label>
+    <div class="col-sm-4">
+      <select class="form-control form-control-sm mt-1 mb-2" name="portfolio" required="" id="id_portfolio">
+        {% if portfolio == None %}<option selected>---------</option>{% endif %}
+        {% for portf in portfolios %}
+        <option value="{{ portf.id }}" {% if portfolio.id == portf.id %}selected{% endif %}>{{ portf.title }}</option>
+        {% endfor %}
+      </select>
+      <small id="ostatok" hidden="true">{% if portfolio %}{{ portfolio.ostatok }}{% endif %}</small>
+      <small id="ostatok_sec" hidden="false">{% if portfolio %}{{ portfolio|count_security_in_portfolio:security }}{% endif %}</small>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label for="security" class="col-sm-2 col-form-label">Наименование:</label>
+    <div class="col-sm-10">
+      <a class="btn btn-secondary btn-sm" id="security" href="{{ security.get_absolute_url }}">{{ security.name }}</a>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label for="action" class="col-sm-2 col-form-label">Действие:</label>
+    <div class="col-sm-4">
+      <input type="text" readonly class="form-control-plaintext" id="action" value="{% if buy %}Покупка{% else %}Продажа{% endif %}">
+    </div>
+  </div>
+  <div class="form-group row">
+    <label for="id_date" class="col-sm-2 col-form-label">Дата:</label>
+    <div class="col-sm-2">
+      <input type="text" value="{{ form.date.value }}" class="form-control form-control-sm mt-1 mb-2" name="date" required="" id="id_date">
+    </div>
+  </div>
+    <div class="form-group row">
+      <label for="id_price" class="col-sm-2 col-form-label">Цена (руб.):</label>
+      <div class="col-sm-4">
+        <input type="number" value="{{ form.price.value|int_to_str }}" class="{% if form.price.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" name="price" step="0.01" required="" id="id_price">
+        <small id="sm_price" class="text-danger form-text collapse">Значение должно быть больше 0.</small>
+        <small class="form-text text-muted">
+          {% if form.price.errors %}
+            <ul>
+              {% for error in form.price.errors %}
+                <li><strong>{{ error|escape }}</strong></li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </small>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="id_comission" class="col-sm-2 col-form-label">Комиссия (руб.):</label>
+      <div class="col-sm-4">
+        <input placeholder="Введите сумму комиссии" type="number" class="{% if form.commission.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" min="0" name="commission" step="0.01" required="" id="id_comission">
+        <small id="sm_comission" class="text-danger form-text collapse">Значение не должно быть меньше 0.</small>
+        <small class="form-text text-muted">
+          {% if form.commission.errors %}
+            <ul>
+              {% for error in form.commission.errors %}
+                <li><strong>{{ error|escape }}</strong></li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </small>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="id_count" class="col-sm-2 col-form-label">Количество (шт.):</label>
+      <div class="col-sm-4">
+        <input placeholder="Введите количество ценных бумаг" type="number" class="{% if form.count.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" name="count" step="1e-7" required="" id="id_count">
+        <small id="sm_count" class="text-danger form-text collapse"></small>
+        <small class="form-text text-muted">
+          {% if form.count.errors %}
+            <ul>
+              {% for error in form.count.errors %}
+                <li><strong>{{ error|escape }}</strong></li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </small>
+      </div>
+    </div>
+      <div class="form-group row">
+        <label for="cost" class="col-sm-2 col-form-label">Общая сумма к {% if buy %}о{% else %}вы{% endif %}плате (руб.):</label>
+        <div class="col-sm-4">
+          <input class="form-control" id="cost" readonly value="0"></input>
+          <small id="sm" class="text-danger form-text collapse">Недостаточно средств на остатке портфеля</small>
+        </div>
+      </div>
+  {% csrf_token %}
+  {# <input type="hidden" name="portfolio" value="{{ portfolio.id }}"> #}
+  <input type="hidden" id="security_id" name="security" value="{{ security.id }}">
+  <input type="hidden" name="buy" value="{% if buy %}true{% else %}false{% endif %}">
+  {% if buy %}
+    <button type="submit" id="sub" class="btn btn-success" disabled>Купить</button>
+  {% else %}
+    <button type="submit" id="sub" class="btn btn-danger" disabled>Продать</button>
+  {% endif %}
+</form>
+
+{% endblock content %}
+
+{% block page_javascript %}
+    <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'js/daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'js/buy.js' %}"></script>
+{% endblock page_javascript %}
+
