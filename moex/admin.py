@@ -54,7 +54,7 @@ class SecurityPortfoliosAdmin(admin.ModelAdmin):
 
 
 @admin.register(TradeHistory)
-class TradeHistoryAdmin(admin.ModelAdmin):
+class TradeHistoryAdmin(ImportExportMixin, ExportActionMixin, admin.ModelAdmin):
     list_display = ['owner', 'portfolio', 'security', 'count',
                     'price', 'date', 'buy', 'commission']
     list_filter = ('owner', 'portfolio', 'security', 'date', 'buy',)
