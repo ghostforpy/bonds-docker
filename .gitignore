@@ -277,3 +277,5 @@ bonds/media/
 .env
 .envs/*
 !.envs/.local/
+up.sh
+build.sh
