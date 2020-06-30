@@ -4,9 +4,24 @@ from config import celery_app
 from django.utils.timezone import now
 
 
-@celery_app.task(name='moex.refresh_security')
-def refresh_security():
+@celery_app.task(bind=True,
+                 name='moex.refresh_security',
+                 default_retry_delay=30 * 60)
+def refresh_security(self):
     today = now().date()
     securities = Security.objects.filter(last_update__lt=today)
+    result = dict()
     for security in securities:
-        security.refresh_price()
+        result[security.name] = security.refresh_price()
+    if securities.count():
+        if securities.count() < len([i for i in result if 'ok' == result[i][0]]):
+            raise self.retry()
+    return result
+
+
+@celery_app.task(bind=True)
+def task_retry(self):
+    try:
+        r = 5 / 0
+    except ZeroDivisionError as e:
+        raise self.retry(exc=e)
