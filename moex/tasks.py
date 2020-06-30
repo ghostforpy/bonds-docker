@@ -4,7 +4,7 @@ from config import celery_app
 from django.utils.timezone import now
 
 
-@celery_app.task(name='refresh_security')
+@celery_app.task(name='moex.refresh_security')
 def refresh_security():
     today = now().date()
     if today.weekday() not in [7, 1]:

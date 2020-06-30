@@ -8,6 +8,7 @@ REDIS_URL=redis://redis:6379/0
 
 # Celery
 # ------------------------------------------------------------------------------
+CELERY_BROKER_URL=redis://redis:6379/0
 
 # Flower
 CELERY_FLOWER_USER=VABhlUElcBqpSudIMRhcrfMnvlpmyAxR

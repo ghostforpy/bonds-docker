@@ -13,10 +13,10 @@
 """
 
 import sys
-from iss_simple_client import Config
-from iss_simple_client import MicexAuth
-from iss_simple_client import MicexISSClient
-from iss_simple_client import MicexISSDataHandler
+from .iss_simple_client import Config
+from .iss_simple_client import MicexAuth
+from .iss_simple_client import MicexISSClient
+from .iss_simple_client import MicexISSDataHandler
 
 my_config = Config(user='caxeka7247@htwern.com',
                    password='gfhjkmmoex',
@@ -69,15 +69,20 @@ def search(query):
     if my_auth.is_real_time():
         iss = MicexISSClient(my_config, my_auth)
         result = iss.search(query)
-        for i in result:
-            print(i, result[i])
+        return result
+    return None
 
 
-def specification(query):
+def history(secid):
+    pass
+
+
+def specification(secid):
     if my_auth.is_real_time():
         iss = MicexISSClient(my_config, my_auth)
-        result = iss.specification(query)
+        result = iss.specification(secid)
         print(result)
+
 
 if __name__ == '__main__':
     try:

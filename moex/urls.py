@@ -21,6 +21,8 @@ urlpatterns = [
          name='delete_history'),
     path('sell/<int:id>/', views.security_sell, name='sell'),
     path('detail/<int:id>/', views.security_detail, name='detail'),
+    path('detail-new/<secid>/', views.new_security_detail, name='new_detail'),
+    path('buy-new/<secid>/', views.new_security_buy, name='new_buy'),
     path('refresh/<int:id>/', views.refresh_security, name='refresh_security'),
     path('sp/<int:id_p>/<int:id_s>/', views.sp, name='sp'),
     path('security_history/<int:id>/',

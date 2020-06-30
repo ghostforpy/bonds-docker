@@ -14,10 +14,14 @@ from django.core.cache import caches
 import threading
 from .models import *
 from .forms import *
+from .iss_simple_main import search as moex_search,\
+    specification as moex_specification,\
+    history as moex_history
 # Create your views here.
 
 
-def upload(security):
+@cache_page(60 * 60)
+def upload_history(security):
     cache = caches['default']
     security_history = security.get_history(None,
                                             None,
@@ -42,8 +46,8 @@ def security_detail(request, id):
             user = request.user
             security_in_user_portfolios = security.portfolios.filter(
                 owner=user)
-        # блок кеширования вынесен в асинхрон
-        t = threading.Thread(target=upload, args=(security,))
+        # блок кеширования
+        t = threading.Thread(target=upload_history, args=(security,))
         t.start()
         # конец блока кеширования
         return render(request,
@@ -56,9 +60,26 @@ def security_detail(request, id):
         return redirect(request.META.get('HTTP_REFERER'))
 
 
+def new_security_detail(request, secid):
+    pass
+
+
+@cache_page(24 * 60 * 60)
+def upload_search_moex_to_cache(query):
+    cache = caches['default']
+    result = moex_search(query)
+    securities = Security.objects.all()
+    secids = [i.secid for i in securities]
+    # delete securities if exist in base
+    res = {i: result[i] for i in result if i not in secids}
+    cache.add('moex_search_' + query,
+              res, timeout=24 * 60 * 60)
+
+
 def security_list(request):
     form = SearchForm()
     query = None
+    moex_dict = None
     if 'query' in request.GET:
         form = SearchForm(request.GET)
         if form.is_valid():
@@ -72,6 +93,12 @@ def security_list(request):
                 Q(isin__icontains=query) |
                 Q(emitent__icontains=query)
             )
+            if not caches['default'].get('moex_search_' + query):
+                t = threading.Thread(
+                    target=upload_search_moex_to_cache, args=(query,))
+                t.start()
+            else:
+                moex_dict = caches['default'].get('moex_search_' + query)
         else:
             securities_list = Security.objects.all()
     else:
@@ -82,23 +109,22 @@ def security_list(request):
     return render(request,
                   'moex/list.html',
                   {'securities': securities,
+                   'moex_dict': moex_dict,
                    'form': form,
                    'query': query})
 
 
 def security_search_moex(request):
-    q = request.GET.get('q')
-    securities_list = Security.objects.filter(Q(name__icontains=q) |
-                                              Q(code__icontains=q) |
-                                              Q(fullname__icontains=q) |
-                                              Q(regnumber__icontains=q) |
-                                              Q(secid__icontains=q) |
-                                              Q(isin__icontains=q) |
-                                              Q(emitent__icontains=q)
-                                              )
-    return render(request,
-                  'security/list.html',
-                  {'securities': securities_list})
+    query = request.GET.get('query')
+    cache = caches['default']
+    result = cache.get('moex_search_' + query)
+    content = {}
+    if result:
+        content['response'] = result
+        content['status'] = 'ok'
+    else:
+        content['status'] = 'no security'
+    return JsonResponse(content)
 
 
 @login_required
@@ -161,6 +187,11 @@ def security_buy(request, id):
 
 
 @login_required
+def new_security_buy(request, secid):
+    pass
+
+
+@login_required
 def security_sell(request, id):
     portfolio_id = request.GET.get('portfolio')
     security_id = id
@@ -188,7 +219,7 @@ def delete_history(request, id):
     content = {'status': status}
     if status == 'ok':
         content.update(updated_portfolio(trade_history.portfolio))
-    #print(content)
+    # print(content)
     return JsonResponse(content)
 
 
@@ -202,7 +233,7 @@ def refresh_security(request, id):
         return JsonResponse({'status': 'no_id_security'})
 
 
-@ login_required
+@login_required
 def sp(request, id_p, id_s):
     ostatok = 0
     ostatok_sec = 0

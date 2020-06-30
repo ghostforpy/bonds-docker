@@ -148,7 +148,7 @@ class MicexISSClient:
                                                                "TYPENAME",
                                                                "GROUPNAME", ]}
         boards = result['boards']
-        return result_description
+        return result_description, boards
 
     def get_history_securities(self, engine, market, board, date):
         """ Get and parse historical data on all the securities at the
