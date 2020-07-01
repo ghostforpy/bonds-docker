@@ -63,17 +63,9 @@ class Security(models.Model):
                               date=self.last_update,
                               first=first)
                 if result:
-                    #history = self.history.filter(date=result['date_today'])
-                    #if history.count():
                     if result['date_publication'] <= self.last_update:
-                        pass
+                        return 'no new data', self.price_today
                     else:
-                        '''
-                        newitem = SecurityHistory(name=self,
-                                                  date=result['date_today'],
-                                                  price=result['price_today'])
-                        newitem.save()
-                        '''
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
                         self.save()
