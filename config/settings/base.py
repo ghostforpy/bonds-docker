@@ -296,3 +296,6 @@ SOCIALACCOUNT_ADAPTER = "bonds.users.adapters.SocialAccountAdapter"
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+#MOEX http://moex.ru
+MOEX_USER = env("MOEX_USER", default='caxeka7247@htwern.com')
+MOEX_PASSWORD  = env("MOEX_PASSWORD", default='gfhjkmmoex')

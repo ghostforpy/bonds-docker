@@ -59,12 +59,15 @@ class Security(models.Model):
     def refresh_price(self, first=False, force=False):
         if self.security_type == 'pif_rshb':
             if force or self.last_update < now().date():
-                result = rshb(self.parce_url,
-                              date=self.last_update,
-                              first=first)
+                try:
+                    result = rshb(self.parce_url,
+                                  date=self.last_update,
+                                  first=first)
+                except Exception:
+                    return 'no data', self.today_price
                 if result:
                     if result['date_publication'] <= self.last_update:
-                        return 'no new data', self.price_today
+                        return 'no new data', self.today_price
                     else:
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
@@ -81,10 +84,13 @@ class Security(models.Model):
 
     def get_history(self, date_since, date_until, format_result):
         if self.security_type == 'pif_rshb':
-            result = rshb_history(self.parce_url,
-                                  date_since,
-                                  date_until,
-                                  format_result=format_result)
+            try:
+                result = rshb_history(self.parce_url,
+                                      date_since,
+                                      date_until,
+                                      format_result=format_result)
+            except Exception:
+                return None
             return result
 
 

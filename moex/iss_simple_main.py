@@ -17,9 +17,10 @@ from .iss_simple_client import Config
 from .iss_simple_client import MicexAuth
 from .iss_simple_client import MicexISSClient
 from .iss_simple_client import MicexISSDataHandler
+from config.settings.base import MOEX_USER, MOEX_PASSWORD
 
-my_config = Config(user='caxeka7247@htwern.com',
-                   password='gfhjkmmoex',
+my_config = Config(user=MOEX_USER,
+                   password=MOEX_PASSWORD,
                    proxy_url='')
 my_auth = MicexAuth(my_config)
 

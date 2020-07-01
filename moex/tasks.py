@@ -14,14 +14,6 @@ def refresh_security(self):
     for security in securities:
         result[security.name] = security.refresh_price()
     if securities.count():
-        if securities.count() < len([i for i in result if 'ok' == result[i][0]]):
+        if securities.count() > len([i for i in result if 'ok' == result[i][0]]):
             raise self.retry()
     return result
-
-
-@celery_app.task(bind=True)
-def task_retry(self):
-    try:
-        r = 5 / 0
-    except ZeroDivisionError as e:
-        raise self.retry(exc=e)
