@@ -63,8 +63,9 @@ class Security(models.Model):
                               date=self.last_update,
                               first=first)
                 if result:
-                    history = self.history.filter(date=result['date_today'])
-                    if history.count():
+                    #history = self.history.filter(date=result['date_today'])
+                    #if history.count():
+                    if result['date_publication'] <= self.last_update:
                         pass
                     else:
                         '''
