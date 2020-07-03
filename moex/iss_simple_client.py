@@ -124,14 +124,14 @@ class MicexISSClient:
         url = 'http://iss.moex.com/iss/securities.json?q={}'.format(query)
         res = self.opener.open(url)
         jres = json.load(res)
-        ''' необходимые поля jres:
-        0-id, 1-secid, 2-regnumber, 3-name, 4-isin
-        '''
         jres = jres['securities']['data']
         result = {i[1]: {'id_moex': i[0],
-                         'regnumber': i[2],
-                         'name': i[3],
-                         'isin': i[4]} for i in jres}
+                         'regnumber': i[3],
+                         'shortname': i[2],
+                         'name': i[4],
+                         'emitent': i[8],
+                         'primary_boardid': i[14],
+                         'isin': i[5]} for i in jres}
         return result
 
     def specification(self, query):
@@ -146,8 +146,15 @@ class MicexISSClient:
                                                                "ISIN",
                                                                "REGNUMBER",
                                                                "TYPENAME",
-                                                               "GROUPNAME", ]}
+                                                               "GROUPNAME",
+                                                               "FACEVALUE",
+                                                               "TYPE",
+                                                               "INITIALFACEVALUE",
+                                                               "MATDATE"]}
         boards = result['boards']
+        s = self.search(query)
+        result_description['primary_boardid'] = s['primary_boardid']
+        result_description['emitent'] = s['emitent']
         return result_description, boards
 
     def get_history_securities(self, engine, market, board, date):

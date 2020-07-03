@@ -81,8 +81,9 @@ def history(secid):
 def specification(secid):
     if my_auth.is_real_time():
         iss = MicexISSClient(my_config, my_auth)
-        result = iss.specification(secid)
-        print(result)
+        description, boards = iss.specification(secid)
+        return description, boards
+    return None
 
 
 if __name__ == '__main__':

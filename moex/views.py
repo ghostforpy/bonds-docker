@@ -12,6 +12,8 @@ from django.utils.timezone import now
 from django.views.decorators.cache import cache_page
 from django.core.cache import caches
 import threading
+import re
+from django.core.mail import send_mail
 from .models import *
 from .forms import *
 from .iss_simple_main import search as moex_search,\
@@ -38,6 +40,7 @@ def staff_only(function):
     return _inner
 
 
+@login_required
 def security_detail(request, id):
     try:
         security = get_object_or_404(Security, id=id)
@@ -60,11 +63,6 @@ def security_detail(request, id):
         return redirect(request.META.get('HTTP_REFERER'))
 
 
-def new_security_detail(request, secid):
-    pass
-
-
-@cache_page(24 * 60 * 60)
 def upload_search_moex_to_cache(query):
     cache = caches['default']
     result = moex_search(query)
@@ -72,6 +70,7 @@ def upload_search_moex_to_cache(query):
     secids = [i.secid for i in securities]
     # delete securities if exist in base
     res = {i: result[i] for i in result if i not in secids}
+    print(res)
     cache.add('moex_search_' + query,
               res, timeout=24 * 60 * 60)
 
@@ -93,11 +92,7 @@ def security_list(request):
                 Q(isin__icontains=query) |
                 Q(emitent__icontains=query)
             )
-            if not caches['default'].get('moex_search_' + query):
-                t = threading.Thread(
-                    target=upload_search_moex_to_cache, args=(query,))
-                t.start()
-            else:
+            if caches['default'].get('moex_search_' + query):
                 moex_dict = caches['default'].get('moex_search_' + query)
         else:
             securities_list = Security.objects.all()
@@ -116,8 +111,19 @@ def security_list(request):
 
 def security_search_moex(request):
     query = request.GET.get('query')
-    cache = caches['default']
-    result = cache.get('moex_search_' + query)
+    if not query:
+        return JsonResponse({'status': 'no'})
+    if not caches['default'].get('moex_search_' + query):
+        result = moex_search(query)
+        securities = Security.objects.all()
+        secids = [i.secid for i in securities]
+        # delete securities if exist in base
+        res = {i: result[i] for i in result if i not in secids}
+        print(res)
+        caches['default'].add('moex_search_' + query,
+                              res, timeout=24 * 60 * 60)
+    else:
+        result = caches['default'].get('moex_search_' + query)
     content = {}
     if result:
         content['response'] = result
@@ -184,6 +190,65 @@ def security_buy(request, id):
                            'buy': buy,
                            'security': security})
     return redirect(request.META.get('HTTP_REFERER'))
+
+
+def get_value(dictionary, key):
+    try:
+        return dictionary[key]
+    except KeyError:
+        return None
+
+
+@login_required
+def new_security_detail(request, secid):
+    description, boards = moex_specification(secid)
+    if not caches['default'].get('moex_secid_' + description["SECID"]):
+        data = boards['data']
+        board = description['primary_boardid']
+        for i in data:
+            if i[1] == board:
+                engine = i[7]
+                market = i[5]
+                break
+        if re.search(r'bond', description["TYPE"]):
+            security_type = 'bond'
+        elif re.search(r'ppif', description["TYPE"]):
+            security_type = 'ppif'
+        elif re.search(r'share', description["TYPE"]):
+            security_type = 'share'
+        else:
+            pass
+        regnumber = get_value(description, "REGNUMBER")
+        isin = get_value(description, "ISIN")
+        facevalue = get_value(description, "FACEVALUE")
+        initialfacevalue = get_value(description, "INITIALFACEVALUE")
+        matdate = get_value(description, "MATDATE")
+        if matdate:
+            matdate = datetime.strptime(matdate, '%Y-%m-%d').date()
+        url = 'https://www.moex.com/ru/issue.aspx?code=' + description["SECID"]
+        url_parse = 'http://iss.moex.com/iss/history/engines/' + \
+            '{}/markets/%(market)s/'.format(engine, market) + \
+            'boards/%(board)s/securities.json'.format(board)
+        newitem = Security.objects.create(fullname=description["NAME"],
+                                          shortname=description["SHORTNAME"],
+                                          name=description["SHORTNAME"],
+                                          regnumber=regnumber,
+                                          secid=description["SECID"],
+                                          isin=isin,
+                                          facevalue=facevalue,
+                                          initialfacevalue=initialfacevalue,
+                                          matdate=matdate,
+                                          security_type=security_type,
+                                          url=url,
+                                          emitent=description['emitent'],
+                                          board=board,
+                                          engine=engine,
+                                          market=market,
+                                          url_parse=url_parse)
+        caches['default'].add('moex_secid_' + description["SECID"],
+                              newitem, timeout=24 * 60 * 60)
+    else:
+        newitem = caches['default'].get('moex_secid_' + description["SECID"])
 
 
 @login_required

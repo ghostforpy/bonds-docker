@@ -22,8 +22,8 @@ class Security(models.Model):
     security_type = models.CharField(max_length=20,
                                      default='bond',
                                      choices=[('pif_rshb', 'ОПИФ РСХБ'),
-                                              ('bpif', 'БПИФ'),
-                                              ('stock', 'Акция'),
+                                              ('ppif', 'БПИФ'),
+                                              ('share', 'Акция'),
                                               ('bond', 'Облигация')])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True)
@@ -33,7 +33,15 @@ class Security(models.Model):
     secid = models.CharField(max_length=30, blank=True)
     isin = models.CharField(max_length=30, blank=True)
     emitent = models.CharField(max_length=250, blank=True)
+    board = models.CharField(max_length=250, blank=True)
+    engine = models.CharField(max_length=250, blank=True)
+    market = models.CharField(max_length=250, blank=True)
     description = models.CharField(max_length=250, blank=True)
+    facevalue = models.DecimalField(max_digits=10, decimal_places=2,
+                                      default=0)
+    initialfacevalue = models.DecimalField(max_digits=10, decimal_places=2,
+                                      default=0)
+    matdate = models.DateField(blank=True)
     today_price = models.DecimalField(max_digits=10, decimal_places=2,
                                       default=0)
     last_update = models.DateField(blank=True)

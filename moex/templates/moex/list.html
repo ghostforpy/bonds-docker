@@ -9,7 +9,7 @@
 {% block content %}
 <form action="." method="get">
     <div class="input-group mb-3">
-      <input type="text" class="form-control" placeholder="Название" aria-label="search" aria-describedby="basic-addon2" name="query" {% if query %}value="{{ query }}"{% endif %}>
+      <input id="query" type="text" class="form-control" placeholder="Название" aria-label="search" aria-describedby="basic-addon2" name="query" {% if query %}value="{{ query }}"{% endif %}>
       <div class="input-group-append">
         <button class="btn btn-outline-secondary" type="submit">Поиск</button>
       </div>
@@ -24,9 +24,12 @@
     		          <div class="col-md-4 d-none d-md-block">
     		            <p>Эмитент</p>
     		          </div>
-    		          <div class="col-md-4 d-none d-md-block">
+    		          <div class="col-md-2 d-none d-md-block">
     		            <p>Цена</p>
     		          </div>
+                  <div class="col-md-2 d-none d-md-block">
+                    <p>Дата обновления</p>
+                  </div>
     	        </div>
     	    <div class="dropdown-divider d-none d-md-block"></div>
     		{% for security in securities %}
@@ -37,8 +40,11 @@
                   <div class="col-md-4 mb-1 mt-1">
                     <span class="d-md-none">Эмитент: </span><span>{{ security.emitent }}</span>
                   </div>
-                	{% if request.user.is_staff %}<div class="col-md-2 mb-1 mt-1">{% else %}<div class="col-md-4 mb-1 mt-1">{% endif %}
+                	<div class="col-md-2 mb-1 mt-1">
                     <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price }}</span><span> руб.</span>
+                  </div>
+                  <div class="col-md-2 mb-1 mt-1">
+                    <span class="d-md-none">Дата обновления: </span><span>{{ security.last_update }}</span>
                   </div>
                   {% if request.user.is_staff %}
                     <div class="col-md-2 mb-1 mt-1">
@@ -72,11 +78,72 @@
     	</div>
     {% endif %}
 {% else %}
-<h3 class="mt-3 mb-3">По вашему запросу ничего не найдено.</h3>
+<h3 class="mt-3 mb-3">По вашему запросу в нашей базе ничего не найдено.</h3>
+{% endif %}
+{% if 'query' in request.GET %}
+<h3 id="moex_h3" class="mt-3 mb-3">Ценные бумаги <a href="http://moex.com">moex.com</a>:</h3>
+{% endif %}
+{% if moex_dict %}
+<button type="button" class="btn btn-secondary col-12 mb-2" id="buttonMoexList" data-toggle="collapse" data-target="#collapseMoexList" aria-expanded="false" aria-controls="collapseMoexList">
+            Развернуть
+            </button>
+<div class="collapse" id="collapseMoexList">
+  <small id="moex_list" hidden="false">True</small>
+    <div class="row">
+        <div class="col-md-3 d-none d-md-block">
+          <p>Наименование</p>
+        </div>
+        <div class="col-md-3 d-none d-md-block">
+          <p>Эмитент</p>
+        </div>
+        <div class="col-md-2 d-none d-md-block">
+          <p>SECID</p>
+        </div>
+        <div class="col-md-2 d-none d-md-block">
+          <p>ISIN</p>
+        </div>
+        <div class="col-md-2 d-none d-md-block">
+          <p>Regnumber</p>
+        </div>
+    </div>
+    <div class="dropdown-divider d-none d-md-block"></div>
+    {% for secid,value in moex_dict.items %}
+        <div class="row">
+              <div class="col-md-3">
+                <span class="d-md-none">Наименование: </span><a class="btn btn-warning btn-sm" href="{% url 'moex:new_detail' secid %}">{{ value.shortname }}</a>
+              </div>
+              <div class="col-md-3">
+                <span class="d-md-none">Эмитент: </span><span>{{ value.emitent }}</span>
+              </div>
+              <div class="col-md-2">
+                <span class="d-md-none">SECID: </span><span>{{ secid }}</span>
+              </div>
+              <div class="col-md-2">
+                <span class="d-md-none">ISIN: </span><span>{{ value.isin }}</span>
+              </div>
+              <div class="col-md-2">
+                <span class="d-md-none">Regnumber: </span><span>{{ value.regnumber }}</span>
+              </div>
+        </div>
+        <div class="dropdown-divider d-none d-md-block"></div>
+    {% endfor %}
+</div>
+{% else %}
+{% if 'query' in request.GET %}
+<div id="spiner_moex" class="d-flex justify-content-center">
+  <div class="spinner-border" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
+<small id="moex_list" hidden="false">False</small>
+{% endif %}
 {% endif %}
 {% endblock content %}
 
 {% block page_javascript %}
+          {% if 'query' in request.GET %}
+            <script src="{% static 'js/securyties_list_moex.js' %}"></script>
+          {% endif %}
             {% if request.user.is_staff %}
                 <script src="{% static 'js/securyties_list.js' %}"></script>
                 <script src="{% static 'js/toast/toast.js' %}"></script>
