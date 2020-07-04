@@ -17,7 +17,7 @@ refresh_price_security = django.dispatch.Signal(providing_args=["price"])
 
 
 class Security(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     url = models.URLField(blank=True)
     security_type = models.CharField(max_length=20,
                                      default='bond',
@@ -26,22 +26,22 @@ class Security(models.Model):
                                               ('share', 'Акция'),
                                               ('bond', 'Облигация')])
     parce_url = models.URLField(blank=True)
-    code = models.CharField(max_length=30, blank=True)
-    shortname = models.CharField(max_length=50, blank=True)
-    fullname = models.CharField(max_length=100, blank=True)
-    regnumber = models.CharField(max_length=30, blank=True)
-    secid = models.CharField(max_length=30, blank=True)
-    isin = models.CharField(max_length=30, blank=True)
+    code = models.CharField(max_length=30, blank=True, unique=True, null=True)
+    shortname = models.CharField(max_length=50, blank=True, unique=True)
+    fullname = models.CharField(max_length=100, blank=True, unique=True)
+    regnumber = models.CharField(max_length=30, blank=True, unique=True, null=True)
+    secid = models.CharField(max_length=30, blank=True, unique=True, null=True)
+    isin = models.CharField(max_length=30, blank=True, unique=True, null=True)
     emitent = models.CharField(max_length=250, blank=True)
     board = models.CharField(max_length=250, blank=True)
     engine = models.CharField(max_length=250, blank=True)
     market = models.CharField(max_length=250, blank=True)
     description = models.CharField(max_length=250, blank=True)
     facevalue = models.DecimalField(max_digits=10, decimal_places=2,
-                                      default=0)
+                                      blank=True, default=0)
     initialfacevalue = models.DecimalField(max_digits=10, decimal_places=2,
-                                      default=0)
-    matdate = models.DateField(blank=True)
+                                      blank=True, default=0)
+    matdate = models.DateField(blank=True, null=True)
     today_price = models.DecimalField(max_digits=10, decimal_places=2,
                                       default=0)
     last_update = models.DateField(blank=True)
