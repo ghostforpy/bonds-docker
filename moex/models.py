@@ -29,7 +29,8 @@ class Security(models.Model):
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)
     shortname = models.CharField(max_length=50, blank=True, unique=True)
     fullname = models.CharField(max_length=100, blank=True, unique=True)
-    regnumber = models.CharField(max_length=30, blank=True, unique=True, null=True)
+    regnumber = models.CharField(
+        max_length=30, blank=True, unique=True, null=True)
     secid = models.CharField(max_length=30, blank=True, unique=True, null=True)
     isin = models.CharField(max_length=30, blank=True, unique=True, null=True)
     emitent = models.CharField(max_length=250, blank=True)
@@ -38,9 +39,9 @@ class Security(models.Model):
     market = models.CharField(max_length=250, blank=True)
     description = models.CharField(max_length=250, blank=True)
     facevalue = models.DecimalField(max_digits=10, decimal_places=2,
-                                      blank=True, default=0)
+                                    blank=True, default=0)
     initialfacevalue = models.DecimalField(max_digits=10, decimal_places=2,
-                                      blank=True, default=0)
+                                           blank=True, default=0)
     matdate = models.DateField(blank=True, null=True)
     today_price = models.DecimalField(max_digits=10, decimal_places=2,
                                       default=0)
@@ -262,7 +263,7 @@ def upload_security_history(sender, instance, created=False, **kwargs):
     security = instance.security
     oldest_date = security.oldest_date
     date = instance.date
-    #print(oldest_date, date)
+    # print(oldest_date, date)
     if oldest_date > date:
         security.oldest_date = instance.date
         security.save(update_fields=['oldest_date'])
