@@ -74,19 +74,22 @@ $(function(){
 	$('#id_portfolio').change(function () {
 		var security = $('#security_id').val()
 		var portfolio = $('#id_portfolio').val()
-		$.get(
-	    	'/securities/sp/' + portfolio + '/' + security + '/',
-	        function(data){
-	            if (data['status'] == 'ok'){
-	            	console.log(data['ostatok_sec'])
-	            	console.log(data['ostatok'])
-	            	$('#ostatok').text(data['ostatok'])
-	            	$('#ostatok_sec').text(data['ostatok_sec'])
-	            	$('#id_count').keyup();
-	            }
-	            
-	        }
-    	);
+		if (typeof security === "undefined") {
+			$('#ostatok').text($('#id_portfolio option:selected').attr('ostatok'));
+		}else{
+			$.get(
+		    	'/securities/sp/' + portfolio + '/' + security + '/',
+		        function(data){
+		            if (data['status'] == 'ok'){
+		            	$('#ostatok').text(data['ostatok'])
+		            	$('#ostatok_sec').text(data['ostatok_sec'])
+		            	$('#id_count').keyup();
+		            }
+		            
+		        }
+	    	);
+		};
+
 	});
 	var action = ($('#action').val() == 'Продажа');
 	if (action) {

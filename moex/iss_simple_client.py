@@ -20,6 +20,8 @@ requests = {
     'history_secs':
     'http://iss.moex.com/iss/history/engines/%(engine)s/markets/%(market)s/boards/%(board)s/securities.json?date=%(date)s'}
 
+requests_history = 'https://iss.moex.com/iss/statistics/engines/stock/currentprices'
+
 
 class Config:
     def __init__(self, user='', password='', proxy_url='', debug_level=0):
@@ -150,12 +152,37 @@ class MicexISSClient:
                                                                "FACEVALUE",
                                                                "TYPE",
                                                                "INITIALFACEVALUE",
-                                                               "MATDATE"]}
+                                                               "MATDATE",
+                                                               "COUPONFREQUENCY",
+                                                               "COUPONPERCENT",
+                                                               "COUPONVALUE",
+                                                               "COUPONDATE",
+                                                               ]}
         boards = result['boards']
-        s = self.search(query)
+        s = self.search(query)[query]
         result_description['primary_boardid'] = s['primary_boardid']
         result_description['emitent'] = s['emitent']
         return result_description, boards
+
+    def get_history(self, url):
+        start = 0
+        cnt = 1
+        result = {}
+        while cnt > 0:
+            res = self.opener.open(url + '?start=' + str(start))
+
+            jres = json.load(res)
+            jhist = jres['history']
+            jdata = jhist['data']
+            jcols = jhist['columns']
+            closeIdx = jcols.index('LEGALCLOSEPRICE')
+            trade_dateIdx = jcols.index('TRADEDATE')
+            for i in jdata:
+                date = i[trade_dateIdx].split('-')[::-1]
+                result['.'.join(date)] = i[closeIdx]
+            cnt = len(jdata)
+            start += cnt
+        return result
 
     def get_history_securities(self, engine, market, board, date):
         """ Get and parse historical data on all the securities at the
@@ -199,7 +226,7 @@ class MicexISSClient:
             # in order to be able to handle large volumes of data
             # and to start data processing without waiting for
             # the complete reply
-            self.handler.do(result)
+            # self.handler.do(result)
             cnt = len(jdata)
             start = start + cnt
         return True

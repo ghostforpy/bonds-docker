@@ -29,7 +29,7 @@ $( document ).ready(function() {
           content_out += '</div>';
           content_out += '</div>';
           content_out += '<div class="dropdown-divider d-none d-md-block"></div>';
-          var url = '/securities/buy-new/';
+          var url = '/securities/detail-new/';
           var resp = data['response'];
           $.each(resp, function(index) {
             content_out += '<div class="row align-items-center">';

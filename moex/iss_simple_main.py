@@ -74,8 +74,12 @@ def search(query):
     return None
 
 
-def history(secid):
-    pass
+def history(url):
+    if my_auth.is_real_time():
+        iss = MicexISSClient(my_config, my_auth)
+        result = iss.get_history(url)
+        return result
+    return None
 
 
 def specification(secid):

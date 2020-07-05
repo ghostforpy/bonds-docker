@@ -16,19 +16,43 @@
         {% if security.code %}
           <p>Код: {{ security.code }}</p>
         {% endif %}
-        {% if security.code %}
+        {% if security.regnumber %}
           <p>Рег.номер: {{ security.regnumber }}</p>
         {% endif %}
-        {% if security.code %}
-          <p>CESID: {{ security.secid }}</p>
+        {% if security.secid %}
+          <p>SECID: {{ security.secid }}</p>
         {% endif %}
-        {% if security.code %}
-          <p>ISIN: {{ security.isina }}</p>
+        {% if security.isin %}
+          <p>ISIN: {{ security.isin }}</p>
         {% endif %}
+        {% if security.facevalue %}
+          <p>Номинальная стоимость: {{ security.facevalue }}</p>
+        {% endif %}
+        {% if security.initialfacevalue %}
+          <p>Первоначальная номинальная стоимость: {{ security.initialfacevalue }}</p>
+        {% endif %}
+        {% if security.matdate %}
+          <p>Дата погашения: {{ security.matdate }}</p>
+        {% endif %}
+        {% if security.coupondate %}
+          <p>Дата выплаты купона: {{ security.coupondate }}</p>
+        {% endif %}
+        {% if security.couponfrequency %}
+          <p>Периодичность выплаты купона в год: {{ security.couponfrequency }}</p>
+        {% endif %}
+        {% if security.couponpercent %}
+          <p>Ставка купона (%): {{ security.couponpercent }}</p>
+        {% endif %}
+        {% if security.couponvalue %}
+          <p>Сумма купона, в валюте номинала: {{ security.couponvalue }}</p>
+        {% endif %}
+
         <p>Эмитент: {{ security.emitent }}</p>
         <p>Тип: {{ security.get_security_type_display }}</p>
         <p>Цена: {{ security.today_price }} руб.</p>
+        {% if security.description %}
         <p>Описание: {{ security.description }}</p>
+        {% endif %}
       </div>
 
       <div class="col-md-8">
@@ -54,8 +78,11 @@
               </div>
             </div>
           </div>
-          
+          {% if not new_security %}
                 <a hidden id="load" class="btn btn-success btn-sm" href="{% url 'moex:get_security_history' security.id %}">Загрузить</a>
+          {% else %}
+                <a hidden id="load" class="btn btn-success btn-sm" href="{% url 'moex:get_new_security_history' security.secid %}">Загрузить</a>
+          {% endif %}
         </div>
       {% if security_in_user_portfolios %}
         <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="portfolioButton" data-toggle="collapse" data-target="#collapsePortfolio" aria-expanded="false" aria-controls="collapsePortfolio">
@@ -97,7 +124,7 @@
         {% else %}
           <h6 class="mt-4 mb-2 col-12">У вас в портфелях пока нет этой ценной бумаги.</h6>
         {% endif %}
-
+      {% if not new_security %}
         {% if request.user|user_trades_security:security %}
             <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapseHistory" aria-expanded="false" aria-controls="collapseHistory">
             История покупок
@@ -144,6 +171,7 @@
             {% endfor %}
             </div>
         {% endif %}
+      {% endif %}
       </div>
     </div>
 </div>

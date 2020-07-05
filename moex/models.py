@@ -10,6 +10,7 @@ from django.db.models.signals import post_save, post_delete, pre_save
 import threading
 import django.dispatch
 from .rshb import *
+from .iss_simple_main import history as moex_history
 # Create your models here.
 
 refresh_price_security = django.dispatch.Signal(providing_args=["price"])
@@ -38,11 +39,24 @@ class Security(models.Model):
     engine = models.CharField(max_length=250, blank=True)
     market = models.CharField(max_length=250, blank=True)
     description = models.CharField(max_length=250, blank=True)
+    # Номинальная стоимость
     facevalue = models.DecimalField(max_digits=10, decimal_places=2,
                                     blank=True, default=0)
+    # Первоначальная номинальная стоимость
     initialfacevalue = models.DecimalField(max_digits=10, decimal_places=2,
                                            blank=True, default=0)
+    # Дата погашения
     matdate = models.DateField(blank=True, null=True)
+    # Дата выплаты купона
+    coupondate = models.DateField(blank=True, null=True)
+    # Периодичность выплаты купона в год
+    couponfrequency = models.IntegerField(blank=True, null=True)
+    # Ставка купона, %
+    couponpercent = models.DecimalField(max_digits=10, decimal_places=2,
+                                        blank=True, null=True)
+    # Сумма купона, в валюте номинала
+    couponvalue = models.DecimalField(max_digits=10, decimal_places=2,
+                                      blank=True, null=True)
     today_price = models.DecimalField(max_digits=10, decimal_places=2,
                                       default=0)
     last_update = models.DateField(blank=True)
@@ -90,6 +104,30 @@ class Security(models.Model):
                         return 'ok', result['price_today']
                 return 'no data', self.today_price
             return 'already update', self.today_price
+        else:
+            if force or self.last_update < now().date():
+                try:
+                    result = moex_history(self.parce_url)
+                except Exception:
+                    return 'no data', self.today_price
+                days = [datetime.strptime(i, '%d.%m.%Y').date()
+                        for i in result]
+                today_price = result[
+                    datetime.strftime(max(days), '%d.%m.%Y')]
+                if max(days) <= self.last_update:
+                    return 'no new data', self.today_price
+                else:
+                    self.last_update = max(days)
+                    self.today_price = today_price
+                    self.save()
+                    self.portfolios.all().update(
+                        today_price=today_price)
+                    refresh_price_security.send(
+                        sender=self.__class__,
+                        instance=self,
+                        price=today_price)
+                    return 'ok', today_price
+            return 'already update', self.today_price
 
     def get_history(self, date_since, date_until, format_result):
         if self.security_type == 'pif_rshb':
@@ -100,6 +138,9 @@ class Security(models.Model):
                                       format_result=format_result)
             except Exception:
                 return None
+            return result
+        else:
+            result = moex_history(self.parce_url)
             return result
 
 
@@ -230,6 +271,8 @@ def refresh_count_security_in_portfolio(sender,
             return
         s_p.count += instance.count * (-1) ** (instance.buy)
         s_p.save(update_fields=['count'])
+    if s_p.count == 0:
+        s_p.delete()
 
 
 @receiver(post_delete, sender=TradeHistory)
