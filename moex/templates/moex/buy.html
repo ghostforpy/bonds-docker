@@ -46,7 +46,7 @@
     <div class="form-group row">
       <label for="id_price" class="col-sm-2 col-form-label">Цена (руб.):</label>
       <div class="col-sm-4">
-        <input type="number" value="{{ form.price.value|int_to_str }}" class="{% if form.price.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" name="price" step="0.01" required="" id="id_price">
+        <input type="number" value="{{ form.price.value|int_to_str }}" class="{% if form.price.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" name="price" step="0.00000001" required="" id="id_price">
         <small id="sm_price" class="text-danger form-text collapse">Значение должно быть больше 0.</small>
         <small class="form-text text-muted">
           {% if form.price.errors %}
@@ -62,7 +62,7 @@
     <div class="form-group row">
       <label for="id_comission" class="col-sm-2 col-form-label">Комиссия (руб.):</label>
       <div class="col-sm-4">
-        <input placeholder="Введите сумму комиссии" type="number" class="{% if form.commission.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" min="0" name="commission" step="0.01" required="" id="id_comission">
+        <input placeholder="Введите сумму комиссии" type="number" class="{% if form.commission.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" min="0" name="commission" step="0.0000001" required="" id="id_comission">
         <small id="sm_comission" class="text-danger form-text collapse">Значение не должно быть меньше 0.</small>
         <small class="form-text text-muted">
           {% if form.commission.errors %}

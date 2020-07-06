@@ -40,10 +40,10 @@ class Security(models.Model):
     market = models.CharField(max_length=250, blank=True)
     description = models.CharField(max_length=250, blank=True)
     # Номинальная стоимость
-    facevalue = models.DecimalField(max_digits=10, decimal_places=2,
+    facevalue = models.DecimalField(max_digits=17, decimal_places=7,
                                     blank=True, default=0)
     # Первоначальная номинальная стоимость
-    initialfacevalue = models.DecimalField(max_digits=10, decimal_places=2,
+    initialfacevalue = models.DecimalField(max_digits=17, decimal_places=7,
                                            blank=True, default=0)
     # Дата погашения
     matdate = models.DateField(blank=True, null=True)
@@ -52,12 +52,12 @@ class Security(models.Model):
     # Периодичность выплаты купона в год
     couponfrequency = models.IntegerField(blank=True, null=True)
     # Ставка купона, %
-    couponpercent = models.DecimalField(max_digits=10, decimal_places=2,
+    couponpercent = models.DecimalField(max_digits=17, decimal_places=7,
                                         blank=True, null=True)
     # Сумма купона, в валюте номинала
-    couponvalue = models.DecimalField(max_digits=10, decimal_places=2,
+    couponvalue = models.DecimalField(max_digits=17, decimal_places=7,
                                       blank=True, null=True)
-    today_price = models.DecimalField(max_digits=10, decimal_places=2,
+    today_price = models.DecimalField(max_digits=17, decimal_places=7,
                                       default=0)
     last_update = models.DateField(blank=True)
     oldest_date = models.DateField(blank=True)
@@ -149,7 +149,7 @@ class SecurityHistory(models.Model):
                              related_name='history',
                              on_delete=models.CASCADE,)
     date = models.DateField()
-    price = models.DecimalField(max_digits=10, decimal_places=2,
+    price = models.DecimalField(max_digits=17, decimal_places=7,
                                 default=0)
     percent_prev_date = models.DecimalField(max_digits=10, decimal_places=2,
                                             default=0)
@@ -176,7 +176,7 @@ class SecurityPortfolios(models.Model):
                                  on_delete=models.CASCADE,)
     count = models.DecimalField(max_digits=20, decimal_places=7,
                                 default=0)
-    today_price = models.DecimalField(max_digits=10, decimal_places=2,
+    today_price = models.DecimalField(max_digits=17, decimal_places=7,
                                       default=0)
 
 
@@ -193,9 +193,9 @@ class TradeHistory(models.Model):
     date = models.DateField()
     # buy - True, sell - False
     buy = models.BooleanField(default=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2,
+    price = models.DecimalField(max_digits=17, decimal_places=7,
                                 default=0)
-    commission = models.DecimalField(max_digits=10, decimal_places=2,
+    commission = models.DecimalField(max_digits=17, decimal_places=7,
                                      default=0)
     count = models.DecimalField(max_digits=20, decimal_places=7,
                                 default=0)
