@@ -28,7 +28,7 @@ $( document ).ready(function() {
           content_out += '<p>Regnumber</p>';
           content_out += '</div>';
           content_out += '</div>';
-          content_out += '<div class="dropdown-divider d-none d-md-block"></div>';
+          content_out += '<div class="dropdown-divider"></div>';
           var url = '/securities/detail-new/';
           var resp = data['response'];
           $.each(resp, function(index) {
