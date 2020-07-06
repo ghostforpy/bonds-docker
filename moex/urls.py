@@ -23,6 +23,8 @@ urlpatterns = [
     path('detail/<int:id>/', views.security_detail, name='detail'),
     path('detail-new/<secid>/', views.new_security_detail, name='new_detail'),
     path('buy-new/<secid>/', views.new_security_buy, name='new_buy'),
+    path('add-new/<secid>/', views.add_new_security_for_staff,
+         name='add_new_security_for_staff'),
     path('new_security_history/<secid>/',
          views.get_new_security_history, name='get_new_security_history'),
     path('refresh/<int:id>/', views.refresh_security, name='refresh_security'),

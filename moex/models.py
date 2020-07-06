@@ -110,6 +110,10 @@ class Security(models.Model):
                     result = moex_history(self.parce_url)
                 except Exception:
                     return 'no data', self.today_price
+                if self.security_type == 'bond':
+                    for i in result:
+                        result[i] = str(float(result[i]) *
+                                        float(self.facevalue) / 100)
                 days = [datetime.strptime(i, '%d.%m.%Y').date()
                         for i in result]
                 today_price = result[
@@ -141,6 +145,10 @@ class Security(models.Model):
             return result
         else:
             result = moex_history(self.parce_url)
+            if self.security_type == 'bond':
+                for i in result:
+                    result[i] = str(float(result[i]) *
+                                    float(self.facevalue) / 100)
             return result
 
 

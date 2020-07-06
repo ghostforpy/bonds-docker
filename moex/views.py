@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-# from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse, HttpResponse
@@ -245,8 +245,20 @@ def get_value(dictionary, key, default=None):
         return default
 
 
-@login_required
-def new_security_detail(request, secid):
+@staff_only
+@require_POST
+def add_new_security_for_staff(request, secid):
+    security = caches['default'].get('moex_secid_' + secid)
+    if security:
+        security.save()
+        messages.success(request, 'Ценная бумага успешно добавлена.')
+        return redirect(security.get_absolute_url())
+    else:
+        messages.error(request, 'Ценная бумага отсутствует в кэше.')
+        return redirect(request.META.get('HTTP_REFERER'))
+
+
+def prepare_new_security_by_secid(secid):
     description, boards = moex_specification(secid)
     if not caches['default'].get('moex_secid_' + description["SECID"]):
         data = boards['data']
@@ -278,7 +290,7 @@ def new_security_detail(request, secid):
             '{}/markets/{}/'.format(engine, market) + \
             'boards/{}/securities/{}.json'.format(board, description["SECID"])
         today_price, last_update = upload_moex_history(
-            parce_url, description["SECID"])
+            parce_url, description["SECID"], security_type, facevalue)
         newitem = Security(fullname=description["NAME"],
                            shortname=description["SHORTNAME"],
                            name=description["SHORTNAME"],
@@ -306,6 +318,12 @@ def new_security_detail(request, secid):
                               newitem, timeout=24 * 60 * 60)
     else:
         newitem = caches['default'].get('moex_secid_' + description["SECID"])
+    return newitem
+
+
+@login_required
+def new_security_detail(request, secid):
+    newitem = prepare_new_security_by_secid(secid)
     # print(newitem.parce_url)
     return render(request,
                   'moex/detail.html',
@@ -314,8 +332,12 @@ def new_security_detail(request, secid):
                    'new_security': True})
 
 
-def upload_moex_history(parce_url, secid):
+def upload_moex_history(parce_url, secid, security_type, facevalue):
     security_history = moex_history(parce_url)
+    if security_type == 'bond':
+        for i in security_history:
+            security_history[i] = str(
+                float(security_history[i]) * float(facevalue) / 100)
     days = sorted(
         security_history,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
@@ -326,7 +348,7 @@ def upload_moex_history(parce_url, secid):
     # days = [datetime.strptime(i, '%d.%m.%Y').date() for i
     #        in security_history]
     today_price = security_history[days[0]]
-    return today_price, max(days)
+    return today_price, datetime.strptime(max(days), '%d.%m.%Y').date()
 
 
 @login_required

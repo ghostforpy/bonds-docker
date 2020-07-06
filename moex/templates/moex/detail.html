@@ -9,6 +9,12 @@
 {% block content %}
 <div class="container">
   <h3 class="mb-3">{{ security.name }}</h3>
+  {% if request.user.is_staff and not security.id %}
+  <form action="{% url 'moex:add_new_security_for_staff' security.secid %}" method="post">
+    {% csrf_token %}
+        <button type="submit" class="btn btn-success">Добавить в базу</button>
+  </form>
+  {% endif %}
     <div class="row">
       <div class="col-md-4">
         <a href="{{ security.url }}">Перейти на сайт</a>
