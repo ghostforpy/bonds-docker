@@ -53,7 +53,7 @@ class InvestmentPortfolio(models.Model):
     def calc_year_percent_profit(self):
         t = self.portfolio_invests.exclude(action='tp')
         # t = PortfolioInvestHistory.objects.filter(portfolio=self.id)
-        invest = [[i.cash, i.date] for i in t]
+        invest = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
         self.year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
         # return scripts.year_percent_profit(invest, self.today_cash)

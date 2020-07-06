@@ -40,7 +40,7 @@ class UserVklad(models.Model):
 
     def calc_year_percent_profit(self):
         t = self.vklads.all()
-        invest = [[i.cash, i.date] for i in t]
+        invest = [[i.cash * (-1)**(not i.popolnenie), i.date] for i in t]
         self.year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
 
