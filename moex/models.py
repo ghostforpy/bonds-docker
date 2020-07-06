@@ -67,6 +67,9 @@ class Security(models.Model):
                                            related_name='security_followed',
                                            blank=True)
 
+    class Meta:
+        ordering = ['-last_update']
+
     def get_absolute_url(self):
         return reverse('moex:detail', args=[self.id])
 
