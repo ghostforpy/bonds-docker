@@ -66,7 +66,7 @@ class InvestmentPortfolio(models.Model):
 
     def calc_invest_cash_portfolio(self):
         t = self.portfolio_invests.exclude(action='tp')
-        self.invest_cash = sum([i.cash for i in t])
+        self.invest_cash = sum([i.cash * (-1)**(i.action == 'pv') for i in t])
 
     def calc_today_cash(self):
         if not self.manual:

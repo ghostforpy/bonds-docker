@@ -23,7 +23,8 @@ class UserVklad(models.Model):
 
     def calc_invest_cash(self):
         vklads = self.vklads.all()
-        self.invest_cash = sum([i.cash for i in vklads])
+        self.invest_cash = sum(
+            [i.cash * (-1) ** (not i.popolnenie) for i in vklads])
 
     def calc_percent_profit(self):
         self.percent_profit = scripts.percent_profit(self.today_cash,
