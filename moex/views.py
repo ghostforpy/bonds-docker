@@ -277,6 +277,8 @@ def new_security_detail(request, secid):
         parce_url = 'http://iss.moex.com/iss/history/engines/' + \
             '{}/markets/{}/'.format(engine, market) + \
             'boards/{}/securities/{}.json'.format(board, description["SECID"])
+        today_price, last_update = upload_moex_history(
+            parce_url, description["SECID"])
         newitem = Security(fullname=description["NAME"],
                            shortname=description["SHORTNAME"],
                            name=description["SHORTNAME"],
@@ -297,11 +299,9 @@ def new_security_detail(request, secid):
                            couponfrequency=couponfrequency,
                            couponpercent=couponpercent,
                            couponvalue=couponvalue,
-                           last_update=datetime.now().date(),
                            oldest_date=datetime.now().date(),
-                           today_price=upload_moex_history(
-            parce_url, description["SECID"]))
-
+                           today_price=today_price,
+                           last_update=last_update)
         caches['default'].add('moex_secid_' + description["SECID"],
                               newitem, timeout=24 * 60 * 60)
     else:
@@ -316,12 +316,17 @@ def new_security_detail(request, secid):
 
 def upload_moex_history(parce_url, secid):
     security_history = moex_history(parce_url)
+    days = sorted(
+        security_history,
+        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
+        reverse=True)
+    result_history = {i: security_history[i] for i in days}
     caches['default'].add('moex_security_history_secid' + secid,
-                          security_history, timeout=30)
-    days = [datetime.strptime(i, '%d.%m.%Y').date() for i
-            in security_history]
-    today_price = security_history[datetime.strftime(max(days), '%d.%m.%Y')]
-    return today_price
+                          result_history, timeout=30)
+    # days = [datetime.strptime(i, '%d.%m.%Y').date() for i
+    #        in security_history]
+    today_price = security_history[days[0]]
+    return today_price, max(days)
 
 
 @login_required

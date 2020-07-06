@@ -50,6 +50,7 @@
         <p>Эмитент: {{ security.emitent }}</p>
         <p>Тип: {{ security.get_security_type_display }}</p>
         <p>Цена: {{ security.today_price }} руб.</p>
+        <p>Дата обновления: {{ security.last_update }}</p>
         {% if security.description %}
         <p>Описание: {{ security.description }}</p>
         {% endif %}
