@@ -277,6 +277,8 @@ def prepare_new_security_by_secid(secid):
             security_type = 'ppif'
         elif re.search(r'share', description["TYPE"]):
             security_type = 'share'
+        elif re.search(r'futures', description["TYPE"]):
+            security_type = 'futures'
         else:
             pass
         regnumber = get_value(description, "REGNUMBER")

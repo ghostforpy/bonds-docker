@@ -25,7 +25,8 @@ class Security(models.Model):
                                      choices=[('pif_rshb', 'ОПИФ РСХБ'),
                                               ('ppif', 'БПИФ'),
                                               ('share', 'Акция'),
-                                              ('bond', 'Облигация')])
+                                              ('bond', 'Облигация'),
+                                              ('futures', 'Фьючерс')])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)
     shortname = models.CharField(max_length=50, blank=True, unique=True)
