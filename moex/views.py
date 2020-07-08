@@ -70,7 +70,6 @@ def upload_search_moex_to_cache(query):
     secids = [i.secid for i in securities]
     # delete securities if exist in base
     res = {i: result[i] for i in result if i not in secids}
-    print(res)
     cache.add('moex_search_' + query,
               res, timeout=24 * 60 * 60)
 
@@ -122,10 +121,10 @@ def security_search_moex(request):
         caches['default'].add('moex_search_' + query,
                               res, timeout=24 * 60 * 60)
     else:
-        result = caches['default'].get('moex_search_' + query)
+        res = caches['default'].get('moex_search_' + query)
     content = {}
-    if result:
-        content['response'] = result
+    if res:
+        content['response'] = res
         content['status'] = 'ok'
     else:
         content['status'] = 'no security'
