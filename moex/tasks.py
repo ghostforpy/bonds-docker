@@ -2,6 +2,7 @@ from .models import Security
 
 from config import celery_app
 from django.utils.timezone import now
+from django.core.mail import send_mail
 
 
 @celery_app.task(bind=True,
@@ -26,7 +27,7 @@ def refresh_security_from_rshb(self):
 @celery_app.task(bind=True,
                  name='moex.refresh_security_from_moex',
                  default_retry_delay=30 * 60,
-                 max_retries=6)
+                 max_retries=1)
 def refresh_security_from_moex(self):
     today = now().date()
     securities = Security.objects.\
@@ -39,4 +40,13 @@ def refresh_security_from_moex(self):
         if securities.count() > len(
                 [i for i in result if 'ok' == result[i][0]]):
             raise self.retry()
+    message = '{}\n'.format(now())
+    message += str(result)
+    send_mail(
+        'refresh moex',
+        message,
+        'admin@mybonds.space',
+        ['staretslexa@ya.ru', 'ghostformobile@gmail.com'],
+        fail_silently=False,
+    )
     return result
