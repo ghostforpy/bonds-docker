@@ -50,14 +50,18 @@ $( document ).ready(function() {
           $('#spiner_moex').empty();
           $('#moex_h3').after(content_out);
         }else{
+          if (data['status'] == 'no duplicate'){
+            $('#spiner_moex').empty();
+            $('#moex_h3').empty();
+          }else{
             $('#spiner_moex').empty();
             var content_out = '<h3 class="mt-3 mb-3">По вашему запросу в базе ';
             content_out += '<a href="http://moex.com">moex.com</a>';
             content_out += ' ничего не найдено.</h3>';
             $('#moex_h3').after(content_out);
             $('#moex_h3').empty();
-        }
-          
+          };
+        }      
       }
     );
   };

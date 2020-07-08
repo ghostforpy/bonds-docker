@@ -112,20 +112,24 @@ def security_search_moex(request):
     query = request.GET.get('query')
     if not query:
         return JsonResponse({'status': 'no'})
+    result = {}
     if not caches['default'].get('moex_search_' + query):
         result = moex_search(query)
         securities = Security.objects.all()
         secids = [i.secid for i in securities]
         # delete securities if exist in base
         res = {i: result[i] for i in result if i not in secids}
-        caches['default'].add('moex_search_' + query,
-                              res, timeout=24 * 60 * 60)
+        if res:
+            caches['default'].add('moex_search_' + query,
+                                  res, timeout=24 * 60 * 60)
     else:
         res = caches['default'].get('moex_search_' + query)
     content = {}
     if res:
         content['response'] = res
         content['status'] = 'ok'
+    elif result:
+        content['status'] = 'no duplicate'
     else:
         content['status'] = 'no security'
     return JsonResponse(content)
