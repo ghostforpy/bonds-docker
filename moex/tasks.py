@@ -36,17 +36,18 @@ def refresh_security_from_moex(self):
     result = dict()
     for security in securities:
         result[security.name] = security.refresh_price()
+    if result:
+        message = '{}\n'.format(now())
+        message += str(result)
+        send_mail(
+            'refresh moex',
+            message,
+            'admin@mybonds.space',
+            ['staretslexa@ya.ru', 'ghostformobile@gmail.com'],
+            fail_silently=False,
+        )
     if securities.count():
         if securities.count() > len(
                 [i for i in result if 'ok' == result[i][0]]):
             raise self.retry()
-    message = '{}\n'.format(now())
-    message += str(result)
-    send_mail(
-        'refresh moex',
-        message,
-        'admin@mybonds.space',
-        ['staretslexa@ya.ru', 'ghostformobile@gmail.com'],
-        fail_silently=False,
-    )
     return result
