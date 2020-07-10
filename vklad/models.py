@@ -47,7 +47,10 @@ class UserVklad(models.Model):
     def refresh_vklad(self):
         self.calc_invest_cash()
         self.calc_today_cash()
-        self.calc_percent_profit()
+        try:
+            self.calc_percent_profit()
+        except ZeroDivisionError:
+            return
         self.calc_year_percent_profit()
         self.save()
 

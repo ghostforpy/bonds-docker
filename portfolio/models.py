@@ -45,8 +45,11 @@ class InvestmentPortfolio(models.Model):
         ordering = ['id']
 
     def calc_percent_profit(self):
-        self.percent_profit = scripts.percent_profit(self.today_cash,
-                                                     self.invest_cash)
+        try:
+            self.percent_profit = scripts.percent_profit(self.today_cash,
+                                                         self.invest_cash)
+        except ZeroDivisionError:
+            return
         # return scripts.percent_profit(self.today_cash,
         #                               self.invest_cash)
 
