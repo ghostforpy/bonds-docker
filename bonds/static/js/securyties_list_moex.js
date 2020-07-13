@@ -28,7 +28,7 @@ $( document ).ready(function() {
           content_out += '<p>Regnumber</p>';
           content_out += '</div>';
           content_out += '</div>';
-          content_out += '<div class="dropdown-divider"></div>';
+          content_out += '<div class="dropdown-divider d-none d-md-block"></div>';
           var url = '/securities/detail-new/';
           var resp = data['response'];
           $.each(resp, function(index) {
@@ -42,10 +42,10 @@ $( document ).ready(function() {
             content_out += '<div class="col-md-2"><span class="d-md-none">SECID: </span><span>';
             content_out += index + '</span></div>'
             content_out += '<div class="col-md-2"><span class="d-md-none">ISIN: </span><span>';
-            content_out += resp['isin'] + '</span></div>';
+            content_out += resp[index]['isin'] + '</span></div>';
             content_out += '<div class="col-md-2"><span class="d-md-none">Regnumber: </span><span>';
-            content_out += resp['regnumber'] + '</span></div></div>';
-            content_out += '<div class="dropdown-divider d-none d-md-block"></div>';
+            content_out += resp[index]['regnumber'] + '</span></div></div>';
+            content_out += '<div class="dropdown-divider"></div>';
             });
           $('#spiner_moex').empty();
           $('#moex_h3').after(content_out);

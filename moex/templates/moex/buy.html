@@ -29,6 +29,7 @@
       {% else %}
       <a class="btn btn-secondary btn-sm" id="security" href="{% url 'moex:new_detail' security.secid %}">{{ security.name }}</a>
       {% endif %}
+      <small id="security_type" hidden="true">{{ security.security_type }}</small>
     </div>
   </div>
   <div class="form-group row">
@@ -75,6 +76,24 @@
         </small>
       </div>
     </div>
+    
+      <div class="form-group row" {% if security.security_type != 'bond' %}hidden="true"{% endif%} >
+        <label for="id_nkd" class="col-sm-2 col-form-label">НКД (руб.):</label>
+        <div class="col-sm-4">
+          <input placeholder="Введите НКД" type="number" class="{% if form.commission.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" min="0" name="nkd" step="0.0000001" required="" id="id_nkd" {% if security.security_type != 'bond' %}value="0"{% endif%}>
+          <small id="sm_nkd" class="text-danger form-text collapse">Значение не должно быть меньше 0.</small>
+          <small class="form-text text-muted">
+            {% if form.nkd.errors %}
+              <ul>
+                {% for error in form.nkd.errors %}
+                  <li><strong>{{ error|escape }}</strong></li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </small>
+        </div>
+      </div>
+    
     <div class="form-group row">
       <label for="id_count" class="col-sm-2 col-form-label">Количество (шт.):</label>
       <div class="col-sm-4">

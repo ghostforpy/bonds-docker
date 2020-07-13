@@ -50,8 +50,12 @@ function result() {
 	var count = parseFloat($('#id_count').val());
 	var comission = parseFloat($('#id_comission').val());
 	var action = ($('#action').val() == 'Продажа');
+	var nkd = parseFloat($('#nkd').val());
 	if (isNaN(price)) {
 		  price = 0;
+		};
+	if (isNaN(nkd)) {
+		  nkd = 0;
 		};
 	if (isNaN(count)) {
 	  count = 0;
@@ -62,13 +66,13 @@ function result() {
 	if (action){
 		comission = comission * (-1);
 	};
-	res = price * count + comission
+	res = price * count + comission + nkd
 	$('#cost').val(res);
 	return res
 };
 
 $(function(){
-	$('#sm, #sm_count, #sm_price, #sm_comission').collapse({
+	$('#sm, #sm_count, #sm_price, #sm_comission, #sm_nkd').collapse({
 			toggle: false
 	});
 	$('#id_portfolio').change(function () {
@@ -93,7 +97,7 @@ $(function(){
 	});
 	var action = ($('#action').val() == 'Продажа');
 	if (action) {
-		$('#id_count, #id_price, #id_comission').keyup(function(){
+		$('#id_count, #id_price, #id_comission, #id_nkd').keyup(function(){
 			res = result()
 			var count = parseFloat($('#id_count').val());
 			var ostatok_sec = parseFloat($('#ostatok_sec').text());
@@ -129,14 +133,18 @@ $(function(){
 			};
 		});
 	}else{
-		$('#id_count, #id_price, #id_comission').keyup(function(){
+		$('#id_count, #id_price, #id_comission, #id_nkd').keyup(function(){
 			
 		var price = parseFloat($('#id_price').val());
 		var count = parseFloat($('#id_count').val());
 		var comission = parseFloat($('#id_comission').val());
 		var ostatok = parseFloat($('#ostatok').text());
+		var nkd = parseFloat($('#id_nkd').val());
 		if (isNaN(price)) {
 		  price = 0;
+		};
+		if (isNaN(nkd)) {
+		  nkd = 0;
 		};
 		if (isNaN(comission)) {
 		  comission = 0;
@@ -144,7 +152,7 @@ $(function(){
 		if (isNaN(count)) {
 		  count = 0;
 		};
-		res = price * count + comission
+		res = price * count + comission + nkd
 		 $('#cost').val(res);
 		if (res > ostatok){
 		  $('#sm').collapse('show');

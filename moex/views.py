@@ -353,7 +353,7 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
     # days = [datetime.strptime(i, '%d.%m.%Y').date() for i
     #        in security_history]
     today_price = security_history[days[0]]
-    return today_price, datetime.strptime(max(days), '%d.%m.%Y').date()
+    return today_price, datetime.strptime(days[0], '%d.%m.%Y').date()
 
 
 @login_required

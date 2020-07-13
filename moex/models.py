@@ -211,10 +211,16 @@ class TradeHistory(models.Model):
                                      default=0)
     count = models.DecimalField(max_digits=20, decimal_places=7,
                                 default=0)
+    # НКД для покупки-продажи облигаций
+    nkd = models.DecimalField(max_digits=20, decimal_places=7,
+                              default=0)
 
     def save(self, *args, **kwargs):
+        if self.security.security_type == 'bond':
+            if self.nkd == 0:
+                return 'NKD must be more then 0'
         if self.buy:
-            total_cost = self.price * self.count + self.commission
+            total_cost = self.price * self.count + self.commission + self.nkd
             if total_cost > self.portfolio.ostatok:
                 return 'no money on portfolio.ostatok'
             else:
@@ -291,7 +297,7 @@ def refresh_count_security_in_portfolio(sender,
 @receiver(post_save, sender=TradeHistory)
 def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
     portfolio = instance.portfolio
-    total_cost = instance.price * instance.count + \
+    total_cost = instance.price * instance.count + instance.nkd + \
         instance.commission * (-1) ** (not instance.buy)
     if created:
         portfolio.ostatok += total_cost * (-1) ** (instance.buy)
