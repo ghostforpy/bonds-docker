@@ -15,6 +15,7 @@ import json
 
 import requests as r
 from requests.auth import HTTPBasicAuth
+from urllib.parse import quote
 
 requests = {
     'history_secs':
@@ -123,8 +124,9 @@ class MicexISSClient:
     def search(self, query):
         if len(query) < 3:
             return False
-        url = 'http://iss.moex.com/iss/securities.json?q={}'.format(query)
+        url = 'http://iss.moex.com/iss/securities.json?q={}'.format(quote(query))
         res = self.opener.open(url)
+
         jres = json.load(res)
         jres = jres['securities']['data']
         result = {i[1]: {'id_moex': i[0],
