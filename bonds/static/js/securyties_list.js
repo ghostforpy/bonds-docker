@@ -2,6 +2,7 @@
 $(document).on('click', '.refresh_security', function(e){
     e.preventDefault();
     var id = '#'+$(this).attr('href').split('/')[3]
+    var id_last_update = id + '_last_update' 
     $.post(
         $(this).attr('href'),
         function(data){
@@ -13,6 +14,7 @@ $(document).on('click', '.refresh_security', function(e){
                     delay: 5000
                     });
                 $(id).text(data['price']);
+                $(id_last_update).text(data['last_update']);
             };
             if (data['status'] == 'no_id_security'){
                 $.toast({

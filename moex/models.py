@@ -91,10 +91,10 @@ class Security(models.Model):
                                   date=self.last_update,
                                   first=first)
                 except Exception:
-                    return 'no data', self.today_price
+                    return 'no data', self.today_price, self.last_update
                 if result:
                     if result['date_publication'] <= self.last_update:
-                        return 'no new data', self.today_price
+                        return 'no new data', self.today_price, self.last_update
                     else:
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
@@ -105,9 +105,11 @@ class Security(models.Model):
                             sender=self.__class__,
                             instance=self,
                             price=result['price_today'])
-                        return 'ok', result['price_today']
-                return 'no data', self.today_price
-            return 'already update', self.today_price
+                        return 'ok',\
+                            result['price_today'],\
+                            result['date_publication']
+                return 'no data', self.today_price, self.last_update
+            return 'already update', self.today_price, self.last_update
         else:
             if force or self.last_update < now().date():
                 try:
@@ -120,10 +122,13 @@ class Security(models.Model):
                                         float(self.facevalue) / 100)
                 days = [datetime.strptime(i, '%d.%m.%Y').date()
                         for i in result]
+                print(days)
+                print(max(days))
                 today_price = result[
                     datetime.strftime(max(days), '%d.%m.%Y')]
+                print(today_price)
                 if max(days) <= self.last_update:
-                    return 'no new data', self.today_price
+                    return 'no new data', self.today_price, self.last_update
                 else:
                     self.last_update = max(days)
                     self.today_price = today_price
@@ -134,8 +139,8 @@ class Security(models.Model):
                         sender=self.__class__,
                         instance=self,
                         price=today_price)
-                    return 'ok', today_price
-            return 'already update', self.today_price
+                    return 'ok', today_price, max(days)
+            return 'already update', self.today_price, self.last_update
 
     def get_history(self, date_since, date_until, format_result):
         if self.security_type == 'pif_rshb':

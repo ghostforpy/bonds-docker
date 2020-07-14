@@ -392,8 +392,10 @@ def delete_history(request, id):
 def refresh_security(request, id):
     try:
         security = get_object_or_404(Security, id=id)
-        status, price = security.refresh_price()
-        return JsonResponse({'status': status, 'price': price})
+        status, price, last_update = security.refresh_price()
+        return JsonResponse({'status': status,
+                             'price': price,
+                             'last_update': last_update})
     except ObjectDoesNotExist:
         return JsonResponse({'status': 'no_id_security'})
 

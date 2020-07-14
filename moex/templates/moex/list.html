@@ -44,7 +44,7 @@
                     <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price }}</span><span> руб.</span>
                   </div>
                   <div class="col-md-2 mb-1 mt-1">
-                    <span class="d-md-none">Дата обновления: </span><span>{{ security.last_update }}</span>
+                    <span class="d-md-none">Дата обновления: </span><span id="{{ security.id }}_last_update">{{ security.last_update }}</span>
                   </div>
                   {% if request.user.is_staff %}
                     <div class="col-md-2 mb-1 mt-1">
