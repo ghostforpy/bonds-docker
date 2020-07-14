@@ -51,13 +51,13 @@
         {% endif %}
       </div>
 
-        <div class="col-sm-8 history-table">
+        <div class="col-sm-8">
 
         {% if portfolio.owner == request.user %}
         <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyPortfolioButton" data-toggle="collapse" data-target="#collapseHistoryPortfolio" aria-expanded="false" aria-controls="collapseHistoryPortfolio">
             История пополнений
             </button>
-              <div class="collapse" id="collapseHistoryPortfolio"> 
+              <div class="collapse history-table" id="collapseHistoryPortfolio"> 
               {% if history != None %}
                 {% for i in history %}
                   <div class="row align-items-center">
@@ -70,7 +70,7 @@
                           {{ i.cash }}
                         </div>
                         <div class="col-md-4">
-                         {% if i.action == 'vp' %}На портфель{% elif i.action == 'pv' %}На вклад{%else%}Доход{% endif %}
+                         {{ i.get_action_display }}
                         </div>
                       </div>
                     </div>
@@ -89,6 +89,7 @@
                     <div class="col-md-4">
                       <select id="id_action" class="form-control form-control-sm mt-1 mb-2">
                         <option value="tp">Доход</option>
+                        <option value="br">Частичное погашение облигаций</option>
                         <option selected value="vp">На портфель</option>
                         <option value="pv">На вклад</option>
                        </select>

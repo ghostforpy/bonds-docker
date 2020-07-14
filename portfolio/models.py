@@ -68,7 +68,7 @@ class InvestmentPortfolio(models.Model):
         return reverse('portfolio:detail', args=[self.id])
 
     def calc_invest_cash_portfolio(self):
-        t = self.portfolio_invests.exclude(action='tp')
+        t = self.portfolio_invests.exclude(action='tp').exclude(action='br')
         self.invest_cash = sum([i.cash * (-1)**(i.action == 'pv') for i in t])
 
     def calc_today_cash(self):
@@ -121,9 +121,11 @@ class PortfolioInvestHistory(models.Model):
                                decimal_places=2, default=0)
     action = models.CharField(max_length=20,
                               default='vklad_to_portfolio',
-                              choices=[('vp', 'vklad_to_portfolio'),
-                                       ('pv', 'portfolio_to_vklad'),
-                                       ('tp', 'take_profit')])
+                              choices=[('vp', 'На портфель'),
+                                       ('pv', 'На вклад'),
+                                       ('tp', 'Доход'),
+                                       ('br',
+                                        'Частичное погашение облигаций')])
 
     class Meta:
         ordering = ['-date', 'cash']
@@ -131,7 +133,8 @@ class PortfolioInvestHistory(models.Model):
     def save(self, *args, **kwargs):
         if self.action not in ['vp',
                                'pv',
-                               'tp']:
+                               'tp',
+                               'br']:
             return 'wrong_action'
         if self.action == 'vp':
             # Пополнение с вклада происходит только,
@@ -156,8 +159,9 @@ class PortfolioInvestHistory(models.Model):
                 # без автоматического подсчета меняем today_cash руками
                 if self.portfolio.manual:
                     self.portfolio.today_cash -= self.cash
-        if self.action == 'tp':
+        if self.action in ['tp', 'br']:
             # Запись о начислении дивидендов/купонов и т.д.
+            # или о частичном погашении облигаций
             self.portfolio.ostatok += self.cash
             # без автоматического подсчета меняем today_cash руками
             if self.portfolio.manual:
@@ -185,7 +189,7 @@ class PortfolioInvestHistory(models.Model):
                 self.portfolio.owner.vklad.ostatok += self.cash
             else:
                 return 'no money on portfolio'
-        elif self.action == 'tp':
+        elif self.action in ['tp', 'br']:
             if self.portfolio.ostatok >= self.cash:
                 self.portfolio.ostatok -= self.cash
                 # без автоматического подсчета меняем today_cash руками
