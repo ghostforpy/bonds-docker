@@ -68,6 +68,7 @@
                         </div>
                         <div class="col-md-4">
                           {{ i.cash }}
+                        {% if i.action == 'tp' %}</br>(НДФЛ: {{ i.ndfl }}){% endif %}
                         </div>
                         <div class="col-md-4">
                          {{ i.get_action_display }}
@@ -85,7 +86,10 @@
                 <div class="col-9">
                   <div class="row align-items-center">
                     <div class="col-md-4"><input type="text" class="form-control form-control-sm mt-1 mb-2" name="date" required="" id="id_date"></div>
-                    <div class="col-md-4"><input placeholder="Введите сумму" type="number" class="form-control form-control-sm mt-1 mb-2" name="cash" step="0.01" required="" id="id_cash"></div>
+                    <div class="col-md-4">
+                      <input placeholder="Введите сумму" type="number" class="form-control form-control-sm mt-1 mb-2" name="cash" step="0.01" required="" id="id_cash">
+                      <input placeholder="НДФЛ" type="number" class="form-control form-control-sm mt-1 mb-2" name="ndfl" step="0.01" id="id_ndfl" style="display: none;">
+                    </div>
                     <div class="col-md-4">
                       <select id="id_action" class="form-control form-control-sm mt-1 mb-2">
                         <option value="tp">Доход</option>

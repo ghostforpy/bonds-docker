@@ -126,6 +126,8 @@ class PortfolioInvestHistory(models.Model):
                                        ('tp', 'Доход'),
                                        ('br',
                                         'Частичное погашение облигаций')])
+    ndfl = models.DecimalField(max_digits=10,
+                               decimal_places=2, default=0)
 
     class Meta:
         ordering = ['-date', 'cash']
@@ -162,10 +164,10 @@ class PortfolioInvestHistory(models.Model):
         if self.action in ['tp', 'br']:
             # Запись о начислении дивидендов/купонов и т.д.
             # или о частичном погашении облигаций
-            self.portfolio.ostatok += self.cash
+            self.portfolio.ostatok += self.cash - self.ndfl
             # без автоматического подсчета меняем today_cash руками
             if self.portfolio.manual:
-                self.portfolio.today_cash += self.cash
+                self.portfolio.today_cash += self.cash - self.ndfl
         super(PortfolioInvestHistory, self).save(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'
@@ -191,10 +193,10 @@ class PortfolioInvestHistory(models.Model):
                 return 'no money on portfolio'
         elif self.action in ['tp', 'br']:
             if self.portfolio.ostatok >= self.cash:
-                self.portfolio.ostatok -= self.cash
+                self.portfolio.ostatok -= self.cash + self.ndfl
                 # без автоматического подсчета меняем today_cash руками
                 if self.portfolio.manual:
-                    self.portfolio.today_cash -= self.cash
+                    self.portfolio.today_cash -= self.cash + self.ndfl
             else:
                 return 'no money on portfolio'
         super(PortfolioInvestHistory, self).delete(*args, **kwargs)

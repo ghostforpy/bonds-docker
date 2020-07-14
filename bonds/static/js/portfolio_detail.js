@@ -5,11 +5,30 @@ function updated_portfolio(data) {
         $('#percent_profit').text(data['percent_profit']);
         $('#year_percent_profit').text(data['year_percent_profit']);
         };
+
+$('#id_cash').keyup(function(){
+    action = $('#id_action').val();
+    if (action == 'tp') {
+        var ndfl = $(this).val() * 0.13;
+        $('#id_ndfl').val(ndfl);
+    };
+});
+
+$('#id_action').change(function(e){
+    if ($(this).val() == 'tp') {
+    $('#id_ndfl').slideDown("fast", "linear");
+  }else{
+    $('#id_ndfl').slideUp("fast", "linear");
+  };
+    
+});
+
 $(document).on('click', '#add_invest', function(e){
     e.preventDefault();
     date = $('#id_date').val();
     cash = $('#id_cash').val();
-
+    ndfl = $('#id_ndfl').val();
+    if (ndfl == '') { ndfl = 0 };
     action = $('#id_action').val();
     if (action == 'tp') {
         action = 'Доход';
@@ -18,14 +37,25 @@ $(document).on('click', '#add_invest', function(e){
     }else{
         action = 'На вклад';
     };
-
     $.post(
         $(this).attr('href'),
-        {cash: $('#id_cash').val(), date: $('#id_date').val(), action: $('#id_action').val()},
+        {cash: $('#id_cash').val(), ndfl: ndfl, date: $('#id_date').val(), action: $('#id_action').val()},
         function(data){
             if (data['status'] == 'ok'){
                 id = data['id'];
-                $('.history-table > .row:first').before(`<div class="row align-items-center"><div class="col-9"><div class="row"><div class="col-md-4">${date}</div><div class="col-md-4">${cash}</div><div class="col-md-4">${action}</div></div></div><div class="col-3"><a class="delete-invest btn btn-danger btn-sm" href="/portfolio/del_invest/${id}/">Удалить</a></div></div><div class="dropdown-divider"></div>`);
+                var out = '<div class="row align-items-center">';
+                out += '<div class="col-9"><div class="row"><div class="col-md-4">';
+                out += date + '</div><div class="col-md-4">' + cash;
+                if (action == 'Доход') {
+                    out += '</br>(НДФЛ: ' + ndfl + ')'
+                };
+                out += '</div><div class="col-md-4">';
+                
+                out += action + '</div></div></div><div class="col-3">';
+                out += '<a class="delete-invest btn btn-danger btn-sm"';
+                out += ' href="/portfolio/del_invest/${id}/">Удалить</a>';
+                out += '</div></div><div class="dropdown-divider"></div>';
+                $('.history-table > .row:first').before(out);
                 updated_portfolio(data);
                 $.toast({
                     title: 'Bonds',
