@@ -50,7 +50,7 @@ function result() {
 	var count = parseFloat($('#id_count').val());
 	var comission = parseFloat($('#id_comission').val());
 	var action = ($('#action').val() == 'Продажа');
-	var nkd = parseFloat($('#nkd').val());
+	var nkd = parseFloat($('#id_nkd').val());
 	if (isNaN(price)) {
 		  price = 0;
 		};
