@@ -196,6 +196,9 @@ class SecurityPortfolios(models.Model):
     today_price = models.DecimalField(max_digits=17, decimal_places=7,
                                       default=0)
 
+    class Meta:
+        ordering = ['id']
+
 
 class TradeHistory(models.Model):
     owner = models.ForeignKey(User,
@@ -219,6 +222,9 @@ class TradeHistory(models.Model):
     # НКД для покупки-продажи облигаций
     nkd = models.DecimalField(max_digits=20, decimal_places=7,
                               default=0)
+
+    class Meta:
+        ordering = ['-date']
 
     def save(self, *args, **kwargs):
         if self.security.security_type == 'bond':

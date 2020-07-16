@@ -124,6 +124,7 @@ class PortfolioInvestHistory(models.Model):
                               choices=[('vp', 'На портфель'),
                                        ('pv', 'На вклад'),
                                        ('tp', 'Доход'),
+                                       ('bc', 'Комиссия брокера'),
                                        ('br',
                                         'Частичное погашение облигаций')])
     ndfl = models.DecimalField(max_digits=10,
@@ -136,7 +137,8 @@ class PortfolioInvestHistory(models.Model):
         if self.action not in ['vp',
                                'pv',
                                'tp',
-                               'br']:
+                               'br',
+                               'bc']:
             return 'wrong_action'
         if self.action == 'vp':
             # Пополнение с вклада происходит только,
@@ -168,6 +170,8 @@ class PortfolioInvestHistory(models.Model):
             # без автоматического подсчета меняем today_cash руками
             if self.portfolio.manual:
                 self.portfolio.today_cash += self.cash - self.ndfl
+        if self.action == 'bc':
+            self.portfolio.ostatok -= self.cash
         super(PortfolioInvestHistory, self).save(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'
@@ -199,6 +203,8 @@ class PortfolioInvestHistory(models.Model):
                     self.portfolio.today_cash -= self.cash + self.ndfl
             else:
                 return 'no money on portfolio'
+        if self.action == 'bc':
+            self.portfolio.ostatok += self.cash
         super(PortfolioInvestHistory, self).delete(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'

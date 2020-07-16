@@ -34,6 +34,10 @@ $(document).on('click', '#add_invest', function(e){
         action = 'Доход';
     }else if (action == 'vp') {
         action = 'На портфель';
+    }else if (action == 'bc') {
+        action = 'Комиссия брокера';
+    }else if (action == 'br') {
+        action = 'Частичное погашении облигаций';
     }else{
         action = 'На вклад';
     };
