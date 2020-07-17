@@ -68,7 +68,7 @@ class InvestmentPortfolio(models.Model):
         return reverse('portfolio:detail', args=[self.id])
 
     def calc_invest_cash_portfolio(self):
-        t = self.portfolio_invests.exclude(action='tp').exclude(action='br')
+        t = self.portfolio_invests.exclude(action__in=['tp', 'br', 'bc'])
         self.invest_cash = sum([i.cash * (-1)**(i.action == 'pv') for i in t])
 
     def calc_today_cash(self):

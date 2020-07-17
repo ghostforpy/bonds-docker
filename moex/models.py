@@ -289,7 +289,7 @@ def refresh_count_security_in_portfolio(sender,
             s_p.count = 0
         s_p.count += instance.count * (-1) ** (not instance.buy)
         s_p.today_price = security.today_price
-        s_p.save(update_fields=['count', 'today_price'])
+        s_p.save()
     else:
         try:
             s_p = SecurityPortfolios.objects.get(
@@ -299,7 +299,7 @@ def refresh_count_security_in_portfolio(sender,
         except ObjectDoesNotExist:
             return
         s_p.count += instance.count * (-1) ** (instance.buy)
-        s_p.save(update_fields=['count'])
+        s_p.save()
     if s_p.count == 0:
         s_p.delete()
 
