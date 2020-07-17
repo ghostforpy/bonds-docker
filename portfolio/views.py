@@ -45,7 +45,8 @@ def portfolio_detail(request, id):
             portfolio = None
             res = False
         if res and (request.user.is_authenticated and (portfolio.private == 'af')):
-            portfolio = None
+            if not request.user.friends.is_friend(portfolio.owner.friends):
+                portfolio = None
             res = False
         return render(request,
                       'portfolio/detail.html',

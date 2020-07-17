@@ -1,7 +1,6 @@
 from django.db import models
 from bonds.users.models import User
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.db.models import Q
+# from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.urls import reverse
@@ -49,24 +48,9 @@ class UserFriendsRequests(models.Model):
     class Meta:
         ordering = ['-new', '-created']
 
-    def already_exist(self):
-        try:
-            friend_request = UserFriendsRequests.\
-                objects.filter(Q(user_from=self.user_from,
-                                 user_to=self.user_to) |
-                               Q(user_from=self.user_to,
-                                 user_to=self.user_from))
-            friend_request = friend_request.get()
-            # return friend_request.id
-            return True
-        except ObjectDoesNotExist:
-            return False
-#        except MultipleObjectsReturned:
-#            return 'Multiple'
-
     def save(self, *args, **kwargs):
         if self.user_to.friends.is_friend(self.user_from.friends):
-            return 'already friends'
+            return 'already_friends'
         if self.accept:
             user_to = UserFriends.objects.get(user=self.user_to)
             user_from = UserFriends.objects.get(user=self.user_from)
@@ -76,9 +60,7 @@ class UserFriendsRequests(models.Model):
         else:
             if self.reject:
                 super(UserFriendsRequests, self).delete(*args, **kwargs)
-                return 'request_deleted'
+                return 'request_reject'
             else:
-#                if self.already_exist():
-#                    return 'already_exist'
                 super(UserFriendsRequests, self).save(*args, **kwargs)
                 return 'request_saved'

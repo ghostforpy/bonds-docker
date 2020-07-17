@@ -39,14 +39,14 @@
             <div class="col-sm-12">
           {% if request.user|is_friends:object %}
 
-                <a class="friends btn btn-primary" href="{% url 'friends:friends_delete' object.id %}" role="button">Удалить из друзей</a>
+                <a class="friends btn btn-danger" href="{% url 'friends:friends_delete' object.id %}" role="button">Удалить из друзей</a>
                 
           {% else %}
             {% if request.user|request_already_exist:object %}
-              <a class="friends btn btn-primary" href="{% url 'friends:friends_request_cancel' request.user|request_friends_id:object %}" role="button">Отменить запрос в друзья</a>
+              <a class="friends btn btn-secondary" href="{% url 'friends:friends_request_cancel' request.user|request_friends_id:object %}" role="button">Отменить запрос в друзья</a>
             {% elif object|request_already_exist:request.user %}
-            <a class="friends btn btn-primary" href="{% url 'friends:friends_request_accept' object|request_friends_id:request.user %}" role="button">Добавить в друзья</a>
-            <a class="friends btn btn-primary" href="{% url 'friends:friends_request_reject' object|request_friends_id:request.user %}" role="button">Отклонить запрос в друзья</a>
+            <a class="friends btn btn-success" href="{% url 'friends:friends_request_accept' object|request_friends_id:request.user %}" role="button">Добавить в друзья</a>
+            <a class="friends btn btn-danger" href="{% url 'friends:friends_request_reject' object|request_friends_id:request.user %}" role="button">Отклонить запрос в друзья</a>
             {% else %}
             <a class="friends btn btn-primary" href="{% url 'friends:friends_send_request' object.id %}" role="button">Направить запрос в друзья</a>
             {% endif %}
