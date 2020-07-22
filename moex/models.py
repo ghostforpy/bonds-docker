@@ -10,7 +10,8 @@ from django.db.models.signals import post_save, post_delete, pre_save
 import threading
 import django.dispatch
 from .rshb import *
-from .iss_simple_main import history as moex_history
+from .iss_simple_main import history as moex_history,\
+    specification as moex_specification
 # Create your models here.
 
 refresh_price_security = django.dispatch.Signal(providing_args=["price"])
@@ -117,16 +118,32 @@ class Security(models.Model):
                 except Exception:
                     return 'no data', self.today_price
                 if self.security_type == 'bond':
+                    if self.coupondate <= now().date():
+                    # проверить параметров облигации
+                        try:
+                            description = moex_specification(self.secid)
+                            facevalue = description['FACEVALUE']
+                            coupondate = description['COUPONDATE']
+                            couponvalue = description['COUPONVALUE']
+                            couponpercent = description['COUPONPERCENT']
+                            if facevalue != self.facevalue:
+                                self.facevalue = facevalue
+                            if coupondate != self.coupondate:
+                                self.coupondate = coupondate
+                            if couponvalue != self.couponvalue:
+                                self.couponvalue = couponvalue
+                            if couponpercent != self.couponpercent:
+                                self.couponpercent = couponpercent
+                            self.save()
+                        except Exception:
+                            pass
                     for i in result:
                         result[i] = str(float(result[i]) *
                                         float(self.facevalue) / 100)
                 days = [datetime.strptime(i, '%d.%m.%Y').date()
                         for i in result]
-                print(days)
-                print(max(days))
                 today_price = result[
                     datetime.strftime(max(days), '%d.%m.%Y')]
-                print(today_price)
                 if max(days) <= self.last_update:
                     return 'no new data', self.today_price, self.last_update
                 else:
