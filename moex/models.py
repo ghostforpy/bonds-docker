@@ -116,12 +116,12 @@ class Security(models.Model):
                 try:
                     result = moex_history(self.parce_url)
                 except Exception:
-                    return 'no data', self.today_price
+                    return 'no data', self.today_price, self.last_update
                 if self.security_type == 'bond':
                     if self.coupondate <= now().date():
-                    # проверить параметров облигации
+                    # проверка параметров облигации
                         try:
-                            description = moex_specification(self.secid)
+                            description = moex_specification(self.secid)[0]
                             facevalue = description['FACEVALUE']
                             coupondate = description['COUPONDATE']
                             couponvalue = description['COUPONVALUE']
@@ -135,7 +135,7 @@ class Security(models.Model):
                             if couponpercent != self.couponpercent:
                                 self.couponpercent = couponpercent
                             self.save()
-                        except Exception:
+                        except Exception as e:
                             pass
                     for i in result:
                         result[i] = str(float(result[i]) *
