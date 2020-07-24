@@ -57,7 +57,7 @@
         <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyPortfolioButton" data-toggle="collapse" data-target="#collapseHistoryPortfolio" aria-expanded="false" aria-controls="collapseHistoryPortfolio">
             История пополнений
             </button>
-              <div class="collapse history-table" id="collapseHistoryPortfolio"> 
+              <div class="collapse history-table container-in-collapse" id="collapseHistoryPortfolio"> 
               {% if history != None %}
                 {% for i in history %}
                   <div class="row align-items-center">
@@ -110,7 +110,7 @@
           <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapsePortfolio" aria-expanded="false" aria-controls="collapsePortfolio">
             Состав портфеля
             </button>
-            <div class="collapse" id="collapsePortfolio">
+            <div class="collapse container-in-collapse" id="collapsePortfolio">
               {% for security in portfolio.securities.all %}
                 <div class="row align-items-center mt-2">
                       <div class="col-lg-3 col-12 mb-1 mt-1">
@@ -137,7 +137,7 @@
             <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapseHistory" aria-expanded="false" aria-controls="collapseHistory">
             История покупок
             </button>
-            <div class="collapse" id="collapseHistory">
+            <div class="collapse container-in-collapse" id="collapseHistory">
               <div class="row">
                 <div class="col-md-2 d-none d-md-block">
                   <p>Наименование</p>
