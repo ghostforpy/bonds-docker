@@ -239,6 +239,9 @@ class TradeHistory(models.Model):
     # НКД для покупки-продажи облигаций
     nkd = models.DecimalField(max_digits=20, decimal_places=7,
                               default=0)
+    # при продаже бумаг учитывать НДФЛ
+    ndfl = models.DecimalField(max_digits=20, decimal_places=7,
+                              default=0)
 
     class Meta:
         ordering = ['-date']
@@ -280,7 +283,7 @@ class TradeHistory(models.Model):
             else:
                 return 'need more security in portfolio'
         else:
-            total_cost = self.commission + self.count * self.price
+            total_cost = self.commission + self.count * self.price + self.ndfl
             if self.portfolio.ostatok < total_cost:
                 return 'need more money on portfolio ostatok'
             else:
@@ -326,7 +329,8 @@ def refresh_count_security_in_portfolio(sender,
 def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
     portfolio = instance.portfolio
     total_cost = instance.price * instance.count + instance.nkd + \
-        instance.commission * (-1) ** (not instance.buy)
+        instance.commission * (-1) ** (not instance.buy) + \
+        instance.ndfl * (-1) ** (not instance.buy)
     if created:
         portfolio.ostatok += total_cost * (-1) ** (instance.buy)
         portfolio.save(update_fields=['ostatok'])

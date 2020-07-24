@@ -1,5 +1,5 @@
 function price_valid() {
-	var price = parseFloat($('#id_price').val());
+	let price = parseFloat($('#id_price').val());
 	if (isNaN(price)) {
 			  price = 0;
 			};
@@ -13,24 +13,8 @@ function price_valid() {
 		  return true
 		};
 };
-function comission_valid() {
-	var comission = parseFloat($('#id_comission').val());
-	if (isNaN(comission)) {
-				  comission = 0;
-				};
-	if (comission < 0){
-			$('#id_comission').addClass('is-invalid');
-		  $('#sm_comission').collapse('show');
-		  return false
-		}else{
-			$('#id_comission').removeClass('is-invalid');
-		  $('#sm_comission').collapse('hide');
-		  return true
-		};
-
-};
 function count_valid() {
-	var count = parseFloat($('#id_count').val());
+	let count = parseFloat($('#id_count').val());
 	if (isNaN(count)) {
 				  count = 0;
 				};
@@ -45,14 +29,67 @@ function count_valid() {
 	  return true
 	};
 };
+
+function comission_valid() {
+	let comission = parseFloat($('#id_comission').val());
+	if (isNaN(comission)) {
+				  comission = 0;
+				};
+	if (comission < 0){
+			$('#id_comission').addClass('is-invalid');
+		  $('#sm_comission').collapse('show');
+		  return false
+		}else{
+			$('#id_comission').removeClass('is-invalid');
+		  $('#sm_comission').collapse('hide');
+		  return true
+		};
+
+};
+function ndfl_valid() {
+	let ndfl = parseFloat($('#id_ndfl').val());
+	if (isNaN(ndfl)) {
+				  ndfl = 0;
+				};
+	if (ndfl < 0){
+			$('#id_ndfl').addClass('is-invalid');
+		  $('#sm_ndfl').collapse('show');
+		  return false
+		}else{
+			$('#id_ndfl').removeClass('is-invalid');
+		  $('#sm_ndfl').collapse('hide');
+		  return true
+		};
+
+};
+function nkd_valid() {
+	let nkd = parseFloat($('#id_nkd').val());
+	if (isNaN(nkd)) {
+				  nkd = 0;
+				};
+	if (nkd < 0){
+			$('#id_nkd').addClass('is-invalid');
+		  $('#sm_nkd').collapse('show');
+		  return false
+		}else{
+			$('#id_nkd').removeClass('is-invalid');
+		  $('#sm_nkd').collapse('hide');
+		  return true
+		};
+
+};
 function result() {
-	var price = parseFloat($('#id_price').val());
-	var count = parseFloat($('#id_count').val());
-	var comission = parseFloat($('#id_comission').val());
-	var action = ($('#action').val() == 'Продажа');
-	var nkd = parseFloat($('#id_nkd').val());
+	let price = parseFloat($('#id_price').val());
+	let count = parseFloat($('#id_count').val());
+	let comission = parseFloat($('#id_comission').val());
+	let action = ($('#action').val() == 'Продажа');
+	let nkd = parseFloat($('#id_nkd').val());
+	let ndfl = parseFloat($('#id_ndfl').val());
 	if (isNaN(price)) {
 		  price = 0;
+		};
+	if (isNaN(ndfl)) {
+		  ndfl = 0;
 		};
 	if (isNaN(nkd)) {
 		  nkd = 0;
@@ -65,14 +102,15 @@ function result() {
 	};
 	if (action){
 		comission = comission * (-1);
+		ndfl = ndfl *(-1)
 	};
-	res = price * count + comission + nkd
+	res = price * count + comission + nkd + ndfl;
 	$('#cost').val(res);
 	return res
 };
 
 $(function(){
-	$('#sm, #sm_count, #sm_price, #sm_comission, #sm_nkd').collapse({
+	$('#sm, #sm_count, #sm_price, #sm_comission, #sm_nkd, #sm_ndfl').collapse({
 			toggle: false
 	});
 	$('#id_portfolio').change(function () {
@@ -97,7 +135,7 @@ $(function(){
 	});
 	var action = ($('#action').val() == 'Продажа');
 	if (action) {
-		$('#id_count, #id_price, #id_comission, #id_nkd').keyup(function(){
+		$('#id_count, #id_price, #id_comission, #id_nkd, #id_ndfl').keyup(function(){
 			res = result()
 			var count = parseFloat($('#id_count').val());
 			var ostatok_sec = parseFloat($('#ostatok_sec').text());
@@ -124,7 +162,9 @@ $(function(){
 			pv = price_valid();
 			cv = comission_valid();
 			c_v = count_valid();
-			if (c && v && pv && cv && c_v){
+			ndfl_v = nkd_valid();
+			nkd_v = ndfl_valid();
+			if (c && v && pv && cv && c_v && ndfl_v && nkd_v){
 				$('#sub').prop('disabled', false);
 				$('#cost').removeClass('is-invalid');
 			}else{
@@ -133,13 +173,14 @@ $(function(){
 			};
 		});
 	}else{
-		$('#id_count, #id_price, #id_comission, #id_nkd').keyup(function(){
+		$('#id_count, #id_price, #id_comission, #id_nkd, #id_ndfl').keyup(function(){
 			
 		var price = parseFloat($('#id_price').val());
 		var count = parseFloat($('#id_count').val());
 		var comission = parseFloat($('#id_comission').val());
 		var ostatok = parseFloat($('#ostatok').text());
 		var nkd = parseFloat($('#id_nkd').val());
+		var ndfl = parseFloat($('#id_ndfl').val());
 		if (isNaN(price)) {
 		  price = 0;
 		};
@@ -151,6 +192,9 @@ $(function(){
 		};
 		if (isNaN(count)) {
 		  count = 0;
+		};
+		if (isNaN(ndfl)) {
+		  ndfl = 0;
 		};
 		res = price * count + comission + nkd
 		 $('#cost').val(res);
@@ -166,7 +210,8 @@ $(function(){
 		  pv = price_valid();
 		  cv = comission_valid();
 		  c_v = count_valid();
-	  if (v && pv && cv && c_v){
+		  nkd_v = ndfl_valid();
+	  if (v && pv && cv && c_v && nkd_v){
 			$('#sub').prop('disabled', false);
 		}else{
 			$('#sub').prop('disabled', true);
