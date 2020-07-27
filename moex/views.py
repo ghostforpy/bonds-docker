@@ -391,8 +391,8 @@ def delete_history(request, id):
 @staff_only
 def refresh_security(request, id):
     try:
-        security = get_object_or_404(Security, id=id)
-        status, price, last_update = security.refresh_price()
+        security = Security.objects.get(id=id)
+        status, price, last_update = security.refresh_price(force=True)
         return JsonResponse({'status': status,
                              'price': price,
                              'last_update': last_update})

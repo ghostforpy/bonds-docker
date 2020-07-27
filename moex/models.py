@@ -94,8 +94,11 @@ class Security(models.Model):
                 except Exception:
                     return 'no data', self.today_price, self.last_update
                 if result:
-                    if result['date_publication'] <= self.last_update:
-                        return 'no new data', self.today_price, self.last_update
+                    if not force and \
+                            result['date_publication'] <= self.last_update:
+                        return 'no new data',\
+                            self.today_price,\
+                            self.last_update
                     else:
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
@@ -119,7 +122,7 @@ class Security(models.Model):
                     return 'no data', self.today_price, self.last_update
                 if self.security_type == 'bond':
                     if self.coupondate <= now().date():
-                    # проверка параметров облигации
+                        # проверка параметров облигации
                         try:
                             description = moex_specification(self.secid)[0]
                             facevalue = description['FACEVALUE']
@@ -144,7 +147,8 @@ class Security(models.Model):
                         for i in result]
                 today_price = result[
                     datetime.strftime(max(days), '%d.%m.%Y')]
-                if max(days) <= self.last_update:
+                if not force and \
+                        max(days) <= self.last_update:
                     return 'no new data', self.today_price, self.last_update
                 else:
                     self.last_update = max(days)
@@ -241,7 +245,7 @@ class TradeHistory(models.Model):
                               default=0)
     # при продаже бумаг учитывать НДФЛ
     ndfl = models.DecimalField(max_digits=20, decimal_places=7,
-                              default=0)
+                               default=0)
 
     class Meta:
         ordering = ['-date']
