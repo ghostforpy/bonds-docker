@@ -15,7 +15,7 @@ class RefreshSecurityMixin(ExportActionMixin):
 
     def refresh_security(self, request, queryset):
         for obj in queryset:
-            obj.refresh_price()
+            obj.refresh_price(force=True)
 
     refresh_security.short_description = "Обновить данные"
     actions = ExportActionMixin.actions + [refresh_security]
