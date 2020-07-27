@@ -177,12 +177,12 @@ class MicexISSClient:
             jhist = jres['history']
             jdata = jhist['data']
             jcols = jhist['columns']
-            #closeIdx = jcols.index('LEGALCLOSEPRICE')
+            closeIdxx = jcols.index('LEGALCLOSEPRICE')
             closeIdx = jcols.index('CLOSE')
             trade_dateIdx = jcols.index('TRADEDATE')
             for i in jdata:
                 date = i[trade_dateIdx].split('-')[::-1]
-                result['.'.join(date)] = i[closeIdx]
+                result['.'.join(date)] = i[closeIdx] or i[closeIdxx]
             cnt = len(jdata)
             start += cnt
         return result
