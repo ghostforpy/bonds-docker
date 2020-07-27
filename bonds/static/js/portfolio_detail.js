@@ -17,8 +17,10 @@ $('#id_cash').keyup(function(){
 $('#id_action').change(function(e){
     if ($(this).val() == 'tp') {
     $('#id_ndfl').slideDown("fast", "linear");
+    $('#id_security').slideDown("fast", "linear");
   }else{
     $('#id_ndfl').slideUp("fast", "linear");
+    $('#id_security').slideUp("fast", "linear");
   };
     
 });
@@ -28,6 +30,7 @@ $(document).on('click', '#add_invest', function(e){
     date = $('#id_date').val();
     cash = $('#id_cash').val();
     ndfl = $('#id_ndfl').val();
+    security = $('#id_security').val();
     if (ndfl == '') { ndfl = 0 };
     action = $('#id_action').val();
     if (action == 'tp') {
@@ -43,7 +46,11 @@ $(document).on('click', '#add_invest', function(e){
     };
     $.post(
         $(this).attr('href'),
-        {cash: $('#id_cash').val(), ndfl: ndfl, date: $('#id_date').val(), action: $('#id_action').val()},
+        {cash: $('#id_cash').val(),
+        ndfl: ndfl,
+        date: $('#id_date').val(),
+        action: $('#id_action').val(),
+        security: security},
         function(data){
             if (data['status'] == 'ok'){
                 id = data['id'];
@@ -51,11 +58,16 @@ $(document).on('click', '#add_invest', function(e){
                 out += '<div class="col-9"><div class="row"><div class="col-md-4">';
                 out += date + '</div><div class="col-md-4">' + cash;
                 if (action == 'Доход') {
-                    out += '</br>(НДФЛ: ' + ndfl + ')'
+                    out += '</br>(НДФЛ: ' + ndfl + ')';
                 };
                 out += '</div><div class="col-md-4">';
-                
-                out += action + '</div></div></div><div class="col-3">';
+                out += action;
+                if (action == 'Доход') {
+                    if ($('#id_security option:selected').val() != ''){
+                        out += '</br>' + $('#id_security option:selected').text();
+                    };
+                };
+                out += '</div></div></div><div class="col-3">';
                 out += '<a class="delete-invest btn btn-danger btn-sm"';
                 out += ' href="/portfolio/del_invest/${id}/">Удалить</a>';
                 out += '</div></div><div class="dropdown-divider"></div>';
@@ -103,7 +115,6 @@ $(document).on('click','.del-history', function(e){
         $(this).attr('href'),
         function(data){
             if (data['status'] == 'ok'){
-                console.log(data);
                 elem.prev('.row').remove()
                 elem.next('.dropdown-divider:first').remove()
                 elem.remove();
@@ -116,14 +127,30 @@ $(document).on('click','.del-history', function(e){
                     });
 
             };
-            if (data['status'] == 'no_money'){
+            if (data['status'] == 'no money on portfolio'){
                 $.toast({
                     title: 'Bonds',
-                    content: 'Недостаточно денег для снятия.',
+                    content: 'Недостаточно денег в портфеле.',
                     type: 'error',
                     delay: 5000
                     });
-            }
+            };
+            if (data['status'] == 'no money on vklad'){
+                $.toast({
+                    title: 'Bonds',
+                    content: 'Недостаточно денег на вкладе.',
+                    type: 'error',
+                    delay: 5000
+                    });
+            };
+            if (data['status'] == 'wrong_action' || data['status'] == 'no_id'){
+                $.toast({
+                    title: 'Bonds',
+                    content: 'Неверные данные.',
+                    type: 'error',
+                    delay: 5000
+                    });
+            };
         }
         );
 });
@@ -153,7 +180,31 @@ $(document).on('click', '.delete-invest', function(e){
                     type: 'error',
                     delay: 5000
                     });
-            }
+            };
+            if (data['status'] == 'no money on portfolio'){
+                $.toast({
+                    title: 'Bonds',
+                    content: 'Недостаточно денег в портфеле.',
+                    type: 'error',
+                    delay: 5000
+                    });
+            };
+            if (data['status'] == 'no money on vklad'){
+                $.toast({
+                    title: 'Bonds',
+                    content: 'Недостаточно денег на вкладе.',
+                    type: 'error',
+                    delay: 5000
+                    });
+            };
+            if (data['status'] == 'wrong_action' || data['status'] == 'no_id'){
+                $.toast({
+                    title: 'Bonds',
+                    content: 'Неверные данные.',
+                    type: 'error',
+                    delay: 5000
+                    });
+            };
         }
         );
 });

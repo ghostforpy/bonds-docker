@@ -127,8 +127,14 @@ class PortfolioInvestHistory(models.Model):
                                        ('bc', 'Комиссия брокера'),
                                        ('br',
                                         'Частичное погашение облигаций')])
+    # при получении дохода учитыавть НДФЛ
     ndfl = models.DecimalField(max_digits=10,
                                decimal_places=2, default=0)
+    # при получении дохода можно выбрать по какой бумаге получен доход
+    security = models.ForeignKey('moex.Security',
+                                 on_delete=models.SET_NULL,
+                                 blank=True,
+                                 null=True)
 
     class Meta:
         ordering = ['-date', 'cash']

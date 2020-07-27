@@ -123,5 +123,5 @@ footer{flex: 0 0 auto;}
 
 #collapseHistoryBond, .container-in-collapse {
   overflow-y: scroll; /* прокрутка по вертикали */
-  height:400px;
+  max-height:400px;
 }

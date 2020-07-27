@@ -71,7 +71,8 @@
                         {% if i.action == 'tp' %}</br>(НДФЛ: {{ i.ndfl }}){% endif %}
                         </div>
                         <div class="col-md-4">
-                         {{ i.get_action_display }}
+                         {{ i.get_action_display }}</br>
+                         {{ i.security.name }}
                         </div>
                       </div>
                     </div>
@@ -89,6 +90,12 @@
                     <div class="col-md-4">
                       <input placeholder="Введите сумму" type="number" class="form-control form-control-sm mt-1 mb-2" name="cash" step="0.01" required="" id="id_cash">
                       <input placeholder="НДФЛ" type="number" class="form-control form-control-sm mt-1 mb-2" name="ndfl" step="0.01" id="id_ndfl" style="display: none;">
+                      <select class="form-control form-control-sm mt-1 mb-2" name="portfolio" required="" id="id_security" style="display: none;">
+                        <option value="" selected>Выберите бумагу</option>
+                        {% for security in securities_result %}
+                          <option value="{{ security.id }}">{{ security.name }}</option>
+                        {% endfor %}
+                      </select>
                     </div>
                     <div class="col-md-4">
                       <select id="id_action" class="form-control form-control-sm mt-1 mb-2">

@@ -27,30 +27,36 @@ def updated_portfolio(portfolio):
 
 def portfolio_detail(request, id):
     try:
-        portfolio = get_object_or_404(InvestmentPortfolio, id=id)
+        portfolio = InvestmentPortfolio.objects.get(id=id)
         history = None
         form_refresh = None
         owner_url = portfolio.owner.get_absolute_url()
         res = True
+        securities_result = None
         if portfolio.owner == request.user:
             history = portfolio.portfolio_invests.all()
             form_refresh = RefreshPortfolio(instance=portfolio)
+            securities = portfolio.trade_securities.all()
+            securities_result = set(i.security for i in securities)
             res = False
         if res and (portfolio.private == 'da'):
             portfolio = None
             res = False
         if res and (portfolio.private == 'aa'):
             res = False
-        if res and (not(request.user.is_authenticated) and (portfolio.private == 'al')):
+        if res and (not(request.user.is_authenticated) and
+                    (portfolio.private == 'al')):
             portfolio = None
             res = False
-        if res and (request.user.is_authenticated and (portfolio.private == 'af')):
+        if res and (request.user.is_authenticated and
+                    (portfolio.private == 'af')):
             if not request.user.friends.is_friend(portfolio.owner.friends):
                 portfolio = None
             res = False
         return render(request,
                       'portfolio/detail.html',
                       {'portfolio': portfolio,
+                       'securities_result': securities_result,
                        'form_refresh': form_refresh,
                        'history': history,
                        'owner_url': owner_url})
@@ -62,6 +68,7 @@ def portfolio_detail(request, id):
 @ login_required
 def portfolio_add_invest(request, id):
     form = PortfolioInvestForm(data=request.POST)
+    print(request.POST)
     if form.is_valid():
         try:
             portfolio = get_object_or_404(InvestmentPortfolio,
@@ -107,7 +114,7 @@ def refresh_portfolio(request, id):
 @ login_required
 def portfolio_del_invest(request, id):
     try:
-        invest = get_object_or_404(PortfolioInvestHistory, id=id)
+        invest = PortfolioInvestHistory.objects.get(id=id)
         if invest.portfolio.owner == request.user:
             portfolio = invest.portfolio
             status = invest.delete()
