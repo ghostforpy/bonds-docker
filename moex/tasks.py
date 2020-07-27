@@ -27,8 +27,8 @@ def refresh_security_from_rshb(self):
 @celery_app.task(bind=True,
                  name='moex.refresh_security_from_moex',
                  default_retry_delay=30 * 60,
-                 max_retries=1)
-def refresh_security_from_moex(self):
+                 max_retries=2)
+def refresh_security_from_moex(self, *args):
     today = now().date()
     securities = Security.objects.\
         filter(last_update__lt=today).\
@@ -36,14 +36,15 @@ def refresh_security_from_moex(self):
     result = dict()
     for security in securities:
         result[security.name] = security.refresh_price()
-    if result:
+    if args and result:
         message = '{}\n'.format(now())
-        message += str(result)
+        for i in result:
+            message += '{}:{}\n'.format(i, result[i])
         send_mail(
             'refresh moex',
             message,
             'admin@mybonds.space',
-            ['staretslexa@ya.ru', 'ghostformobile@gmail.com'],
+            [i for i in args],
             fail_silently=False,
         )
     if securities.count():
