@@ -380,6 +380,6 @@ def refresh_portfolios(sender, instance, **kwargs):
     s_p = security.portfolios.all()
     for i in s_p:
         i.today_price = security.today_price
-        i.total_cost = i.today_price * float(i.count)
+        i.total_cost = float(i.today_price) * float(i.count)
         i.save(update_fields=['today_price', 'total_cost'])
         i.portfolio.refresh_portfolio()
