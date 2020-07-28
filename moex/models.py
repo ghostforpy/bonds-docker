@@ -103,8 +103,8 @@ class Security(models.Model):
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
                         self.save()
-                        self.portfolios.all().update(
-                            today_price=result['price_today'])
+                        # self.portfolios.all().update(
+                        #    today_price=result['price_today'])
                         refresh_price_security.send(
                             sender=self.__class__,
                             instance=self,
@@ -154,8 +154,8 @@ class Security(models.Model):
                     self.last_update = max(days)
                     self.today_price = today_price
                     self.save()
-                    self.portfolios.all().update(
-                        today_price=today_price)
+                    # self.portfolios.all().update(
+                    #    today_price=today_price)
                     refresh_price_security.send(
                         sender=self.__class__,
                         instance=self,
@@ -216,6 +216,8 @@ class SecurityPortfolios(models.Model):
                                 default=0)
     today_price = models.DecimalField(max_digits=17, decimal_places=7,
                                       default=0)
+    total_cost = models.DecimalField(max_digits=17, decimal_places=7,
+                                     default=0)
 
     class Meta:
         ordering = ['id']
@@ -313,6 +315,7 @@ def refresh_count_security_in_portfolio(sender,
             s_p.count = 0
         s_p.count += instance.count * (-1) ** (not instance.buy)
         s_p.today_price = security.today_price
+        s_p.total_cost = s_p.count * s_p.today_price
         s_p.save()
     else:
         try:
@@ -323,6 +326,7 @@ def refresh_count_security_in_portfolio(sender,
         except ObjectDoesNotExist:
             return
         s_p.count += instance.count * (-1) ** (instance.buy)
+        s_p.total_cost = s_p.count * s_p.today_price
         s_p.save()
     if s_p.count == 0:
         s_p.delete()
@@ -337,12 +341,12 @@ def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
         instance.ndfl * (-1) ** (not instance.buy)
     if created:
         portfolio.ostatok += total_cost * (-1) ** (instance.buy)
-        portfolio.save(update_fields=['ostatok'])
-        portfolio.refresh_portfolio()
+        # portfolio.save(update_fields=['ostatok'])
+        # portfolio.refresh_portfolio()
     else:
         portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
-        portfolio.save(update_fields=['ostatok'])
-        portfolio.refresh_portfolio()
+    portfolio.save(update_fields=['ostatok'])
+    portfolio.refresh_portfolio()
 
 
 def upload(security, date, oldest_date):
@@ -375,4 +379,7 @@ def refresh_portfolios(sender, instance, **kwargs):
     security = instance
     s_p = security.portfolios.all()
     for i in s_p:
+        i.today_price = security.today_price
+        i.total_cost = i.today_price * float(i.count)
+        i.save(update_fields=['today_price', 'total_cost'])
         i.portfolio.refresh_portfolio()
