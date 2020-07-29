@@ -290,6 +290,10 @@ def prepare_new_security_by_secid(secid):
         couponfrequency = get_value(description, "COUPONFREQUENCY")
         couponpercent = get_value(description, "COUPONPERCENT")
         couponvalue = get_value(description, "COUPONVALUE")
+        accint = get_value(description, "ACCINT")
+        print(description)
+        print(accint)
+        faceunit = get_value(description, "FACEUNIT")
         url = 'https://www.moex.com/ru/issue.aspx?code=' + description["SECID"]
         parce_url = 'http://iss.moex.com/iss/history/engines/' + \
             '{}/markets/{}/'.format(engine, market) + \
@@ -316,6 +320,8 @@ def prepare_new_security_by_secid(secid):
                            couponfrequency=couponfrequency,
                            couponpercent=couponpercent,
                            couponvalue=couponvalue,
+                           accint=accint,
+                           faceunit=faceunit,
                            oldest_date=datetime.now().date(),
                            today_price=today_price,
                            last_update=last_update)

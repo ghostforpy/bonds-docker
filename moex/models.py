@@ -56,6 +56,18 @@ class Security(models.Model):
     # Ставка купона, %
     couponpercent = models.DecimalField(max_digits=17, decimal_places=7,
                                         blank=True, null=True)
+    # НКД для облигаций
+    accint = models.DecimalField(max_digits=17, decimal_places=7,
+                                 blank=True, null=True)
+    # валюта номинала
+    faceunit = models.CharField(max_length=20,
+                                default='SUR',
+                                choices=[('SUR', 'РУБ'),
+                                         ('USD', 'USD'),
+                                         ('EUR', 'EUR'),
+                                         ('GBP', 'GBP'),
+                                         ('CNY', 'CNY')],
+                                blank=True)
     # Сумма купона, в валюте номинала
     couponvalue = models.DecimalField(max_digits=17, decimal_places=7,
                                       blank=True, null=True)

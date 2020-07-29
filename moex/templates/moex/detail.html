@@ -34,6 +34,9 @@
         {% if security.facevalue %}
           <p>Номинальная стоимость: {{ security.facevalue }}</p>
         {% endif %}
+        {% if security.faceunit %}
+          <p>Валюта номинала: {{ security.get_faceunit_display }}</p>
+        {% endif %}
         {% if security.initialfacevalue %}
           <p>Первоначальная номинальная стоимость: {{ security.initialfacevalue }}</p>
         {% endif %}
@@ -51,6 +54,9 @@
         {% endif %}
         {% if security.couponvalue %}
           <p>Сумма купона, в валюте номинала: {{ security.couponvalue }}</p>
+        {% endif %}
+        {% if security.accint %}
+          <p>НКД: {{ security.accint }}</p>
         {% endif %}
 
         <p>Эмитент: {{ security.emitent }}</p>

@@ -143,6 +143,7 @@ class MicexISSClient:
         res = self.opener.open(url)
         result = json.load(res)
         description = result['description']['data']
+        print(description)
         result_description = {i[0]: i[2]
                               for i in description if i[0] in ["SECID",
                                                                "NAME",
@@ -159,6 +160,7 @@ class MicexISSClient:
                                                                "COUPONPERCENT",
                                                                "COUPONVALUE",
                                                                "COUPONDATE",
+                                                               "FACEUNIT",
                                                                ]}
         boards = result['boards']
         s = self.search(query)[query]
@@ -180,6 +182,7 @@ class MicexISSClient:
             closeIdxx = jcols.index('LEGALCLOSEPRICE')
             closeIdx = jcols.index('CLOSE')
             trade_dateIdx = jcols.index('TRADEDATE')
+            #accintIdx = jcols.index('ACCINT')
             for i in jdata:
                 date = i[trade_dateIdx].split('-')[::-1]
                 result['.'.join(date)] = i[closeIdx] or i[closeIdxx]
