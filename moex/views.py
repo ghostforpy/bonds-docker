@@ -353,8 +353,6 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
     result_history = {i: security_history[i]['CLOSE'] for i in days}
     caches['default'].add('moex_security_history_secid' + secid,
                           result_history, timeout=30)
-    # days = [datetime.strptime(i, '%d.%m.%Y').date() for i
-    #        in security_history]
     today_price = security_history[days[0]]['CLOSE']
     try:
         accint = security_history[days[0]]['ACCINT']

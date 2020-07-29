@@ -132,7 +132,7 @@ class Security(models.Model):
                     result = moex_history(self.parce_url)
                 except Exception:
                     return 'no data', self.today_price, self.last_update
-                days = [datetime.strptime(i['CLOSE'], '%d.%m.%Y').date()
+                days = [datetime.strptime(i, '%d.%m.%Y').date()
                         for i in result]
                 if self.security_type == 'bond':
                     if self.coupondate <= now().date():
