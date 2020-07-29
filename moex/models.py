@@ -331,8 +331,6 @@ def refresh_count_security_in_portfolio(sender,
             s_p.count = 0
         s_p.count += instance.count * (-1) ** (not instance.buy)
         s_p.today_price = security.today_price
-        s_p.total_cost = s_p.count * s_p.today_price
-        s_p.save()
     else:
         try:
             s_p = SecurityPortfolios.objects.get(
@@ -342,8 +340,13 @@ def refresh_count_security_in_portfolio(sender,
         except ObjectDoesNotExist:
             return
         s_p.count += instance.count * (-1) ** (instance.buy)
+    # в облигациях учитывать НКД
+    if security.security_type == 'bond':
+        s_p.total_cost = float(s_p.count) * \
+            (float(s_p.today_price) + float(s_p.security.accint))
+    else:
         s_p.total_cost = s_p.count * s_p.today_price
-        s_p.save()
+    s_p.save()
     if s_p.count == 0:
         s_p.delete()
 
@@ -396,6 +399,11 @@ def refresh_portfolios(sender, instance, **kwargs):
     s_p = security.portfolios.all()
     for i in s_p:
         i.today_price = security.today_price
-        i.total_cost = float(i.today_price) * float(i.count)
+        # в облигациях учитывать НКД
+        if security.security_type == 'bond':
+            i.total_cost = float(s_p.count) * \
+                (float(s_p.today_price) + float(s_p.security.accint))
+        else:
+            i.total_cost = float(i.today_price) * float(i.count)
         i.save(update_fields=['today_price', 'total_cost'])
         i.portfolio.refresh_portfolio()
