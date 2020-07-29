@@ -143,7 +143,6 @@ class MicexISSClient:
         res = self.opener.open(url)
         result = json.load(res)
         description = result['description']['data']
-        print(description)
         result_description = {i[0]: i[2]
                               for i in description if i[0] in ["SECID",
                                                                "NAME",
