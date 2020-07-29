@@ -124,7 +124,8 @@ class MicexISSClient:
     def search(self, query):
         if len(query) < 3:
             return False
-        url = 'http://iss.moex.com/iss/securities.json?q={}'.format(quote(query))
+        url = 'http://iss.moex.com/iss/securities.json?q={}'.format(
+            quote(query))
         res = self.opener.open(url)
 
         jres = json.load(res)
@@ -181,10 +182,15 @@ class MicexISSClient:
             closeIdxx = jcols.index('LEGALCLOSEPRICE')
             closeIdx = jcols.index('CLOSE')
             trade_dateIdx = jcols.index('TRADEDATE')
-            #accintIdx = jcols.index('ACCINT')
+            try:
+                accintIdx = jcols.index('ACCINT')
+            except ValueError:
+                accintIdx = False
             for i in jdata:
                 date = i[trade_dateIdx].split('-')[::-1]
-                result['.'.join(date)] = i[closeIdx] or i[closeIdxx]
+                result['.'.join(date)] = {'CLOSE': i[closeIdx] or i[closeIdxx]}
+                if accintIdx:
+                    result['.'.join(date)]['ACCINT'] = i[accintIdx]
             cnt = len(jdata)
             start += cnt
         return result

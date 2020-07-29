@@ -290,13 +290,12 @@ def prepare_new_security_by_secid(secid):
         couponfrequency = get_value(description, "COUPONFREQUENCY")
         couponpercent = get_value(description, "COUPONPERCENT")
         couponvalue = get_value(description, "COUPONVALUE")
-        accint = get_value(description, "ACCINT")
         faceunit = get_value(description, "FACEUNIT")
         url = 'https://www.moex.com/ru/issue.aspx?code=' + description["SECID"]
         parce_url = 'http://iss.moex.com/iss/history/engines/' + \
             '{}/markets/{}/'.format(engine, market) + \
             'boards/{}/securities/{}.json'.format(board, description["SECID"])
-        today_price, last_update = upload_moex_history(
+        today_price, last_update, accint = upload_moex_history(
             parce_url, description["SECID"], security_type, facevalue)
         newitem = Security(fullname=description["NAME"],
                            shortname=description["SHORTNAME"],
@@ -345,19 +344,23 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
     security_history = moex_history(parce_url)
     if security_type == 'bond':
         for i in security_history:
-            security_history[i] = str(
-                float(security_history[i]) * float(facevalue) / 100)
+            security_history[i]['CLOSE'] = str(
+                float(security_history[i]['CLOSE']) * float(facevalue) / 100)
     days = sorted(
         security_history,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
         reverse=True)
-    result_history = {i: security_history[i] for i in days}
+    result_history = {i: security_history[i]['CLOSE'] for i in days}
     caches['default'].add('moex_security_history_secid' + secid,
                           result_history, timeout=30)
     # days = [datetime.strptime(i, '%d.%m.%Y').date() for i
     #        in security_history]
-    today_price = security_history[days[0]]
-    return today_price, datetime.strptime(days[0], '%d.%m.%Y').date()
+    today_price = security_history[days[0]]['CLOSE']
+    try:
+        accint = security_history[days[0]]['ACCINT']
+    except KeyError:
+        accint = None
+    return today_price, datetime.strptime(days[0], '%d.%m.%Y').date(), accint
 
 
 @login_required
@@ -455,6 +458,7 @@ def get_new_security_history(request, secid):
     if result is None:
         parce_url = newitem.parce_url
         result = moex_history(parce_url)
+        result = {i: i['CLOSE'] for i in result}
     content = dict()
     content['history'] = result
     content['status'] = 'ok'

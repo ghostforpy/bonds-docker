@@ -132,6 +132,8 @@ class Security(models.Model):
                     result = moex_history(self.parce_url)
                 except Exception:
                     return 'no data', self.today_price, self.last_update
+                days = [datetime.strptime(i['CLOSE'], '%d.%m.%Y').date()
+                        for i in result]
                 if self.security_type == 'bond':
                     if self.coupondate <= now().date():
                         # проверка параметров облигации
@@ -153,12 +155,12 @@ class Security(models.Model):
                         except Exception as e:
                             pass
                     for i in result:
-                        result[i] = str(float(result[i]) *
-                                        float(self.facevalue) / 100)
-                days = [datetime.strptime(i, '%d.%m.%Y').date()
-                        for i in result]
+                        result[i]['CLOSE'] = str(float(result[i]['CLOSE']) *
+                                                 float(self.facevalue) / 100)
+                    self.accint = result[
+                        datetime.strftime(max(days), '%d.%m.%Y')]['ACCINT']
                 today_price = result[
-                    datetime.strftime(max(days), '%d.%m.%Y')]
+                    datetime.strftime(max(days), '%d.%m.%Y')]['CLOSE']
                 if not force and \
                         max(days) <= self.last_update:
                     return 'no new data', self.today_price, self.last_update
@@ -188,10 +190,12 @@ class Security(models.Model):
         else:
             result = moex_history(self.parce_url)
             if self.security_type == 'bond':
+                history = {}
                 for i in result:
-                    result[i] = str(float(result[i]) *
-                                    float(self.facevalue) / 100)
-            return result
+                    history[i] = str(float(result[i]['CLOSE']) *
+                                     float(self.facevalue) / 100)
+
+            return history
 
 
 class SecurityHistory(models.Model):
@@ -366,7 +370,7 @@ def upload(security, date, oldest_date):
     for i in history:
         newitem = SecurityHistory(name=security,
                                   date=i,
-                                  price=history[i])
+                                  price=history[i]['CLOSE'])
         newitem.save()
 
 
