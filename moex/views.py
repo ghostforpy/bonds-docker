@@ -295,7 +295,7 @@ def prepare_new_security_by_secid(secid):
         parce_url = 'http://iss.moex.com/iss/history/engines/' + \
             '{}/markets/{}/'.format(engine, market) + \
             'boards/{}/securities/{}.json'.format(board, description["SECID"])
-        today_price, last_update, accint = upload_moex_history(
+        today_price, last_update, accint, change_price_percent = upload_moex_history(
             parce_url, description["SECID"], security_type, facevalue)
         newitem = Security(fullname=description["NAME"],
                            shortname=description["SHORTNAME"],
@@ -321,7 +321,8 @@ def prepare_new_security_by_secid(secid):
                            faceunit=faceunit,
                            oldest_date=datetime.now().date(),
                            today_price=today_price,
-                           last_update=last_update)
+                           last_update=last_update,
+                           change_price_percent=change_price_percent)
         caches['default'].add('moex_secid_' + description["SECID"],
                               newitem, timeout=24 * 60 * 60)
     else:
@@ -344,8 +345,12 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
     security_history = moex_history(parce_url)
     if security_type == 'bond':
         for i in security_history:
-            security_history[i]['CLOSE'] = str(
-                float(security_history[i]['CLOSE']) * float(facevalue) / 100)
+            try:
+                security_history[i]['CLOSE'] = str(
+                    float(security_history[i]['CLOSE']) * float(facevalue)
+                    / 100)
+            except Exception:
+                security_history.pop(i)
     days = sorted(
         security_history,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
@@ -355,10 +360,20 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
                           result_history, timeout=30)
     today_price = security_history[days[0]]['CLOSE']
     try:
+        previos_price = security_history[days[1]]['CLOSE']
+        change_price_percent = (float(today_price) - float(previos_price))\
+            / float(previos_price) * 100
+        change_price_percent = float("{0:.2f}".format(change_price_percent))
+    except Exception:
+        change_price_percent = 0
+    try:
         accint = security_history[days[0]]['ACCINT']
     except KeyError:
         accint = None
-    return today_price, datetime.strptime(days[0], '%d.%m.%Y').date(), accint
+    return today_price,\
+        datetime.strptime(days[0], '%d.%m.%Y').date(),\
+        accint,\
+        change_price_percent
 
 
 @login_required

@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 from portfolio.models import InvestmentPortfolio
 from django.core.exceptions import ObjectDoesNotExist
 from bonds.users.models import User
@@ -82,6 +83,10 @@ class Security(models.Model):
                                            blank=True)
     # флаг отслеживания цен при ежедневном обновлении
     monitor = models.BooleanField(default=True)
+    # процент изменения цены по сравнению с предыдущим значением
+    # (предыдущим днем)
+    change_price_percent = models.DecimalField(max_digits=10, decimal_places=3,
+                                               default=0)
 
     class Meta:
         ordering = ['-last_update']
@@ -114,6 +119,9 @@ class Security(models.Model):
                             self.today_price,\
                             self.last_update
                     else:
+                        self.change_price_percent = (
+                            Decimal(result['price_today']) - self.today_price)\
+                            / self.today_price * 100
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
                         self.save()
@@ -167,6 +175,9 @@ class Security(models.Model):
                         max(days) <= self.last_update:
                     return 'no new data', self.today_price, self.last_update
                 else:
+                    self.change_price_percent = (
+                        Decimal(today_price) - self.today_price) / \
+                        self.today_price * 100
                     self.last_update = max(days)
                     self.today_price = today_price
                     self.save()
