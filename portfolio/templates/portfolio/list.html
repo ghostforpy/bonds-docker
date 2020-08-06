@@ -34,10 +34,10 @@
 	                      <div class="col-md-2 mb-1 mt-1">
 	                        <span class="d-md-none">Стратегия: </span><span>{{ portfolio.strategia }}</span></div>
 	                      <div class="col-md-2 mb-1 mt-1">
-	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }} %</span>
+	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }} %</span><br class="d-none"><span class="{% if portfolio.change_percent_profit > 0 %}text-success{% elif portfolio.change_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">({{portfolio.change_percent_profit}} %)</span>
 	                      </div>
 	                      <div class="col-md-2 mb-1 mt-1">
-	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }} %</span>
+	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }} %</span><br class="d-none"><span class="{% if portfolio.change_year_percent_profit > 0 %}text-success{% elif portfolio.change_year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">({{portfolio.change_year_percent_profit}} %)</span>
 	                      </div>
 	                    </div>
 	                <div class="dropdown-divider"></div>

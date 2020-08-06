@@ -1,6 +1,7 @@
 from django.db import models
 from bonds.users.models import User
 from django.urls import reverse
+from decimal import Decimal
 from . import scripts
 
 # Create your models here.
@@ -18,8 +19,13 @@ class InvestmentPortfolio(models.Model):
     ostatok = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     percent_profit = models.DecimalField(max_digits=5, decimal_places=2,
                                          default=0)
+    change_percent_profit = models.DecimalField(max_digits=5, decimal_places=2,
+                                                default=0)
     year_percent_profit = models.DecimalField(max_digits=5, decimal_places=2,
                                               default=0)
+    change_year_percent_profit = models.DecimalField(max_digits=5,
+                                                     decimal_places=2,
+                                                     default=0)
     private = models.CharField(max_length=20,
                                default='da',
                                choices=[('da', 'deny_all'),
@@ -46,8 +52,14 @@ class InvestmentPortfolio(models.Model):
 
     def calc_percent_profit(self):
         try:
-            self.percent_profit = scripts.percent_profit(self.today_cash,
-                                                         self.invest_cash)
+
+            percent_profit = scripts.percent_profit(self.today_cash,
+                                                    self.invest_cash)
+            change_percent_profit = (
+                Decimal(percent_profit) - self.percent_profit)\
+                / self.percent_profit * 100
+            self.change_percent_profit = change_percent_profit
+            self.percent_profit = percent_profit
         except ZeroDivisionError:
             return
         # return scripts.percent_profit(self.today_cash,
@@ -57,9 +69,14 @@ class InvestmentPortfolio(models.Model):
         t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
         # t = PortfolioInvestHistory.objects.filter(portfolio=self.id)
         invest = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
-        self.year_percent_profit = scripts.year_percent_profit(
+
+        year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
-        # return scripts.year_percent_profit(invest, self.today_cash)
+        change_year_percent_profit = (
+            Decimal(year_percent_profit) - self.year_percent_profit)\
+            / self.year_percent_profit * 100
+        self.change_year_percent_profit = change_year_percent_profit
+        self.year_percent_profit = year_percent_profit
 
     def __str__(self):
         return self.title

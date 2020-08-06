@@ -27,8 +27,8 @@
           {%endif%}
           <p id="manual" hidden="true">{{ portfolio.manual }}</p>
           <p>Остаток (руб.): <span id="ostatok">{{portfolio.ostatok}}</span></p>
-          <p>Доходность (%): <span id="percent_profit">{{portfolio.percent_profit}}</span></p>
-          <p>Годовая доходность (%): <span id="year_percent_profit">{{portfolio.year_percent_profit}}</span></p>
+          <p>Доходность (%): <span id="percent_profit">{{portfolio.percent_profit}}</span><span class="{% if portfolio.change_percent_profit > 0 %}text-success{% elif portfolio.change_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">({{portfolio.change_percent_profit}} %)</span></p>
+          <p>Годовая доходность (%): <span id="year_percent_profit">{{portfolio.year_percent_profit}}</span><span class="{% if portfolio.change_year_percent_profit > 0 %}text-success{% elif portfolio.change_year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">({{portfolio.change_year_percent_profit}} %)</span></p>
           {% if request.user == portfolio.owner %}
             <div class="form-group mb-2">
               <label for="id_private">Приватность:</label>
