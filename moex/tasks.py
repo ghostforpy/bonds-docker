@@ -32,10 +32,12 @@ def refresh_security_from_moex(self, *args):
     today = now().date()
     securities = Security.objects.\
         filter(last_update__lt=today).\
-        exclude(security_type='pif_rshb')
+        exclude(security_type='pif_rshb').\
+        filter(monitor=True)
     result = dict()
     for security in securities:
         result[security.name] = security.refresh_price()
+    print(result)
     if args and result:
         message = '{}\n'.format(now())
         for i in result:

@@ -80,6 +80,8 @@ class Security(models.Model):
     users_follows = models.ManyToManyField(User,
                                            related_name='security_followed',
                                            blank=True)
+    # флаг отслеживания цен при ежедневном обновлении
+    monitor = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['-last_update']
