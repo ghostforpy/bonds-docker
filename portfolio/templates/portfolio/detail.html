@@ -27,8 +27,8 @@
           {%endif%}
           <p id="manual" hidden="true">{{ portfolio.manual }}</p>
           <p>Остаток (руб.): <span id="ostatok">{{portfolio.ostatok}}</span></p>
-          <p>Доходность (%): <span id="percent_profit">{{portfolio.percent_profit}}</span><span class="{% if portfolio.change_percent_profit > 0 %}text-success{% elif portfolio.change_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">({{portfolio.change_percent_profit}} %)</span></p>
-          <p>Годовая доходность (%): <span id="year_percent_profit">{{portfolio.year_percent_profit}}</span><span class="{% if portfolio.change_year_percent_profit > 0 %}text-success{% elif portfolio.change_year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">({{portfolio.change_year_percent_profit}} %)</span></p>
+          <p>Доходность (%): <span id="percent_profit">{{portfolio.percent_profit}}</span> <span class="{% if portfolio.change_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{portfolio.change_percent_profit}}%)</span></p>
+          <p>Годовая доходность (%): <span id="year_percent_profit">{{portfolio.year_percent_profit}}</span> <span class="{% if portfolio.change_year_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_year_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{portfolio.change_year_percent_profit}}%)</span></p>
           {% if request.user == portfolio.owner %}
             <div class="form-group mb-2">
               <label for="id_private">Приватность:</label>
@@ -144,7 +144,7 @@
                           <span class="d-md-none">Количество: </span><span>{{ security.count }} шт.</span>
                         </div>
                         <div class="col-lg-2 col-12 mb-1 mt-1">
-                          <span class="d-md-none">Цена: </span><span>{{ security.today_price }} руб.<br class="d-md-inline d-none"><span class="{% if security.security.change_price_percent > 0 %}text-success{% elif security.security.change_price_percent < 0%}text-danger{% else %}text-secondary{% endif %}">({{security.security.change_price_percent}} %)</span></span>
+                          <span class="d-md-none">Цена: </span><span>{{ security.today_price }} руб.<br class="d-md-inline d-none"><span class="d-md-none d-inline"> </span><span class="{% if security.security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.security.change_price_percent}}%)</span></span>
                         </div>
                         <div class="col-lg-2 col-12 mb-1 mt-1">
                           <span class="d-md-none">Итого: </span><span>{{ security.total_cost }} руб.</span>

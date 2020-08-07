@@ -46,10 +46,10 @@
 	                        <span class="d-md-none">Текущий баланс: </span>{{ portfolio.today_cash}}
 	                      </div>
 	                      <div class="col-md-2 mt-1 mb-1">
-	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }} %</span>
+	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_percent_profit}}%)</span>
 	                      </div>
 	                      <div class="col-md-2 mt-1 mb-1">
-	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }} %</span>
+	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_year_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_year_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_year_percent_profit}}%)</span>
 	                      </div>
 	                    </div>
 	                <div class="dropdown-divider"></div>
