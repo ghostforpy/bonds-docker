@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose -f production.yml run --rm django python manage.py migrate
+sudo docker-compose -f production.yml run --rm django python manage.py migrate
