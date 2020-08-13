@@ -68,6 +68,7 @@ THIRD_PARTY_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    'allauth.socialaccount.providers.google',
     "django_celery_beat",
     'import_export',
     'rest_framework',
