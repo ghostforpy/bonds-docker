@@ -125,8 +125,6 @@ class Security(models.Model):
                         self.last_update = result['date_publication']
                         self.today_price = result['price_today']
                         self.save()
-                        # self.portfolios.all().update(
-                        #    today_price=result['price_today'])
                         refresh_price_security.send(
                             sender=self.__class__,
                             instance=self,
