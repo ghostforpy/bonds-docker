@@ -444,7 +444,7 @@ def sp(request, id_p, id_s):
 
 def get_security_history(request, id):
     try:
-        security = get_object_or_404(Security, id=id)
+        security = Security.objects.get(id=id)
     except ObjectDoesNotExist:
         return JsonResponse({'status': 'no_id_security'})
     date_since = request.GET.get('date_since') or None
@@ -455,8 +455,13 @@ def get_security_history(request, id):
         security_history = security.get_history(date_since,
                                                 date_until,
                                                 format_result='str')
+    days = sorted(
+        security_history,
+        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
+        reverse=True)
+    result_history = {i: security_history[i] for i in days}
     content = dict()
-    content['history'] = security_history
+    content['history'] = result_history
     content['status'] = 'ok'
     content['url'] = reverse('moex:buy', args=[security.id])
     return JsonResponse(content)
@@ -472,8 +477,13 @@ def get_new_security_history(request, secid):
         parce_url = newitem.parce_url
         result = moex_history(parce_url)
         result = {i: i['CLOSE'] for i in result}
+    days = sorted(
+        result,
+        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
+        reverse=True)
+    result_history = {i: result[i] for i in days}
     content = dict()
-    content['history'] = result
+    content['history'] = result_history
     content['status'] = 'ok'
     content['url'] = reverse('moex:new_buy', args=[secid])
     return JsonResponse(content)
