@@ -45,7 +45,7 @@ def refresh_security_from_moex(self, *args):
         send_mail(
             'refresh moex',
             message,
-            'admin@mybonds.space',
+            'info@mybonds.space',
             [i for i in args],
             fail_silently=False,
         )
