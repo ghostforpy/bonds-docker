@@ -61,7 +61,7 @@
 
         <p>Эмитент: {{ security.emitent }}</p>
         <p>Тип: {{ security.get_security_type_display }}</p>
-        <p>Цена: {{ security.today_price }} руб.<span class="{% if security.change_price_percent > 0 %}text-success{% elif security.change_price_percent < 0%}text-danger{% else %}text-secondary{% endif %}">({{security.change_price_percent}} %)</span></p>
+        <p>Цена: {{ security.today_price }} руб. <span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></p>
         <p>Дата обновления: {{ security.last_update }}</p>
         {% if security.description %}
         <p>Описание: {{ security.description }}</p>
