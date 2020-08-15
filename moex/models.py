@@ -200,13 +200,15 @@ class Security(models.Model):
             return result
         else:
             result = moex_history(self.parce_url)
+            history = {}
             if self.security_type == 'bond':
-                history = {}
                 for i in result:
                     history[i] = str(float(result[i]['CLOSE']) *
                                      float(self.facevalue) / 100)
-                return history
-            return result
+            else:
+                for i in result:
+                    history[i] = str(float(result[i]['CLOSE']))
+            return history
 
 
 class SecurityHistory(models.Model):
