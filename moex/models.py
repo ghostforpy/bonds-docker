@@ -205,8 +205,8 @@ class Security(models.Model):
                 for i in result:
                     history[i] = str(float(result[i]['CLOSE']) *
                                      float(self.facevalue) / 100)
-
-            return history
+                return history
+            return result
 
 
 class SecurityHistory(models.Model):
