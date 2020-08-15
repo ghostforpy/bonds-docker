@@ -56,7 +56,7 @@ class InvestmentPortfolio(models.Model):
             percent_profit = scripts.percent_profit(self.today_cash,
                                                     self.invest_cash)
             change_percent_profit = (
-                Decimal(percent_profit) - self.percent_profit)
+                Decimal(percent_profit) - Decimal(self.percent_profit))
                 # / self.percent_profit * 100
             self.change_percent_profit = change_percent_profit
             self.percent_profit = percent_profit
@@ -73,7 +73,7 @@ class InvestmentPortfolio(models.Model):
         year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
         change_year_percent_profit = (
-            Decimal(year_percent_profit) - self.year_percent_profit)
+            Decimal(year_percent_profit) - Decimal(self.year_percent_profit))
             # / self.year_percent_profit * 100
         self.change_year_percent_profit = change_year_percent_profit
         self.year_percent_profit = year_percent_profit
