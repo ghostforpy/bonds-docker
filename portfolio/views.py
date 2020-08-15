@@ -31,6 +31,8 @@ def portfolio_detail(request, id):
         history = None
         form_refresh = None
         owner_url = portfolio.owner.get_absolute_url()
+        owner_name = portfolio.owner.name or portfolio.owner.username
+        portfolio_title = portfolio.title
         res = True
         securities_result = None
         if portfolio.owner == request.user:
@@ -59,7 +61,9 @@ def portfolio_detail(request, id):
                        'securities_result': securities_result,
                        'form_refresh': form_refresh,
                        'history': history,
-                       'owner_url': owner_url})
+                       'owner_url': owner_url,
+                       'owner_name': owner_name,
+                       'portfolio_title': portfolio_title})
     except ObjectDoesNotExist:
         return redirect(request.META.get('HTTP_REFERER'))
 
