@@ -476,7 +476,7 @@ def get_new_security_history(request, secid):
     if result is None:
         parce_url = newitem.parce_url
         result = moex_history(parce_url)
-        result = {i: i['CLOSE'] for i in result}
+        #result = {i: i['CLOSE'] for i in result}
     days = sorted(
         result,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
