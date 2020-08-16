@@ -69,7 +69,7 @@ $(document).on('click', '#add_invest', function(e){
                 };
                 out += '</div></div></div><div class="col-3">';
                 out += '<a class="delete-invest btn btn-danger btn-sm"';
-                out += ' href="/portfolio/del_invest/${id}/">Удалить</a>';
+                out += ' href="/portfolio/del_invest/' + id + '/">Удалить</a>';
                 out += '</div></div><div class="dropdown-divider"></div>';
                 $('.history-table > .row:first').before(out);
                 updated_portfolio(data);
