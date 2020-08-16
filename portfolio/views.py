@@ -72,7 +72,6 @@ def portfolio_detail(request, id):
 @ login_required
 def portfolio_add_invest(request, id):
     form = PortfolioInvestForm(data=request.POST)
-    print(request.POST)
     if form.is_valid():
         try:
             portfolio = get_object_or_404(InvestmentPortfolio,
