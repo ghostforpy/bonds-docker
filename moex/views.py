@@ -350,7 +350,8 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
                     float(security_history[i]['CLOSE']) * float(facevalue)
                     / 100)
             except Exception:
-                security_history.pop(i)
+                pass
+                #security_history.pop(i)
     days = sorted(
         security_history,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
@@ -476,7 +477,7 @@ def get_new_security_history(request, secid):
     if result is None:
         parce_url = newitem.parce_url
         result = moex_history(parce_url)
-        #result = {i: i['CLOSE'] for i in result}
+        result = {i: i['CLOSE'] for i in result}
     days = sorted(
         result,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
