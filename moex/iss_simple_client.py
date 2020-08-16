@@ -179,8 +179,11 @@ class MicexISSClient:
             jhist = jres['history']
             jdata = jhist['data']
             jcols = jhist['columns']
-            closeIdxx = jcols.index('LEGALCLOSEPRICE')
             closeIdx = jcols.index('CLOSE')
+            try:
+                closeIdxx = jcols.index('LEGALCLOSEPRICE')
+            except ValueError:
+                closeIdxx = closeIdx
             trade_dateIdx = jcols.index('TRADEDATE')
             try:
                 accintIdx = jcols.index('ACCINT')

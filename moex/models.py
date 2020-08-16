@@ -28,7 +28,9 @@ class Security(models.Model):
                                               ('ppif', 'БПИФ'),
                                               ('share', 'Акция'),
                                               ('bond', 'Облигация'),
-                                              ('futures', 'Фьючерс')])
+                                              ('futures', 'Фьючерс'),
+                                              ('index', 'Индекс'),
+                                              ('etf_ppif', 'ETF'),])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)
     shortname = models.CharField(max_length=50, blank=True, unique=True)
@@ -358,7 +360,7 @@ def refresh_count_security_in_portfolio(sender,
         s_p.total_cost = float(s_p.count) * \
             (float(s_p.today_price) + float(s_p.security.accint))
     else:
-        s_p.total_cost = s_p.count * s_p.today_price
+        s_p.total_cost = float(s_p.count) * float(s_p.today_price)
     s_p.save()
     if s_p.count == 0:
         s_p.delete()

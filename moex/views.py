@@ -273,12 +273,16 @@ def prepare_new_security_by_secid(secid):
                 break
         if re.search(r'bond', description["TYPE"]):
             security_type = 'bond'
+        elif re.search(r'etf_ppif', description["TYPE"]):
+            security_type = 'etf_ppif'
         elif re.search(r'ppif', description["TYPE"]):
             security_type = 'ppif'
         elif re.search(r'share', description["TYPE"]):
             security_type = 'share'
         elif re.search(r'futures', description["TYPE"]):
             security_type = 'futures'
+        elif re.search(r'index', description["TYPE"]):
+            security_type = 'index'
         else:
             pass
         regnumber = get_value(description, "REGNUMBER")
