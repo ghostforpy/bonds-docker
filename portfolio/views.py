@@ -74,8 +74,7 @@ def portfolio_add_invest(request, id):
     form = PortfolioInvestForm(data=request.POST)
     if form.is_valid():
         try:
-            portfolio = get_object_or_404(InvestmentPortfolio,
-                                          id=id)
+            portfolio = InvestmentPortfolio.objects.get(id=id)
             if portfolio.owner == request.user:
                 new_item = form.save(commit=False)
                 new_item.portfolio = portfolio
@@ -99,8 +98,7 @@ def refresh_portfolio(request, id):
     form = RefreshPortfolio(data=request.POST)
     if form.is_valid():
         try:
-            portfolio = get_object_or_404(InvestmentPortfolio,
-                                          id=id)
+            portfolio = InvestmentPortfolio.objects.get(id=id)
             if portfolio.owner == request.user:
                 portfolio.today_cash = form.cleaned_data['today_cash']
                 portfolio.private = form.cleaned_data['private']
@@ -181,7 +179,7 @@ def portfolio_create(request):
 @ login_required
 def delete_portfolio(request, id):
     try:
-        portfolio = get_object_or_404(InvestmentPortfolio, id=id)
+        portfolio = InvestmentPortfolio.objects.get(id=id)
     except ObjectDoesNotExist:
         return redirect(request.META.get('HTTP_REFERER'))
 
