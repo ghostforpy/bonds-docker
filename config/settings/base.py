@@ -72,6 +72,7 @@ THIRD_PARTY_APPS = [
     "django_celery_beat",
     'import_export',
     'rest_framework',
+    'bootstrap_email',
 ]
 
 LOCAL_APPS = [

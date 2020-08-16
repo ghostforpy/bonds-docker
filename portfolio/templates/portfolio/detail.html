@@ -57,7 +57,7 @@
 
         {% if portfolio.owner == request.user %}
         <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyPortfolioButton" data-toggle="collapse" data-target="#collapseHistoryPortfolio" aria-expanded="false" aria-controls="collapseHistoryPortfolio">
-            История пополнений
+            История движения денежных средств
             </button>
               <div class="collapse history-table container-in-collapse" id="collapseHistoryPortfolio"> 
               {% if history != None %}
@@ -164,7 +164,7 @@
           {% if portfolio.owner == request.user %}
             {% if portfolio.trade_securities.count > 0 %}
               <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapseHistory" aria-expanded="false" aria-controls="collapseHistory">
-              История покупок
+              История торгов
               </button>
               <div class="collapse container-in-collapse" id="collapseHistory">
                 <div class="row">
