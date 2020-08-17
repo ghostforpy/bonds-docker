@@ -18,12 +18,12 @@ def get_users_count():
 
 @celery_app.task(bind=True,
                  name='user.informer')
-def informer(self):
-    users = User.objects.filter(is_active=True).filter(is_staff=False)
+def informer(self, *args):
+    users = User.objects.filter(is_active=True).exclude(email__in=args)
     for user in users:
         portfolios = user.portfolios.all()
         if not portfolios:
-            return
+            continue
         s_p = SecurityPortfolios.objects.filter(portfolio__in=portfolios)
         securities_in_portfolios = [i.security for i in s_p]
         security_followed = [i for i in user.security_followed.all(

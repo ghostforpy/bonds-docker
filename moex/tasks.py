@@ -37,7 +37,6 @@ def refresh_security_from_moex(self, *args):
     result = dict()
     for security in securities:
         result[security.name] = security.refresh_price()
-    print(result)
     if args and result:
         message = '{}\n'.format(now())
         for i in result:
