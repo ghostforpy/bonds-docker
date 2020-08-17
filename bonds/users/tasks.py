@@ -20,6 +20,7 @@ def get_users_count():
                  name='user.informer')
 def informer(self, *args):
     users = User.objects.filter(is_active=True).exclude(email__in=args)
+    result = dict()
     for user in users:
         portfolios = user.portfolios.all()
         if not portfolios:
@@ -28,6 +29,11 @@ def informer(self, *args):
         securities_in_portfolios = [i.security for i in s_p]
         security_followed = [i for i in user.security_followed.all(
         ) if i not in securities_in_portfolios]
+        result[user.email] = dict()
+        result[user.email]['securities_in_portfolios'] = [
+            i.name for i in securities_in_portfolios]
+        result[user.email]['security_followed'] = [
+            i.name for i in security_followed]
         html_message = render_to_string(
             'users/email_informer_template.html', {'portfolios': portfolios,
                                                    'securities_in_portfolios':
@@ -42,3 +48,4 @@ def informer(self, *args):
             [user.email],
             fail_silently=False,
             html_message=html_message)
+    return result
