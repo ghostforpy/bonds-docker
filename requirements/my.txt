@@ -1,3 +1,3 @@
 djangorestframework==3.11.0
 lxml==4.5.1
-django-bootstrap-email
+#django-bootstrap-email
