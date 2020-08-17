@@ -35,6 +35,7 @@ def informer(self, *args):
         result[user.email]['security_followed'] = [
             i.name for i in security_followed]
         html_message = render_to_string(
+            #'users/email.html', {'portfolios': portfolios,
             'users/email_informer_template.html', {'portfolios': portfolios,
                                                    'securities_in_portfolios':
                                                    securities_in_portfolios,

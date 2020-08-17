@@ -1,123 +1,37 @@
-{% extends "base_email_template.html" %}
-{% block content %}
 	{% if portfolios %}
-		<h3 class="mt-3">Мои портфели:</h3>
-	        <div class="row">
-		          <div class="col-md-2 d-none d-md-block">
-		            <p>Наименование</p>
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		            <p>Стратегия</p>
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		            <p>Инвестиции</p>
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		            <p>Текущий баланс</p>
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		            Доходность
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		           Годовая доходность
-		          </div>
-	        </div>
-
-	    <div class="dropdown-divider d-none d-md-block"></div>
+		<h3>Мои портфели:</h3>
 		{% for portfolio in portfolios %}
-	                    <div class="row">
-	                      <div class="col-md-2 mt-1 mb-1">
-	                        <a class="btn btn-secondary btn-sm" href="{{ portfolio.get_absolute_url }}">{{ portfolio.title}}</a>
-	                      </div>
-	                      <div class="col-md-2 mt-1 mb-1">
-	                        <span class="d-md-none">Стратегия: </span>{{ portfolio.strategia }}
-	                      </div>
-	                      <div class="col-md-2 mt-1 mb-1">
-	                        <span class="d-md-none">Инвестиции: </span>{{ portfolio.invest_cash}}
-	                      </div>
-	                      <div class="col-md-2 mt-1 mb-1">
-	                        <span class="d-md-none">Текущий баланс: </span>{{ portfolio.today_cash}}
-	                      </div>
-	                      <div class="col-md-2 mt-1 mb-1">
-	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_percent_profit}}%)</span>
-	                      </div>
-	                      <div class="col-md-2 mt-1 mb-1">
-	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_year_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_year_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_year_percent_profit}}%)</span>
-	                      </div>
-	                    </div>
-	                <div class="dropdown-divider"></div>
+
+			*{{ portfolio.title}}</br>
+	                        <span>Инвестиции: {{ portfolio.invest_cash}}</span></br>
+	                        <span>Текущий баланс: {{ portfolio.today_cash}}</span></br>
+	                        <span>Доходность: </span><span style = "color:{% if portfolio.percent_profit > 0 %}green{% elif portfolio.percent_profit < 0 %}red{% else %}gray{% endif %}">{{ portfolio.percent_profit }}%</span><span style = "color:{% if portfolio.change_percent_profit > 0 %}green{% elif portfolio.change_percent_profit < 0 %}red{% else %}gray{% endif %}">({{portfolio.change_percent_profit}}%)</span></br>
+	                       <span>Годовая доходность: </span><span style = "color:{% if portfolio.year_percent_profit > 0 %}green{% elif portfolio.year_percent_profit < 0 %}red{% else %}gray{% endif %}">{{ portfolio.year_percent_profit }}%</span><span style = "color:{% if portfolio.change_year_percent_profit > 0 %}green{% elif portfolio.change_year_percent_profit < 0 %}red{% else %}gray{% endif %}">({{portfolio.change_year_percent_profit}}%)</span></br>
+	                       <span>---------------------------</span></br>
 	    {% endfor %}
 	{% endif %}
 
 	{% if securities_in_portfolios %}
-    <h3 class="mt-3 mb-3">Ценные бумаги в портфелях:</h3>
-    		<div class="row">
-    		          <div class="col-md-4 d-none d-md-block">
-    		            <p>Наименование</p>
-    		          </div>
-    		          <div class="col-md-4 d-none d-md-block">
-    		            <p>Эмитент</p>
-    		          </div>
-    		          <div class="col-md-2 d-none d-md-block">
-    		            <p>Цена</p>
-    		          </div>
-                  <div class="col-md-2 d-none d-md-block">
-                    <p>Дата обновления</p>
-                  </div>
-    	        </div>
-    	    <div class="dropdown-divider d-none d-md-block"></div>
+    <h3>Ценные бумаги в портфелях:</h3>
     		{% for security in securities_in_portfolios %}
-            <div class="row">
-                  <div class="col-md-4 mb-1 mt-1">
-                    <span class="d-md-none">Наименование: </span><a class="btn btn-warning btn-sm" href="{{ security.get_absolute_url }}">{{ security.name }}</a>
-                  </div>
-                  <div class="col-md-4 mb-1 mt-1">
-                    <span class="d-md-none">Эмитент: </span><span>{{ security.emitent }}</span>
-                  </div>
-                	<div class="col-md-2 mb-1 mt-1">
-                    <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price }}</span><span> руб.<br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></span>
-                  </div>
-                  <div class="col-md-2 mb-1 mt-1">
-                    <span class="d-md-none">Дата обновления: </span><span>{{ security.last_update }}</span>
-                  </div>
-            </div>
-            <div class="mb-3 dropdown-divider"></div>
+                    <span>Наименование: </span>{{ security.name }}</a></br>
+                    <span>Эмитент: </span><span>{{ security.emitent }}</span></br>
+                    <span>Цена: </span><span>{{ security.today_price }}</span><span> руб.<span style = "color:{% if security.change_price_percent > 0 %}green{% elif security.change_price_percent < 0 %}red{% else %}gray{% endif %}">({{security.change_price_percent}}%)</span></span></br>
+                    <span>Дата обновления: </span><span>{{ security.last_update }}</span></br>
+                    <span>---------------------------</span></br>
+
         {% endfor %}
     {% endif %}
 
     {% if security_followed %}
-    <h3 class="mt-3 mb-3">Отслеживаемые ценные бумаги:</h3>
-    		<div class="row">
-    		          <div class="col-md-4 d-none d-md-block">
-    		            <p>Наименование</p>
-    		          </div>
-    		          <div class="col-md-4 d-none d-md-block">
-    		            <p>Эмитент</p>
-    		          </div>
-    		          <div class="col-md-2 d-none d-md-block">
-    		            <p>Цена</p>
-    		          </div>
-                  <div class="col-md-2 d-none d-md-block">
-                    <p>Дата обновления</p>
-                  </div>
-    	        </div>
-    	    <div class="dropdown-divider d-none d-md-block"></div>
-    		{% for security in security_followed %}
-            <div class="row">
-                  <div class="col-md-4 mb-1 mt-1">
-                    <span class="d-md-none">Наименование: </span><a class="btn btn-warning btn-sm" href="{{ security.get_absolute_url }}">{{ security.name }}</a>
-                  </div>
-                  <div class="col-md-4 mb-1 mt-1">
-                    <span class="d-md-none">Эмитент: </span><span>{{ security.emitent }}</span>
-                  </div>
-                	<div class="col-md-2 mb-1 mt-1">
-                    <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price }}</span><span> руб.<br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></span>
-                  </div>
-                  <div class="col-md-2 mb-1 mt-1">
-                    <span class="d-md-none">Дата обновления: </span><span>{{ security.last_update }}</span>
-                  </div>
-            </div>
-            <div class="mb-3 dropdown-divider"></div>
+    <h3>Отслеживаемые ценные бумаги:</h3>
+    		{% for security in securities_in_portfolios %}
+                    <span>Наименование: </span>{{ security.name }}</a></br>
+                    <span>Эмитент: </span><span>{{ security.emitent }}</span></br>
+                    <span>Цена: </span><span>{{ security.today_price }}</span><span> руб.<span style = "color:{% if security.change_price_percent > 0 %}green{% elif security.change_price_percent < 0 %}red{% else %}gray{% endif %}">({{security.change_price_percent}}%)</span></span></br>
+                    <span>Дата обновления: </span><span>{{ security.last_update }}</span></br>
+                    <span>---------------------------</span></br>
+
         {% endfor %}
     {% endif %}
-{% endblock content %}
+
