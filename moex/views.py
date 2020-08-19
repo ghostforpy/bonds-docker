@@ -328,7 +328,7 @@ def prepare_new_security_by_secid(secid):
                            last_update=last_update,
                            change_price_percent=change_price_percent)
         caches['default'].add('moex_secid_' + description["SECID"],
-                              newitem, timeout=24 * 60 * 60)
+                              newitem, timeout=60 * 60)
     else:
         newitem = caches['default'].get('moex_secid_' + description["SECID"])
     return newitem
@@ -362,7 +362,7 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
         reverse=True)
     result_history = {i: security_history[i]['CLOSE'] for i in days}
     caches['default'].add('moex_security_history_secid' + secid,
-                          result_history, timeout=30)
+                          result_history, timeout=60 * 60)
     today_price = security_history[days[0]]['CLOSE']
     try:
         previos_price = security_history[days[1]]['CLOSE']
