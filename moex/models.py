@@ -165,8 +165,9 @@ class Security(models.Model):
                         except Exception as e:
                             pass
                     for i in result:
-                        result[i]['CLOSE'] = str(float(result[i]['CLOSE']) *
-                                                 float(self.facevalue) / 100)
+                        result[i]['CLOSE'] = str(
+                            float(result[i]['CLOSE']
+                                  ) * float(self.facevalue) / 100)
                     self.accint = result[
                         datetime.strftime(max(days), '%d.%m.%Y')]['ACCINT']
                 today_price = result[
@@ -205,8 +206,8 @@ class Security(models.Model):
             history = {}
             if self.security_type == 'bond':
                 for i in result:
-                    history[i] = str(float(result[i]['CLOSE']) *
-                                     float(self.facevalue) / 100)
+                    history[i] = str(float(result[i]['CLOSE']
+                                           ) * float(self.facevalue) / 100)
             else:
                 for i in result:
                     history[i] = str(float(result[i]['CLOSE']))
@@ -375,8 +376,6 @@ def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
         instance.ndfl * (-1) ** (not instance.buy)
     if created:
         portfolio.ostatok += total_cost * (-1) ** (instance.buy)
-        # portfolio.save(update_fields=['ostatok'])
-        # portfolio.refresh_portfolio()
     else:
         portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
     portfolio.save(update_fields=['ostatok'])
@@ -398,7 +397,6 @@ def upload_security_history(sender, instance, created=False, **kwargs):
     security = instance.security
     oldest_date = security.oldest_date
     date = instance.date
-    # print(oldest_date, date)
     if oldest_date > date:
         security.oldest_date = instance.date
         security.save(update_fields=['oldest_date'])

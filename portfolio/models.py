@@ -16,13 +16,24 @@ class InvestmentPortfolio(models.Model):
                                       default=0)
     today_cash = models.DecimalField(max_digits=10, decimal_places=2,
                                      default=0)
+    previos_today_cash = models.DecimalField(max_digits=10, decimal_places=2,
+                                             default=0)
+    change_today_cash = models.DecimalField(max_digits=5,
+                                            decimal_places=2,
+                                            default=0)
     ostatok = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     percent_profit = models.DecimalField(max_digits=5, decimal_places=2,
                                          default=0)
+    previos_percent_profit = models.DecimalField(max_digits=5,
+                                                 decimal_places=2,
+                                                 default=0)
     change_percent_profit = models.DecimalField(max_digits=5, decimal_places=2,
                                                 default=0)
     year_percent_profit = models.DecimalField(max_digits=5, decimal_places=2,
                                               default=0)
+    previos_year_percent_profit = models.DecimalField(max_digits=5,
+                                                      decimal_places=2,
+                                                      default=0)
     change_year_percent_profit = models.DecimalField(max_digits=5,
                                                      decimal_places=2,
                                                      default=0)
@@ -55,27 +66,17 @@ class InvestmentPortfolio(models.Model):
 
             percent_profit = scripts.percent_profit(self.today_cash,
                                                     self.invest_cash)
-            change_percent_profit = (
-                Decimal(percent_profit) - Decimal(self.percent_profit))
-                # / self.percent_profit * 100
-            self.change_percent_profit = change_percent_profit
             self.percent_profit = percent_profit
         except ZeroDivisionError:
             return
-        # return scripts.percent_profit(self.today_cash,
-        #                               self.invest_cash)
 
     def calc_year_percent_profit(self):
         t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
-        # t = PortfolioInvestHistory.objects.filter(portfolio=self.id)
         invest = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
 
         year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
-        change_year_percent_profit = (
-            Decimal(year_percent_profit) - Decimal(self.year_percent_profit))
-            # / self.year_percent_profit * 100
-        self.change_year_percent_profit = change_year_percent_profit
+
         self.year_percent_profit = year_percent_profit
 
     def __str__(self):
@@ -91,7 +92,6 @@ class InvestmentPortfolio(models.Model):
     def calc_today_cash(self):
         if not self.manual:
             securities = self.securities.all()
-            #total = sum([i.count * i.today_price for i in securities])
             total = sum([i.total_cost for i in securities])
             self.today_cash = total + self.ostatok
             self.save(update_fields=['today_cash'])
@@ -109,6 +109,23 @@ class InvestmentPortfolio(models.Model):
         self.calc_year_percent_profit()
         self.save()
         self.owner.vklad.refresh_vklad()
+
+    def refresh_portfolio_changes(self):
+        change_year_percent_profit = (
+            Decimal(self.year_percent_profit
+                    ) - Decimal(self.previos_year_percent_profit))
+        self.change_year_percent_profit = change_year_percent_profit
+        change_percent_profit = (
+            Decimal(self.percent_profit
+                    ) - Decimal(self.previos_percent_profit))
+        self.change_percent_profit = change_percent_profit
+        change_today_cash = (
+            Decimal(self.today_cash) - Decimal(self.previos_today_cash)
+        ) / Decimal(self.previos_today_cash) * 100
+        self.change_today_cash = change_today_cash
+        self.save(update_fields=['change_year_percent_profit',
+                                 'change_percent_profit',
+                                 'change_today_cash'])
 
 
 class PortfolioHistory(models.Model):
