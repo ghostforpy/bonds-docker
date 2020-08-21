@@ -1,7 +1,7 @@
 from django.db import models
 from bonds.users.models import User
 from django.urls import reverse
-from decimal import Decimal
+from decimal import Decimal, DivisionByZero
 from . import scripts
 
 # Create your models here.
@@ -119,9 +119,12 @@ class InvestmentPortfolio(models.Model):
             Decimal(self.percent_profit
                     ) - Decimal(self.previos_percent_profit))
         self.change_percent_profit = change_percent_profit
-        change_today_cash = (
-            Decimal(self.today_cash) - Decimal(self.previos_today_cash)
-        ) / Decimal(self.previos_today_cash) * 100
+        try:
+            change_today_cash = (
+                Decimal(self.today_cash) - Decimal(self.previos_today_cash)
+            ) / Decimal(self.previos_today_cash) * 100
+        except DivisionByZero:
+            change_today_cash = 0
         self.change_today_cash = change_today_cash
         self.save(update_fields=['change_year_percent_profit',
                                  'change_percent_profit',
