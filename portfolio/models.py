@@ -114,10 +114,12 @@ class InvestmentPortfolio(models.Model):
         change_year_percent_profit = (
             Decimal(self.year_percent_profit
                     ) - Decimal(self.previos_year_percent_profit))
+        self.previos_year_percent_profit = self.year_percent_profit
         self.change_year_percent_profit = change_year_percent_profit
         change_percent_profit = (
             Decimal(self.percent_profit
                     ) - Decimal(self.previos_percent_profit))
+        self.previos_percent_profit = self.percent_profit
         self.change_percent_profit = change_percent_profit
         try:
             change_today_cash = (
@@ -125,6 +127,7 @@ class InvestmentPortfolio(models.Model):
             ) / Decimal(self.previos_today_cash) * 100
         except DivisionByZero:
             change_today_cash = 0
+        self.previos_today_cash = self.today_cash
         self.change_today_cash = change_today_cash
         self.save(update_fields=['change_year_percent_profit',
                                  'change_percent_profit',
