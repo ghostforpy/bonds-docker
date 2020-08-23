@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load moex_extras%}
 {% block page_css %}
             {% if request.user.is_staff %}
                 <link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
@@ -41,7 +42,7 @@
                     <span class="d-md-none">Эмитент: </span><span>{{ security.emitent }}</span>
                   </div>
                 	<div class="col-md-2 mb-1 mt-1">
-                    <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price }}</span><span> руб.<br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></span>
+                    <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price|delete_zeroes }}</span><span> руб.<br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></span>
                   </div>
                   <div class="col-md-2 mb-1 mt-1">
                     <span class="d-md-none">Дата обновления: </span><span id="{{ security.id }}_last_update">{{ security.last_update }}</span>

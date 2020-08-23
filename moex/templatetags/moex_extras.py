@@ -31,5 +31,10 @@ def user_trades_security(user, security):
 
 @register.filter(name='int_to_str')
 def int_to_str(s):
-    s = str(s)
+    s = str(float("{0:.2f}".format(s)))
     return s
+
+
+@register.filter(name='delete_zeroes')
+def delete_zeroes(s):
+    return float("{0:.2f}".format(s))

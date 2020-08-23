@@ -121,7 +121,7 @@
                         <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" href="{{ portfolio.portfolio.get_absolute_url }}">{{ portfolio.portfolio.title}}</a>
                       </div>
                       <div class="col-lg-4 col-12 mb-1 mt-1">
-                        <span class="d-md-none">Количество: </span><span>{{ portfolio.count }} шт.</span>
+                        <span class="d-md-none">Количество: </span><span>{{ portfolio.count|delete_zeroes }} шт.</span>
                       </div>
                       <div class="col-lg-2 col-4 mb-1 mt-1">
                         <a class="btn btn-success btn-sm" href="{% url 'moex:buy' security.id %}?portfolio={{ portfolio.portfolio.id }}&buy=true">Купить</a>
@@ -164,13 +164,13 @@
             {% for security in request.user|user_trades_security:security %}
               <div class="row align-items-center mt-2">
                       <div class="col-md-2 col-12 mb-1 mt-1">
-                        <span class="d-md-none">Количество: </span><span>{{ security.count }} шт.</span>
+                        <span class="d-md-none">Количество: </span><span>{{ security.count|delete_zeroes }} шт.</span>
                       </div>
                       <div class="col-md-2 col-12 mb-1 mt-1">
-                        <span class="d-md-none">Цена: </span><span>{{ security.price }} руб.</span>
+                        <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} руб.</span>
                       </div>
                       <div class="col-md-2 col-12 mb-1 mt-1">
-                        <span class="d-md-none">Комиссия: </span><span>{{ security.commission }} руб.</span>
+                        <span class="d-md-none">Комиссия: </span><span>{{ security.commission|delete_zeroes }} руб.</span>
                       </div>
                       <div class="col-md-2 col-12 mb-1 mt-1">
                         <span class="d-md-none">Действие: </span><span>{% if security.buy %}Покупка{% else %}Продажа{% endif %}</span>
