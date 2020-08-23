@@ -2,6 +2,8 @@ from django.db import models
 from bonds.users.models import User
 from django.urls import reverse
 from decimal import Decimal, DivisionByZero
+from django.dispatch import receiver
+from django.db.models.signals import post_save, post_delete
 from . import scripts
 
 # Create your models here.
@@ -255,3 +257,15 @@ class PortfolioInvestHistory(models.Model):
         super(PortfolioInvestHistory, self).delete(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'
+
+
+@receiver(post_delete, sender=PortfolioInvestHistory)
+@receiver(post_save, sender=PortfolioInvestHistory)
+def refresh_portfolio_previos_state(sender, instance, **kwargs):
+    portfolio = instance.portfolio
+    portfolio.previos_percent_profit = portfolio.percent_profit
+    portfolio.previos_year_percent_profit = portfolio.year_percent_profit
+    portfolio.previos_today_cash = portfolio.today_cash
+    portfolio.save(update_fields=['change_year_percent_profit',
+                                  'change_percent_profit',
+                                  'change_today_cash'])
