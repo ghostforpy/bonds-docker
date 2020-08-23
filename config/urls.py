@@ -8,9 +8,9 @@ from django.http import HttpResponse
 
 
 def favicon(request):
-    image_data = open(settings.STATIC_ROOT + "images/favicons/favicon.ico",
+    image_data = open(settings.STATIC_ROOT + "/images/favicons/favicon.ico",
                       "rb").read()
-    return HttpResponse(image_data, mimetype="image/png")
+    return HttpResponse(image_data, content_type="image/png")
 
 
 urlpatterns = [
