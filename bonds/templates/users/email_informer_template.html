@@ -1,10 +1,21 @@
+{% load email_templates %}
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>{{ subject }}</title>
+        <style media="all" type="text/css">
+        {% bootstrap_email %}
+        {# or use bootstrap_email_min for stripped file #}
+    </style>
+</head>
+<body>
 	{% if portfolios %}
 		<h3>Мои портфели:</h3>
 		{% for portfolio in portfolios %}
 
 			*{{ portfolio.title}}</br>
 	                        <span>Инвестиции: {{ portfolio.invest_cash}}</span></br>
-	                        <span>Текущий баланс: {{ portfolio.today_cash}}</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_today_cash > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_today_cash < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_today_cash}}%)</span></br>
+	                        <span>Текущий баланс: {{ portfolio.today_cash}}</span><span style = "color:{% if portfolio.change_today_cash > 0 %}green{% elif portfolio.change_today_cash < 0 %}red{% else %}gray{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_today_cash}}%)</span></br>
 	                        <span>Доходность: </span><span style = "color:{% if portfolio.percent_profit > 0 %}green{% elif portfolio.percent_profit < 0 %}red{% else %}gray{% endif %}">{{ portfolio.percent_profit }}%</span><span style = "color:{% if portfolio.change_percent_profit > 0 %}green{% elif portfolio.change_percent_profit < 0 %}red{% else %}gray{% endif %}">({{portfolio.change_percent_profit}}%)</span></br>
 	                       <span>Годовая доходность: </span><span style = "color:{% if portfolio.year_percent_profit > 0 %}green{% elif portfolio.year_percent_profit < 0 %}red{% else %}gray{% endif %}">{{ portfolio.year_percent_profit }}%</span><span style = "color:{% if portfolio.change_year_percent_profit > 0 %}green{% elif portfolio.change_year_percent_profit < 0 %}red{% else %}gray{% endif %}">({{portfolio.change_year_percent_profit}}%)</span></br>
 	                       <span>---------------------------</span></br>
@@ -35,3 +46,5 @@
         {% endfor %}
     {% endif %}
 
+</body>
+</html>

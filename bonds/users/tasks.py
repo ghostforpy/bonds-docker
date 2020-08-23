@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from moex.models import SecurityPortfolios
 #from django.utils.html import strip_tags
 
@@ -42,9 +43,10 @@ def informer(self, *args):
                                                    'security_followed':
                                                    security_followed, })
         subject = 'Информация о состоянии ваших портфелей и отслеживаемых ценных бумагах'
+        plain_message = strip_tags(html_message)
         send_mail(
             subject,
-            '',
+            plain_message,
             'info@mybonds.space',
             [user.email],
             fail_silently=False,
