@@ -4,7 +4,14 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
-from django.views.generic.base import RedirectView
+from django.http import HttpResponse
+
+
+def favicon(request):
+    image_data = open(settings.STATIC_ROOT + "images/favicons/favicon.ico",
+                      "rb").read()
+    return HttpResponse(image_data, mimetype="image/png")
+
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -20,10 +27,7 @@ urlpatterns = [
     path("vklad/", include("vklad.urls", namespace="vklad")),
     path("securities/", include("moex.urls", namespace="moex")),
     path("friends/", include("friends.urls", namespace="friends")),
-    path("favicon.ico",\
-         RedirectView.as_view(url='/static/images/favicons/favicon.ico',\
-                              permanent=True),\
-         name="favicon"),
+    path("favicon.ico", favicon, name="favicon"),
     # Your stuff: custom urls includes go here
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
