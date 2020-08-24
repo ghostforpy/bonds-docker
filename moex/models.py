@@ -145,6 +145,8 @@ class Security(models.Model):
                 days = [datetime.strptime(i, '%d.%m.%Y').date()
                         for i in result]
                 if self.security_type == 'bond':
+                    if self.matdate <= now().date():
+                        self.monitor = False
                     if self.coupondate <= now().date():
                         # проверка параметров облигации
                         try:
@@ -285,9 +287,9 @@ class TradeHistory(models.Model):
         ordering = ['-date']
 
     def save(self, *args, **kwargs):
-        if self.security.security_type == 'bond':
-            if self.nkd == 0:
-                return 'NKD must be more then 0'
+        # if self.security.security_type == 'bond':
+            # if self.nkd == 0:
+            #    return 'NKD must be more then 0'
         if self.buy:
             total_cost = self.price * self.count + self.commission + self.nkd
             if total_cost > self.portfolio.ostatok:
