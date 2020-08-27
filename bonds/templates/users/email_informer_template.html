@@ -1,3 +1,4 @@
+{% load email_extras %}
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -11,10 +12,10 @@
 		<h3>Мои портфели:</h3>
 		{% for portfolio in portfolios %}
 			<h5>*{{ portfolio.title}}</h5>
-                <p>Инвестиции: {{ portfolio.invest_cash}}</p>
-                <p>Текущий баланс: {{ portfolio.today_cash}}</span><span style = "color:{% if portfolio.change_today_cash > 0 %}green{% elif portfolio.change_today_cash < 0 %}red{% else %}gray{% endif %}"></span>({{portfolio.change_today_cash}}%)</p>
-                <p>Доходность: </span><span style = "color:{% if portfolio.percent_profit > 0 %}green{% elif portfolio.percent_profit < 0 %}red{% else %}gray{% endif %}">{{ portfolio.percent_profit }}%</span><span style = "color:{% if portfolio.change_percent_profit > 0 %}green{% elif portfolio.change_percent_profit < 0 %}red{% else %}gray{% endif %}">({{portfolio.change_percent_profit}}%)</p>
-               <p>Годовая доходность: </span><span style = "color:{% if portfolio.year_percent_profit > 0 %}green{% elif portfolio.year_percent_profit < 0 %}red{% else %}gray{% endif %}">{{ portfolio.year_percent_profit }}%</span><span style = "color:{% if portfolio.change_year_percent_profit > 0 %}green{% elif portfolio.change_year_percent_profit < 0 %}red{% else %}gray{% endif %}">({{portfolio.change_year_percent_profit}}%)</p>
+                <p>Инвестиции: {{ portfolio.invest_cash }}</p>
+                <p>Текущий баланс: {{ portfolio.today_cash }}</span> <span style = "color:{{portfolio.change_today_cash | return_color }}">({{portfolio.change_today_cash | return_number_with_sign}}%)</span></p>
+                <p>Доходность: </span><span style = "color:{{portfolio.percent_profit | return_color }}">{{ portfolio.percent_profit}}%</span> <span style = "color:{{portfolio.change_percent_profit | return_color }}">({{portfolio.change_percent_profit | return_number_with_sign }}%)</p>
+               <p>Годовая доходность: </span><span style = "color:{{portfolio.year_percent_profit | return_color }}">{{ portfolio.year_percent_profit }}%</span> <span style = "color:{{portfolio.change_year_percent_profit | return_color }}">({{portfolio.change_year_percent_profit | return_number_with_sign}}%)</p>
                <p>---------------------------</span></p>
 	    {% endfor %}
 	{% endif %}
@@ -24,7 +25,7 @@
     		{% for security in securities_in_portfolios %}
             <h5>Наименование: </span>{{ security.name }}</h5>
             <p>Эмитент: </span><span>{{ security.emitent }}</p>
-            <p>Цена: </span><span>{{ security.today_price }}</span><span> руб.<span style = "color:{% if security.change_price_percent > 0 %}green{% elif security.change_price_percent < 0 %}red{% else %}gray{% endif %}">({{security.change_price_percent}}%)</span></p>
+            <p>Цена: </span><span>{{ security.today_price | delete_zeroes }}</span><span> руб. <span style = "color:{{security.change_price_percent | return_color }}">({{security.change_price_percent | return_number_with_sign}}%)</span></p>
             <p>Дата обновления: </span><span>{{ security.last_update }}</p>
             <p>---------------------------</p>
         {% endfor %}
@@ -35,7 +36,7 @@
     		{% for security in securities_in_portfolios %}
                     <h5>Наименование: </span>{{ security.name }}</h5>
             <p>Эмитент: </span><span>{{ security.emitent }}</p>
-            <p>Цена: </span><span>{{ security.today_price }}</span><span> руб.<span style = "color:{% if security.change_price_percent > 0 %}green{% elif security.change_price_percent < 0 %}red{% else %}gray{% endif %}">({{security.change_price_percent}}%)</span></p>
+            <p>Цена: </span><span>{{ security.today_price | delete_zeroes }}</span><span> руб. <span style = "color:{{security.change_price_percent | return_color }}">({{security.change_price_percent | return_number_with_sign}}%)</span></p>
             <p>Дата обновления: </span><span>{{ security.last_update }}</p>
             <p>---------------------------</p>
         {% endfor %}
