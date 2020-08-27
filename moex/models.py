@@ -382,6 +382,13 @@ def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
         portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
     portfolio.save(update_fields=['ostatok'])
     portfolio.refresh_portfolio()
+    # refresh portfolio previos state
+    portfolio.previos_percent_profit = portfolio.percent_profit
+    portfolio.previos_year_percent_profit = portfolio.year_percent_profit
+    portfolio.previos_today_cash = portfolio.today_cash
+    portfolio.save(update_fields=['change_year_percent_profit',
+                                  'change_percent_profit',
+                                  'change_today_cash'])
 
 
 def upload(security, date, oldest_date):
@@ -422,15 +429,3 @@ def refresh_portfolios(sender, instance, **kwargs):
             i.total_cost = float(i.today_price) * float(i.count)
         i.save(update_fields=['today_price', 'total_cost'])
         i.portfolio.refresh_portfolio()
-
-
-@receiver(post_delete, sender=TradeHistory)
-@receiver(post_save, sender=TradeHistory)
-def refresh_portfolio_previos_state(sender, instance, **kwargs):
-    portfolio = instance.portfolio
-    portfolio.previos_percent_profit = portfolio.percent_profit
-    portfolio.previos_year_percent_profit = portfolio.year_percent_profit
-    portfolio.previos_today_cash = portfolio.today_cash
-    portfolio.save(update_fields=['change_year_percent_profit',
-                                  'change_percent_profit',
-                                  'change_today_cash'])
