@@ -347,6 +347,7 @@ def refresh_count_security_in_portfolio(sender,
             security=security)
         if s_p_created:
             s_p.count = 0
+            security.users_follows.add(owner)
         s_p.count += instance.count * (-1) ** (not instance.buy)
         s_p.today_price = security.today_price
     else:

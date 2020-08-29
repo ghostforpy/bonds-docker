@@ -1,4 +1,5 @@
 {% load email_extras %}
+{% load moex_extras %}
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -10,36 +11,22 @@
 <body>
 	{% if portfolios %}
 		<h3>Мои портфели:</h3>
-		{% for portfolio in portfolios %}
-			<h5>*{{ portfolio.title}}</h5>
-                <p>Инвестиции: {{ portfolio.invest_cash }}</p>
-                <p>Текущий баланс: {{ portfolio.today_cash }}</span> <span style = "color:{{portfolio.change_today_cash | return_color }}">({{portfolio.change_today_cash | return_number_with_sign}}%)</span></p>
-                <p>Доходность: </span><span style = "color:{{portfolio.percent_profit | return_color }}">{{ portfolio.percent_profit}}%</span> <span style = "color:{{portfolio.change_percent_profit | return_color }}">({{portfolio.change_percent_profit | return_number_with_sign }}%)</p>
-               <p>Годовая доходность: </span><span style = "color:{{portfolio.year_percent_profit | return_color }}">{{ portfolio.year_percent_profit }}%</span> <span style = "color:{{portfolio.change_year_percent_profit | return_color }}">({{portfolio.change_year_percent_profit | return_number_with_sign}}%)</p>
-               <p>---------------------------</span></p>
-	    {% endfor %}
+		{% include "users/portfolios_template.html" with portfolios=portfolios %}
 	{% endif %}
 
 	{% if securities_in_portfolios %}
     <h3>Ценные бумаги в портфелях:</h3>
-    		{% for security in securities_in_portfolios %}
-            <h5>Наименование: </span>{{ security.name }}</h5>
-            <p>Эмитент: </span><span>{{ security.emitent }}</p>
-            <p>Цена: </span><span>{{ security.today_price | delete_zeroes }}</span><span> руб. <span style = "color:{{security.change_price_percent | return_color }}">({{security.change_price_percent | return_number_with_sign}}%)</span></p>
-            <p>Дата обновления: </span><span>{{ security.last_update }}</p>
-            <p>---------------------------</p>
-        {% endfor %}
+        {% include "users/securities_template.html" with securities=securities_in_portfolios %}
+    {% endif %}
+
+    {% if portfolio_followed %}
+        <h3>Отслеживаемые портфели:</h3>
+        {% include "users/portfolios_template.html" with portfolios=portfolio_followed %}
     {% endif %}
 
     {% if security_followed %}
     <h3>Отслеживаемые ценные бумаги:</h3>
-    		{% for security in securities_in_portfolios %}
-                    <h5>Наименование: </span>{{ security.name }}</h5>
-            <p>Эмитент: </span><span>{{ security.emitent }}</p>
-            <p>Цена: </span><span>{{ security.today_price | delete_zeroes }}</span><span> руб. <span style = "color:{{security.change_price_percent | return_color }}">({{security.change_price_percent | return_number_with_sign}}%)</span></p>
-            <p>Дата обновления: </span><span>{{ security.last_update }}</p>
-            <p>---------------------------</p>
-        {% endfor %}
+        {% include "users/securities_template.html" with securities=security_followed %}
     {% endif %}
 
 </body>

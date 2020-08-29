@@ -1,0 +1,14 @@
+{% load email_extras %}
+{% load moex_extras %}
+
+{% for portfolio in portfolios %}
+	<h5>*{{ portfolio.title}}</h5>
+		{% if portfolio.owner != request.user %}
+			<p>Владелец: {{ portfolio.owner }}</p>
+		{% endif %}
+        <p>Инвестиции: {{ portfolio.invest_cash }}</p>
+        <p>Текущий баланс: {{ portfolio.today_cash }}</span> <span style = "color:{{portfolio.change_today_cash | return_color }}">({{portfolio.change_today_cash | return_number_with_sign}}%)</span></p>
+        <p>Доходность: </span><span style = "color:{{portfolio.percent_profit | return_color }}">{{ portfolio.percent_profit}}%</span> <span style = "color:{{portfolio.change_percent_profit | return_color }}">({{portfolio.change_percent_profit | return_number_with_sign }}%)</p>
+       <p>Годовая доходность: </span><span style = "color:{{portfolio.year_percent_profit | return_color }}">{{ portfolio.year_percent_profit }}%</span> <span style = "color:{{portfolio.change_year_percent_profit | return_color }}">({{portfolio.change_year_percent_profit | return_number_with_sign}}%)</p>
+       <p>---------------------------</span></p>
+{% endfor %}

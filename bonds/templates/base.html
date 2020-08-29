@@ -63,11 +63,12 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'portfolio:my_portfolios' %}">Мои портфели</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'friends:list' %}">Мои друзья <span class="badge badge-pill badge-secondary">{{ request.user|new_friends_count }}</span></a></li>
                 <div class="dropdown-divider"></div>
-                <li class="nav-item"><a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a>
+                </li>
               </ul>  
             {% else %}
               <div class="dropdown-divider"></div>
-              <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a></li>
+              <li class="nav-item d-md-none"><a class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a></li> 
             {% endif %}
           </li>
           </ul>
@@ -85,8 +86,8 @@
                     <li><a href="{% url 'account_logout' %}" class="btn btn-sm btn-warning dropdown-item">{% trans "Sign Out" %}</a></li>                  
                   </ul>
                 {% else %}
-                <button type="button" class="btn btn-warning">
-                  <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
+                <button type="button" class="btn btn-sm btn-warning">
+                  <a id="log-in-link" href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
                 </button>
                 {% endif %}
                 

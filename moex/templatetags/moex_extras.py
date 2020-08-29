@@ -41,3 +41,20 @@ def int_to_str(s):
 @register.filter(name='delete_zeroes')
 def delete_zeroes(s):
     return float("{0:.2f}".format(s))
+
+
+@register.filter(name='return_color_and_fas_bootstrap')
+def return_color(i, fas=False):
+    i = float(i)
+    if i < 0:
+        result = 'text-danger'
+        if fas:
+            result += ' fas fa-angle-double-down'
+        return result
+    elif i > 0:
+        result = 'text-success'
+        if fas:
+            result += ' fas fa-angle-double-up'
+        return result
+    else:
+        return 'text-secondary'

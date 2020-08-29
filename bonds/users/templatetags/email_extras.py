@@ -6,6 +6,11 @@ from django import template
 register = template.Library()
 
 
+@register.filter(name='return_number_with_sign')
+def return_number_with_sign(num):
+    return "{0:+.2f}".format(float(num))
+
+
 @register.filter(name='return_color')
 def return_color(i):
     i = float(i)
@@ -15,14 +20,3 @@ def return_color(i):
         return 'green'
     else:
         return 'gray'
-
-
-@register.filter(name='return_number_with_sign')
-def return_number_with_sign(num):
-
-    return "{0:+.2f}".format(float(num))
-
-
-@register.filter(name='delete_zeroes')
-def delete_zeroes(s):
-    return float("{0:.2f}".format(s))

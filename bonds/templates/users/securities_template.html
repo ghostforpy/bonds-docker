@@ -1,0 +1,10 @@
+{% load email_extras %}
+{% load moex_extras %}
+
+{% for security in securities %}
+    <h5>Наименование: </span>{{ security.name }}</h5>
+    <p>Эмитент: </span><span>{{ security.emitent }}</p>
+    <p>Цена: </span><span>{{ security.today_price | delete_zeroes }}</span><span> руб. <span style = "color:{{security.change_price_percent | return_color }}">({{security.change_price_percent | return_number_with_sign}}%)</span></p>
+    <p>Дата обновления: </span><span>{{ security.last_update }}</p>
+    <p>---------------------------</p>
+{% endfor %}

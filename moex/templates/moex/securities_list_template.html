@@ -1,0 +1,38 @@
+{% load moex_extras%}
+<div class="row">
+    		          <div class="col-md-4 d-none d-md-block">
+    		            <p>Наименование</p>
+    		          </div>
+    		          <div class="col-md-4 d-none d-md-block">
+    		            <p>Эмитент</p>
+    		          </div>
+    		          <div class="col-md-2 d-none d-md-block">
+    		            <p>Цена</p>
+    		          </div>
+                  <div class="col-md-2 d-none d-md-block">
+                    <p>Дата обновления</p>
+                  </div>
+    	        </div>
+    	    <div class="dropdown-divider d-none d-md-block"></div>
+    		{% for security in securities %}
+            <div class="row">
+                  <div class="col-md-4 mb-1 mt-1">
+                    <span class="d-md-none">Наименование: </span><a class="btn btn-warning btn-sm" href="{{ security.get_absolute_url }}">{{ security.name }}</a>
+                  </div>
+                  <div class="col-md-4 mb-1 mt-1">
+                    <span class="d-md-none">Эмитент: </span><span>{{ security.emitent }}</span>
+                  </div>
+                	<div class="col-md-2 mb-1 mt-1">
+                    <span class="d-md-none">Цена: </span><span id="{{ security.id }}">{{ security.today_price|delete_zeroes }}</span><span> руб.<br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></span>
+                  </div>
+                  <div class="col-md-2 mb-1 mt-1">
+                    <span class="d-md-none">Дата обновления: </span><span id="{{ security.id }}_last_update">{{ security.last_update }}</span>
+                  </div>
+                  {% if request.user.is_staff %}
+                    <div class="col-md-2 mb-1 mt-1">
+                    <a class="refresh_security btn btn-success btn-sm mt-1 mb-2" href="{% url 'moex:refresh_security' security.id %}">Обновить</a>
+                  </div>
+                  {% endif %}
+            </div>
+            <div class="dropdown-divider"></div>
+        {% endfor %}

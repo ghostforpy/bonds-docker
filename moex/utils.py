@@ -1,33 +1,10 @@
-#!/usr/bin/env python
-import asyncio
-import aiomoex
-import pandas as pd
+def get_securities_in_portfolios_by_user(user):
+    return [i.security for i in user.securities.all()]
 
 
-async def main():
-    async with aiomoex.ISSClientSession():
-        # data = await aiomoex.get_board_history('SNGSP')
-        #df = pd.DataFrame(data)
-        #df.set_index('TRADEDATE', inplace=True)
-        #print(df.head(), '\n')
-        #print(df.tail(), '\n')
-        # df.info()
-        data = await aiomoex.find_securities('SBER', columns=('secid',
-                                                              'boardid',
-                                                              'isin',
-                                                              'latname',
-                                                              'regnumber'))
-        df = pd.DataFrame(data)
-        print(df.head(), '\n')
-        print(df.tail(), '\n')
-        # print(df)
-
-
-def aiomoex():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.close()
-
-
-if __name__ == '__main__':
-    aiomoex()
+def get_followed_securities_by_user(user, exclude_portfolios=True):
+    result = user.security_followed.all()
+    if exclude_portfolios:
+        security_in_portfolios = user.securities.all().values('security')
+        result = result.exclude(id__in=security_in_portfolios)
+    return result

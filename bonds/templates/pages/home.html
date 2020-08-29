@@ -1,1 +1,24 @@
 {% extends "base.html" %}
+{% block content %}
+
+	{% if portfolios %}
+		<h3 class="mt-4">Мои портфели:</h3>
+		{% include 'portfolio/my_portfolios_list_template.html' %}
+	{% endif %}
+
+	{% if securities_in_portfolios %}
+		<h3 class="mt-4">Ценные бумаги в портфелях:</h3>
+	    {% include "moex/securities_list_template.html" with securities=securities_in_portfolios %}
+	{% endif %}
+
+	{% if portfolio_followed %}
+	    <h3 class="mt-4">Отслеживаемые портфели:</h3>
+	    {% include "portfolio/portfolio_list_template.html" with portfolios=portfolio_followed %}
+	{% endif %}
+
+	{% if security_followed %}
+		<h3 class="mt-4">Отслеживаемые ценные бумаги:</h3>
+	    {% include "moex/securities_list_template.html" with securities=security_followed %}
+	{% endif %}
+
+{% endblock content %}

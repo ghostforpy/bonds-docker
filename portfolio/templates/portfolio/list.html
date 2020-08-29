@@ -1,45 +1,6 @@
 {% extends "base.html" %}
-
-
-
-
 {% block content %}
+{% load moex_extras %}
 <h3 class="mt-3 mb-3">Портфели:</h3>
-		<div class="row">
-		          <div class="col-md-3 d-none d-md-block">
-		            <p>Наименование</p>
-		          </div>
-		          <div class="col-md-3 d-none d-md-block">
-		            <p>Владелец</p>
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		            <p>Стратегия</p>
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		            Доходность
-		          </div>
-		          <div class="col-md-2 d-none d-md-block">
-		           Годовая доходность
-		          </div>
-	        </div>
-	    <div class="dropdown-divider d-none d-md-block"></div>
-		{% for portfolio in portfolios %}
-	                <div class="row">
-	                      <div class="col-md-3 mb-1 mt-1">
-	                        <a class="btn {% if request.user != portfolio.owner %}btn-secondary{% else %}btn-success{% endif %} btn-sm" href="{{ portfolio.get_absolute_url }}">{{ portfolio.title}}</a>
-	                      </div>
-	                      <div class="col-md-3 mb-1 mt-1">
-	                        <span class="d-md-none">Владелец: </span><a class="btn btn-warning btn-sm" href="{{ portfolio.owner.get_absolute_url }}">{{ portfolio.owner}}</a>
-	                      </div>
-	                      <div class="col-md-2 mb-1 mt-1">
-	                        <span class="d-md-none">Стратегия: </span><span>{{ portfolio.strategia }}</span></div>
-	                      <div class="col-md-2 mb-1 mt-1">
-	                        <span class="d-md-none">Доходность: </span><span class="{% if portfolio.percent_profit > 0 %}text-success{% elif portfolio.percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_percent_profit}}%)</span>
-	                      </div>
-	                      <div class="col-md-2 mb-1 mt-1">
-	                       <span class="d-md-none">Годовая доходность: </span><span class="{% if portfolio.year_percent_profit > 0 %}text-success{% elif portfolio.year_percent_profit < 0%}text-danger{% else %}text-secondary{% endif %}">{{ portfolio.year_percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{% if portfolio.change_year_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_year_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}"><span class="d-md-none d-inline"></span>({{portfolio.change_year_percent_profit}}%)</span>
-	                      </div>
-	                    </div>
-	                <div class="dropdown-divider"></div>
-	    {% endfor %}
+{% include 'portfolio/portfolio_list_template.html' %}
 {% endblock content %}
