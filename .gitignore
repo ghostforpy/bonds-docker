@@ -279,3 +279,5 @@ bonds/media/
 !.envs/.local/
 up.sh
 build.sh
+
+bonds/templates/pages/privacy.html
