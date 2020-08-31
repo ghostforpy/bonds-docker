@@ -6,6 +6,7 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from .views import HomePageView
+from bonds.users.views import CustomUserSignUp
 
 
 def favicon(request):
@@ -26,6 +27,9 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
     path("users/", include("bonds.users.urls", namespace="users")),
+    path("accounts/signup/",\
+         CustomUserSignUp.as_view(),\
+         name="signup"),
     path("accounts/", include("allauth.urls")),
     path("portfolio/", include("portfolio.urls", namespace="portfolio")),
     path("vklad/", include("vklad.urls", namespace="vklad")),

@@ -1,7 +1,8 @@
 from django.contrib.auth import forms, get_user_model
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
-
+from allauth.account import forms as allauth_forms
+from django import forms as django_forms
 User = get_user_model()
 
 
@@ -28,3 +29,18 @@ class UserCreationForm(forms.UserCreationForm):
             return username
 
         raise ValidationError(self.error_messages["duplicate_username"])
+
+
+class CustomSignUpForm(allauth_forms.SignupForm):
+    privacy_politic_accept = django_forms.BooleanField(
+        label='С политикой конфиденциальных данных согласен')
+
+    def __init__(self, *args, **kwargs):
+        super(CustomSignUpForm, self).__init__(*args, **kwargs)
+        self.field_order = ['email', 'username', 'password', 'password2', 'privacy_politic_accept']
+
+    def save(self, *args, **kwargs):
+        user = super(CustomSignUpForm, self).save(*args, **kwargs)
+        user.accept_private_policy = True
+        user.save()
+        return user

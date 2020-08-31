@@ -4,6 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import DetailView, RedirectView, UpdateView
+from allauth.account.views import SignupView
+from .forms import CustomSignUpForm
 from vklad.forms import FormVkladInvestHistory
 
 User = get_user_model()
@@ -49,7 +51,12 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
     permanent = False
 
     def get_redirect_url(self):
-        return reverse("users:detail", kwargs={"username": self.request.user.username})
+        return reverse("users:detail",
+                       kwargs={"username": self.request.user.username})
 
 
 user_redirect_view = UserRedirectView.as_view()
+
+
+class CustomUserSignUp(SignupView):
+    form_class = CustomSignUpForm
