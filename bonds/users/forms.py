@@ -33,7 +33,7 @@ class UserCreationForm(forms.UserCreationForm):
 
 class CustomSignUpForm(allauth_forms.SignupForm):
     privacy_politic_accept = django_forms.BooleanField(
-        label='С политикой конфиденциальных данных согласен')
+        label='С политикой конфиденциальности согласен')
 
     def __init__(self, *args, **kwargs):
         super(CustomSignUpForm, self).__init__(*args, **kwargs)
