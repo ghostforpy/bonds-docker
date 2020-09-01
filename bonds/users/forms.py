@@ -37,7 +37,11 @@ class CustomSignUpForm(allauth_forms.SignupForm):
 
     def __init__(self, *args, **kwargs):
         super(CustomSignUpForm, self).__init__(*args, **kwargs)
-        self.field_order = ['email', 'username', 'password', 'password2', 'privacy_politic_accept']
+        self.order_fields(['email',
+                           'username',
+                           'password1',
+                           'password2',
+                           'privacy_politic_accept'])
 
     def save(self, *args, **kwargs):
         user = super(CustomSignUpForm, self).save(*args, **kwargs)
