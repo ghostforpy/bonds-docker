@@ -131,9 +131,7 @@ class InvestmentPortfolio(models.Model):
             change_today_cash = 0
         self.previos_today_cash = self.today_cash
         self.change_today_cash = change_today_cash
-        self.save(update_fields=['change_year_percent_profit',
-                                 'change_percent_profit',
-                                 'change_today_cash'])
+        self.save()
 
 
 class PortfolioHistory(models.Model):
