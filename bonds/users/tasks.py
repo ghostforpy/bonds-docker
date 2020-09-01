@@ -26,7 +26,7 @@ def informer(self, *args):
     for user in users:
         result[user.email] = dict()
         portfolios = user.portfolios.all()
-        securities_in_portfolios = get_securities_in_portfolios_by_user()
+        securities_in_portfolios = get_securities_in_portfolios_by_user(user)
         security_followed = get_followed_securities_by_user(user)
         result[user.email]['securities_in_portfolios'] = [
             i.name for i in securities_in_portfolios]
