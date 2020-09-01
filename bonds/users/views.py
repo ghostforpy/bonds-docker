@@ -60,4 +60,3 @@ user_redirect_view = UserRedirectView.as_view()
 
 class CustomUserSignUp(SignupView):
     form_class = CustomSignUpForm
-
