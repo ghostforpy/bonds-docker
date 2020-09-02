@@ -355,7 +355,7 @@ def upload_moex_history(parce_url, secid, security_type, facevalue):
                     / 100)
             except Exception:
                 pass
-                #security_history.pop(i)
+                # security_history.pop(i)
     days = sorted(
         security_history,
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
@@ -492,3 +492,21 @@ def get_new_security_history(request, secid):
     content['status'] = 'ok'
     content['url'] = reverse('moex:new_buy', args=[secid])
     return JsonResponse(content)
+
+
+@ require_POST
+@ login_required
+def security_follow(request, id):
+    try:
+        security = Security.objects.get(id=id)
+        content = {'status': 'ok'}
+        if request.user in security.users_follows.all():
+            security.users_follows.remove(request.user)
+            content['result'] = 'removed'
+        else:
+            security.users_follows.add(request.user)
+            content['result'] = 'added'
+        security.save()
+        return JsonResponse(content)
+    except ObjectDoesNotExist:
+        return JsonResponse({'status': 'no_id'})

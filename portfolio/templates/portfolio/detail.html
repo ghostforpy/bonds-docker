@@ -9,7 +9,16 @@
 
 {% block content %}
 <div class="container">
-  <h3 class="mb-3">Портфель: {{portfolio_title}}</h3>
+  <div class="mb-3 d-flex justify-content-between">
+      <h3 class="align-self-center">Портфель: {{portfolio_title}}</h3>
+      {% if portfolio != None and request.user != portfolio.owner %}
+        {% if request.user in portfolio.users_follows.all %}
+          <a id="follow" class="btn btn-danger btn-sm align-self-center" href="{% url 'portfolio:follow' portfolio.id %}">Отписаться</a>
+        {% else %}
+          <a id="follow" class="btn btn-primary btn-sm align-self-center" href="{% url 'portfolio:follow' portfolio.id %}">Подписаться</a>
+        {% endif %}
+      {% endif %}
+  </div>
     <div class="row">
       <div class="col-sm-4">
         {% if portfolio != None %}
@@ -228,6 +237,7 @@
       {% if request.user == portfolio.owner %}
         <script src="{% static 'js/portfolio_detail.js' %}"></script>
       {% endif %}
+    <script src="{% static 'js/follow.js' %}"></script>
     <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
     <script src="{% static 'js/daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'js/toast/toast.js' %}"></script>

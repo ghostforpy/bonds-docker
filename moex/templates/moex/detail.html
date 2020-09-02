@@ -8,7 +8,16 @@
 
 {% block content %}
 <div class="container">
-  <h3 class="mb-3">{{ security.name }}</h3>
+  <div class="mb-3 d-flex justify-content-between">
+      <h3 class="align-self-center">{{ security.name }}</h3>
+      {% if security.id %}
+        {% if request.user in security.users_follows.all %}
+          <a id="follow" class="btn btn-danger btn-sm align-self-center" href="{% url 'moex:follow' security.id %}">Отписаться</a>
+        {% else %}
+          <a id="follow" class="btn btn-primary btn-sm align-self-center" href="{% url 'moex:follow' security.id %}">Подписаться</a>
+        {% endif %}
+      {% endif %}
+  </div>
   {% if request.user.is_staff and not security.id %}
   <form action="{% url 'moex:add_new_security_for_staff' security.secid %}" method="post">
     {% csrf_token %}
@@ -195,6 +204,7 @@
 
 
 {% block page_javascript %}
+    <script src="{% static 'js/follow.js' %}"></script>
     <script src="{% static 'js/toast/toast.js' %}"></script>
     <script src="{% static 'js/securyties_detail.js' %}"></script>
     <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>

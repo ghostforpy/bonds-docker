@@ -228,6 +228,7 @@ $(document).on('click', '.refresh-portfolio', function(e){
         }
     );
 });
+
 $(function(){
 $('#id_date').daterangepicker({
     singleDatePicker: true,

@@ -26,7 +26,7 @@ urlpatterns = [
     #path('ranking/', views.portfolio_ranking, name='ranking'),
     path('detail/<int:id>/', views.portfolio_detail, name='detail'),
     #path('like/', views.portfolio_like, name='like'),
-    #path('follow/', views.portfolio_follow, name='follow'),
+    path('follow/<int:id>/', views.portfolio_follow, name='follow'),
 #    path("api/", include(router.urls)),
     path('', views.portfolio_list, name='list'),
 ]

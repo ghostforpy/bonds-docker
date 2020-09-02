@@ -205,3 +205,21 @@ class InvestmentPortfolioViewSet(viewsets.ModelViewSet):
     queryset = InvestmentPortfolio.objects.all()
     serializer_class = InvestmentPortfolioSerializer
     http_method_names = ['get', 'head']
+
+
+@ require_POST
+@ login_required
+def portfolio_follow(request, id):
+    try:
+        portfolio = InvestmentPortfolio.objects.get(id=id)
+        content = {'status': 'ok'}
+        if request.user in portfolio.users_follows.all():
+            portfolio.users_follows.remove(request.user)
+            content['result'] = 'removed'
+        else:
+            portfolio.users_follows.add(request.user)
+            content['result'] = 'added'
+        portfolio.save()
+        return JsonResponse(content)
+    except ObjectDoesNotExist:
+        return JsonResponse({'status': 'no_id'})
