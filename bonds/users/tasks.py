@@ -33,6 +33,11 @@ def informer(self, *args):
         result[user.email]['security_followed'] = [
             i.name for i in security_followed]
         portfolio_followed = user.portfolio_followed.all()
+        if not portfolios and \
+                not securities_in_portfolios and \
+                not security_followed and \
+                not portfolio_followed:
+            continue
         html_message = render_to_string(
             'users/email_informer_template.html',
             {'portfolios': portfolios,
