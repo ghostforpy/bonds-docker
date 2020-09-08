@@ -70,9 +70,9 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     'allauth.socialaccount.providers.google',
     "django_celery_beat",
+    "rest_framework",
+    "rest_framework.authtoken",
     'import_export',
-    'rest_framework',
-#    'bootstrap_email',
 ]
 
 LOCAL_APPS = [
@@ -230,7 +230,7 @@ EMAIL_TIMEOUT = 5
 # Django Admin URL.
 ADMIN_URL = "admin/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = [("""Alekaey Starets""", "ghostformobile@gmail.com")]
+ADMINS = [("""Aleksey Starets""", "ghostformobile@gmail.com")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 
@@ -295,6 +295,16 @@ ACCOUNT_ADAPTER = "bonds.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "bonds.users.adapters.SocialAccountAdapter"
 
+# django-rest-framework
+# -------------------------------------------------------------------------------
+# django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+}
 
 # Your stuff...
 # ------------------------------------------------------------------------------

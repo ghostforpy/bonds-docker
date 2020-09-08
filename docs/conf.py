@@ -22,8 +22,8 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = "bonds"
-copyright = """2020, Alekaey Starets"""
-author = "Alekaey Starets"
+copyright = """2020, Aleksey Starets"""
+author = "Aleksey Starets"
 
 
 # -- General configuration ---------------------------------------------------
