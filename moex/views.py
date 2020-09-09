@@ -3,53 +3,39 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.urls import reverse
 from django.core.paginator import Paginator
-from django.db.models import Q
-from django.core.exceptions import PermissionDenied
 from django.utils.timezone import now
-from django.views.decorators.cache import cache_page
 from django.core.cache import caches
 import threading
-import re
-from django.core.mail import send_mail
 from .models import *
 from .forms import *
-from .iss_simple_main import search as moex_search,\
-    specification as moex_specification,\
-    history as moex_history
+# from .iss_simple_main import history as moex_history
+#    specification as moex_specification,\
+from .utils import upload_history,\
+    staff_only,\
+    prepare_new_security_by_secid,\
+    security_search_in_db,\
+    security_search_in_moex,\
+    get_new_security_history_from_moex,\
+    get_security_in_db_history_from_moex
+# upload_search_moex_to_cache,\
+
 # Create your views here.
-
-
-#@cache_page(60 * 60)
-def upload_history(security):
-    cache = caches['default']
-    security_history = security.get_history(None,
-                                            None,
-                                            format_result='str')
-    cache.add('security_history_by_id' + str(security.id),
-              security_history, timeout=30)
-
-
-def staff_only(function):
-    def _inner(request, *args, **kwargs):
-        if not request.user.is_staff:
-            raise PermissionDenied
-        return function(request, *args, **kwargs)
-    return _inner
 
 
 @login_required
 def security_detail(request, id):
     try:
-        security = get_object_or_404(Security, id=id)
+        security = Security.objects.get(id=id)
         security_in_user_portfolios = None
         if request.user.is_authenticated:
             user = request.user
             security_in_user_portfolios = security.portfolios.filter(
                 owner=user)
-        # блок кеширования
+        # блок кеширования исторических данных поценной бумаге
+        # для дальнейшей загрузки через ajax-запрос
         t = threading.Thread(target=upload_history, args=(security,))
         t.start()
         # конец блока кеширования
@@ -63,17 +49,6 @@ def security_detail(request, id):
         return redirect(request.META.get('HTTP_REFERER'))
 
 
-def upload_search_moex_to_cache(query):
-    cache = caches['default']
-    result = moex_search(query)
-    securities = Security.objects.all()
-    secids = [i.secid for i in securities]
-    # delete securities if exist in base
-    res = {i: result[i] for i in result if i not in secids}
-    cache.add('moex_search_' + query,
-              res, timeout=24 * 60 * 60)
-
-
 def security_list(request):
     form = SearchForm()
     query = None
@@ -82,15 +57,7 @@ def security_list(request):
         form = SearchForm(request.GET)
         if form.is_valid():
             query = form.cleaned_data['query']
-            securities_list = Security.objects.filter(
-                Q(name__icontains=query) |
-                Q(code__icontains=query) |
-                Q(fullname__icontains=query) |
-                Q(regnumber__icontains=query) |
-                Q(secid__icontains=query) |
-                Q(isin__icontains=query) |
-                Q(emitent__icontains=query)
-            )
+            securities_list = security_search_in_db(query)
             if caches['default'].get('moex_search_' + query):
                 moex_dict = caches['default'].get('moex_search_' + query)
         else:
@@ -113,17 +80,7 @@ def security_search_moex(request):
     if not query:
         return JsonResponse({'status': 'no'})
     result = {}
-    if not caches['default'].get('moex_search_' + query):
-        result = moex_search(query)
-        securities = Security.objects.all()
-        secids = [i.secid for i in securities]
-        # delete securities if exist in base
-        res = {i: result[i] for i in result if i not in secids}
-        if res:
-            caches['default'].add('moex_search_' + query,
-                                  res, timeout=24 * 60 * 60)
-    else:
-        res = caches['default'].get('moex_search_' + query)
+    res = security_search_in_moex(query)
     content = {}
     if res:
         content['response'] = res
@@ -238,16 +195,6 @@ def new_security_buy(request, secid):
     return redirect(request.META.get('HTTP_REFERER'))
 
 
-def get_value(dictionary, key, default=None):
-    try:
-        result = dictionary[key]
-        if key in ["MATDATE", "COUPONDATE"]:
-            result = datetime.strptime(result, '%Y-%m-%d').date()
-        return result
-    except KeyError:
-        return default
-
-
 @staff_only
 @require_POST
 def add_new_security_for_staff(request, secid):
@@ -261,79 +208,6 @@ def add_new_security_for_staff(request, secid):
         return redirect(request.META.get('HTTP_REFERER'))
 
 
-def prepare_new_security_by_secid(secid):
-    description, boards = moex_specification(secid)
-    if not caches['default'].get('moex_secid_' + description["SECID"]):
-        data = boards['data']
-        board = description['primary_boardid']
-        for i in data:
-            if i[1] == board:
-                engine = i[7]
-                market = i[5]
-                break
-        if re.search(r'bond', description["TYPE"]):
-            security_type = 'bond'
-        elif re.search(r'etf_ppif', description["TYPE"]):
-            security_type = 'etf_ppif'
-        elif re.search(r'ppif', description["TYPE"]):
-            security_type = 'ppif'
-        elif re.search(r'share', description["TYPE"]):
-            security_type = 'share'
-        elif re.search(r'futures', description["TYPE"]):
-            security_type = 'futures'
-        elif re.search(r'index', description["TYPE"]):
-            security_type = 'index'
-        else:
-            pass
-        regnumber = get_value(description, "REGNUMBER")
-        isin = get_value(description, "ISIN")
-        facevalue = get_value(description, "FACEVALUE", 0)
-        initialfacevalue = get_value(description, "INITIALFACEVALUE", 0)
-        matdate = get_value(description, "MATDATE")
-        coupondate = get_value(description, "COUPONDATE")
-        couponfrequency = get_value(description, "COUPONFREQUENCY")
-        couponpercent = get_value(description, "COUPONPERCENT")
-        couponvalue = get_value(description, "COUPONVALUE")
-        faceunit = get_value(description, "FACEUNIT")
-        url = 'https://www.moex.com/ru/issue.aspx?code=' + description["SECID"]
-        parce_url = 'http://iss.moex.com/iss/history/engines/' + \
-            '{}/markets/{}/'.format(engine, market) + \
-            'boards/{}/securities/{}.json'.format(board, description["SECID"])
-        today_price, last_update, accint, change_price_percent = upload_moex_history(
-            parce_url, description["SECID"], security_type, facevalue)
-        newitem = Security(fullname=description["NAME"],
-                           shortname=description["SHORTNAME"],
-                           name=description["SHORTNAME"],
-                           regnumber=regnumber,
-                           secid=description["SECID"],
-                           isin=isin,
-                           facevalue=facevalue,
-                           initialfacevalue=initialfacevalue,
-                           matdate=matdate,
-                           security_type=security_type,
-                           url=url,
-                           emitent=description['emitent'],
-                           board=board,
-                           engine=engine,
-                           market=market,
-                           parce_url=parce_url,
-                           coupondate=coupondate,
-                           couponfrequency=couponfrequency,
-                           couponpercent=couponpercent,
-                           couponvalue=couponvalue,
-                           accint=accint,
-                           faceunit=faceunit,
-                           oldest_date=datetime.now().date(),
-                           today_price=today_price,
-                           last_update=last_update,
-                           change_price_percent=change_price_percent)
-        caches['default'].add('moex_secid_' + description["SECID"],
-                              newitem, timeout=60 * 60)
-    else:
-        newitem = caches['default'].get('moex_secid_' + description["SECID"])
-    return newitem
-
-
 @login_required
 def new_security_detail(request, secid):
     newitem = prepare_new_security_by_secid(secid)
@@ -343,52 +217,6 @@ def new_security_detail(request, secid):
                   {'security': newitem,
                    'security_in_user_portfolios': None,
                    'new_security': True})
-
-
-def upload_moex_history(parce_url, secid, security_type, facevalue):
-    security_history = moex_history(parce_url)
-    if security_type == 'bond':
-        for i in security_history:
-            try:
-                security_history[i]['CLOSE'] = str(
-                    float(security_history[i]['CLOSE']) * float(facevalue)
-                    / 100)
-            except Exception:
-                pass
-                # security_history.pop(i)
-    days = sorted(
-        security_history,
-        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
-        reverse=True)
-    result_history = {i: security_history[i]['CLOSE'] for i in days}
-    caches['default'].add('moex_security_history_secid' + secid,
-                          result_history, timeout=60 * 60)
-    today_price = security_history[days[0]]['CLOSE']
-    try:
-        previos_price = security_history[days[1]]['CLOSE']
-        change_price_percent = (float(today_price) - float(previos_price))\
-            / float(previos_price) * 100
-        change_price_percent = float("{0:.2f}".format(change_price_percent))
-    except Exception:
-        change_price_percent = 0
-    try:
-        accint = security_history[days[0]]['ACCINT']
-    except KeyError:
-        accint = None
-    return today_price,\
-        datetime.strptime(days[0], '%d.%m.%Y').date(),\
-        accint,\
-        change_price_percent
-
-
-@login_required
-def security_sell(request, id):
-    portfolio_id = request.GET.get('portfolio')
-    security_id = id
-
-    return render(request,
-                  'security/list.html',
-                  {'securities': securities})
 
 
 def updated_portfolio(portfolio):
@@ -454,17 +282,9 @@ def get_security_history(request, id):
         return JsonResponse({'status': 'no_id_security'})
     date_since = request.GET.get('date_since') or None
     date_until = request.GET.get('date_until') or datetime.now().date()
-    cache = caches['default']
-    security_history = cache.get('security_history_by_id' + str(security.id))
-    if not security_history:
-        security_history = security.get_history(date_since,
-                                                date_until,
-                                                format_result='str')
-    days = sorted(
-        security_history,
-        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
-        reverse=True)
-    result_history = {i: security_history[i] for i in days}
+    result_history = get_security_in_db_history_from_moex(security,
+                                                          date_since,
+                                                          date_until)
     content = dict()
     content['history'] = result_history
     content['status'] = 'ok'
@@ -473,20 +293,10 @@ def get_security_history(request, id):
 
 
 def get_new_security_history(request, secid):
-    if caches['default'].get('moex_secid_' + secid):
-        newitem = caches['default'].get('moex_secid_' + secid)
-    else:
-        return JsonResponse({'status': 'no_secid_security'})
-    result = caches['default'].get('moex_security_history_secid' + secid)
-    if result is None:
-        parce_url = newitem.parce_url
-        result = moex_history(parce_url)
-        result = {i: i['CLOSE'] for i in result}
-    days = sorted(
-        result,
-        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
-        reverse=True)
-    result_history = {i: result[i] for i in days}
+    res = get_new_security_history_from_moex(secid)
+    if res['status'] == 'no_secid_security':
+        return JsonResponse(res)
+    result_history = res['result_history']
     content = dict()
     content['history'] = result_history
     content['status'] = 'ok'

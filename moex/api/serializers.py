@@ -3,6 +3,7 @@ from ..models import Security
 
 
 class SecurityRetrivieSerializer(serializers.ModelSerializer):
+    """ Serializer for retrivie one security"""
     class Meta:
         model = Security
         exclude = ['parce_url',
@@ -14,6 +15,9 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
 
 
 class SecurityListSerializer(serializers.ModelSerializer):
+    """ Serializer for list securities """
+    url = serializers.CharField(source='get_api_url', read_only=True)
+
     class Meta:
         model = Security
         fields = ["id",
@@ -22,4 +26,5 @@ class SecurityListSerializer(serializers.ModelSerializer):
                   "secid",
                   "emitent",
                   "today_price",
-                  "last_update"]
+                  "last_update",
+                  "url"]

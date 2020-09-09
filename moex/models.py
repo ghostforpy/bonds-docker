@@ -4,6 +4,7 @@ from portfolio.models import InvestmentPortfolio
 from django.core.exceptions import ObjectDoesNotExist
 from bonds.users.models import User
 from django.urls import reverse
+from rest_framework.reverse import reverse as api_reverse
 # from datetime import datetime
 from django.utils.timezone import now
 from django.dispatch import receiver
@@ -95,6 +96,9 @@ class Security(models.Model):
 
     def get_absolute_url(self):
         return reverse('moex:detail', args=[self.id])
+
+    def get_api_url(self):
+        return api_reverse('api:security-detail', args=[self.id])
 
     def __str__(self):
         return self.name

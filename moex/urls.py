@@ -12,7 +12,6 @@ urlpatterns = [
     path('delete_history/<int:id>/',
          views.delete_history,
          name='delete_history'),
-    path('sell/<int:id>/', views.security_sell, name='sell'),
     path('detail/<int:id>/', views.security_detail, name='detail'),
     path('detail-new/<secid>/', views.new_security_detail, name='new_detail'),
     path('buy-new/<secid>/', views.new_security_buy, name='new_buy'),
