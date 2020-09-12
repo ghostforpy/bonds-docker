@@ -1,0 +1,23 @@
+version: '3'
+
+volumes:
+  production_postgres_data: {}
+  production_postgres_data_backups: {}
+  production_traefik: {}
+
+services:
+  celeryworker: &celeryworker
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: bonds_production_celeryworker
+    env_file:
+      - ./.envs/.production/.django_celery
+      - ./.envs/.production/.postgres_celery
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *celeryworker
+    image: bonds_production_celerybeat
+    command: /start-celerybeat
+
