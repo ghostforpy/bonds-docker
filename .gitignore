@@ -281,3 +281,4 @@ up.sh
 build.sh
 
 bonds/templates/pages/privacy.html
+config/bonds*.sublime*

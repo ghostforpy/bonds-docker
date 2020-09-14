@@ -20,8 +20,10 @@ def get_users_count():
 
 @celery_app.task(bind=True,
                  name='user.informer')
-def informer(self, *args):
+def informer(self, exclude_emails=None, *args, **kwargs):
     users = User.objects.filter(is_active=True).exclude(email__in=args)
+    if exclude_emails:
+        users = users.exclude(email__in=exclude_emails)
     result = dict()
     for user in users:
         result[user.email] = dict()
