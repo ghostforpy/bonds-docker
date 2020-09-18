@@ -65,7 +65,6 @@ class InvestmentPortfolio(models.Model):
 
     def calc_percent_profit(self):
         try:
-
             percent_profit = scripts.percent_profit(self.today_cash,
                                                     self.invest_cash)
             self.percent_profit = percent_profit
@@ -73,12 +72,12 @@ class InvestmentPortfolio(models.Model):
             return
 
     def calc_year_percent_profit(self):
+        # выбор записей пополнения и снятия денег
         t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
+        #формирование списка инвестиций и снятий денег с датами
         invest = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
-
         year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
-
         self.year_percent_profit = year_percent_profit
 
     def __str__(self):
@@ -88,7 +87,8 @@ class InvestmentPortfolio(models.Model):
         return reverse('portfolio:detail', args=[self.id])
 
     def calc_invest_cash_portfolio(self):
-        t = self.portfolio_invests.exclude(action__in=['tp', 'br', 'bc'])
+        # выбор записей пополнения и снятия денег
+        t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
         self.invest_cash = sum([i.cash * (-1)**(i.action == 'pv') for i in t])
 
     def calc_today_cash(self):
@@ -162,12 +162,14 @@ class PortfolioInvestHistory(models.Model):
                                decimal_places=2, default=0)
     action = models.CharField(max_length=20,
                               default='vklad_to_portfolio',
-                              choices=[('vp', 'На портфель'),
-                                       ('pv', 'На вклад'),
+                              choices=[('vp', 'Пополнение'),
+                                       ('pv', 'Снятие'),
                                        ('tp', 'Доход'),
                                        ('bc', 'Комиссия брокера'),
                                        ('br',
-                                        'Частичное погашение облигаций')])
+                                        'Частичное погашение облигаций'),
+                                        ('tax',
+                                        'Налог на доход')])
     # при получении дохода учитыавть НДФЛ
     ndfl = models.DecimalField(max_digits=10,
                                decimal_places=2, default=0)
@@ -185,27 +187,24 @@ class PortfolioInvestHistory(models.Model):
                                'pv',
                                'tp',
                                'br',
-                               'bc']:
+                               'bc',
+                               'tax']:
             return 'wrong_action'
         if self.action == 'vp':
-            # Пополнение с вклада происходит только,
-            # если на остатке вклада имеются деньги
-            if self.portfolio.owner.vklad.ostatok >= self.cash:
-                self.portfolio.owner.vklad.ostatok -= self.cash
-                self.portfolio.ostatok += self.cash
-                # без автоматического подсчета меняем today_cash руками
-                if self.portfolio.manual:
-                    self.portfolio.today_cash += self.cash
-            else:
-                return 'no money on vklad'
+            # Увеличиваем остаток на величину
+            # внесенных денег
+            self.portfolio.ostatok += self.cash
+            # без автоматического подсчета меняем today_cash руками
+            if self.portfolio.manual:
+                self.portfolio.today_cash += self.cash
         if self.action == 'pv':
             # Снятие денег(перевод на вклад) происходит только,
             # если на остатке портфеля есть деньги
             if self.cash > self.portfolio.ostatok:
                 return 'no money on portfolio'
             else:
-                self.portfolio.owner.vklad.ostatok += self.cash
-                self.portfolio.owner.vklad.save()
+              #  self.portfolio.owner.vklad.ostatok += self.cash
+              #  self.portfolio.owner.vklad.save()
                 self.portfolio.ostatok -= self.cash
                 # без автоматического подсчета меняем today_cash руками
                 if self.portfolio.manual:
@@ -217,31 +216,36 @@ class PortfolioInvestHistory(models.Model):
             # без автоматического подсчета меняем today_cash руками
             if self.portfolio.manual:
                 self.portfolio.today_cash += self.cash - self.ndfl
-        if self.action == 'bc':
+        # снятие денег при оплате комисси брокеру за обслуживание счета
+        # или при уплате налога на доход, когда он не был уплачен ранее
+        if self.action in ['bc', 'tax']:
             self.portfolio.ostatok -= self.cash
         super(PortfolioInvestHistory, self).save(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'
 
     def delete(self, *args, **kwargs):
+        # удаление записи о снятии денежных средств
         if self.action == 'pv':
-            if self.portfolio.owner.vklad.ostatok >= self.cash:
-                self.portfolio.ostatok += self.cash
-                # без автоматического подсчета меняем today_cash руками
-                if self.portfolio.manual:
-                    self.portfolio.today_cash += self.cash
-                self.portfolio.owner.vklad.ostatok -= self.cash
-            else:
-                return 'no money on vklad'
+            # if self.portfolio.owner.vklad.ostatok >= self.cash:
+            self.portfolio.ostatok += self.cash
+            # без автоматического подсчета меняем today_cash руками
+            if self.portfolio.manual:
+                self.portfolio.today_cash += self.cash
+              #  self.portfolio.owner.vklad.ostatok -= self.cash
+            # else:
+             #   return 'no money on vklad'
+        # удаление записи о внесении денежных средств
         elif self.action == 'vp':
             if self.portfolio.ostatok >= self.cash:
                 self.portfolio.ostatok -= self.cash
                 # без автоматического подсчета меняем today_cash руками
                 if self.portfolio.manual:
                     self.portfolio.today_cash -= self.cash
-                self.portfolio.owner.vklad.ostatok += self.cash
+              #  self.portfolio.owner.vklad.ostatok += self.cash
             else:
                 return 'no money on portfolio'
+        # удаление записи о получении дохода или частичном погашении облигаций
         elif self.action in ['tp', 'br']:
             if self.portfolio.ostatok >= self.cash:
                 self.portfolio.ostatok -= self.cash + self.ndfl
@@ -250,7 +254,8 @@ class PortfolioInvestHistory(models.Model):
                     self.portfolio.today_cash -= self.cash + self.ndfl
             else:
                 return 'no money on portfolio'
-        if self.action == 'bc':
+        # удаление записи об уплате комиссии брокера, налога на доход
+        if self.action in ['bc', 'tax']:
             self.portfolio.ostatok += self.cash
         super(PortfolioInvestHistory, self).delete(*args, **kwargs)
         self.portfolio.refresh_portfolio()

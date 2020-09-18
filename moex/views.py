@@ -237,7 +237,6 @@ def delete_history(request, id):
     content = {'status': status}
     if status == 'ok':
         content.update(updated_portfolio(trade_history.portfolio))
-    # print(content)
     return JsonResponse(content)
 
 

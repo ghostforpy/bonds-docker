@@ -344,25 +344,24 @@ def refresh_count_security_in_portfolio(sender,
     portfolio = instance.portfolio
     owner = instance.owner
     security = instance.security
+    # при создании записи о продаже/покупке 
+    # берется из базы или создается объект
+    # при удалении записи о продаже/покупке
+    # если до этого была полная продажа(или полное погашение облигаций)
+    # то заново создается объект
+    s_p, s_p_created = SecurityPortfolios.objects.get_or_create(
+        portfolio=portfolio,
+        owner=owner,
+        security=security)
+    if s_p_created:
+        s_p.count = 0
+        security.users_follows.add(owner)
+    s_p.today_price = security.today_price
     if created:
-        s_p, s_p_created = SecurityPortfolios.objects.get_or_create(
-            portfolio=portfolio,
-            owner=owner,
-            security=security)
-        if s_p_created:
-            s_p.count = 0
-            security.users_follows.add(owner)
         s_p.count += instance.count * (-1) ** (not instance.buy)
-        s_p.today_price = security.today_price
     else:
-        try:
-            s_p = SecurityPortfolios.objects.get(
-                portfolio=portfolio,
-                owner=owner,
-                security=security)
-        except ObjectDoesNotExist:
-            return
         s_p.count += instance.count * (-1) ** (instance.buy)
+    
     # в облигациях учитывать НКД
     if security.security_type == 'bond':
         s_p.total_cost = float(s_p.count) * \

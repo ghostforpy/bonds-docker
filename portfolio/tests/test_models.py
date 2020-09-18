@@ -102,7 +102,7 @@ class PortfolioInvestHistoryTest(PortfolioTest):
         new_instance = PortfolioInvestHistory(
             portfolio=portfolio,
             date=now().date())
-        for action in ['vp', 'pv', 'tp', 'br', 'bc']:
+        for action in ['vp', 'pv', 'tp', 'br', 'bc', 'tax']:
             new_instance.action = action
             status = new_instance.save()
             self.assertNotEqual('wrong_action', status)
@@ -126,13 +126,7 @@ class PortfolioInvestHistoryTest(PortfolioTest):
             self.assertRaises(ObjectDoesNotExist, f)
 
     def test_add_invest_to_portfolio(self):
-        VkladInvestHistory.objects.create(
-            vklad=self.user.vklad,
-            date=now().date() - datetime.timedelta(days=1),
-            cash=Decimal(2000),
-            popolnenie=True)
-        """test add invest to manual and not manual portfolios,
-        test changes in vklad.ostatok"""
+        """test add invest to manual and not manual portfolios"""
         for portfolio in [self.portfolio1, self.portfolio2]:
             new_instance = PortfolioInvestHistory(
                 portfolio=portfolio,
@@ -143,8 +137,12 @@ class PortfolioInvestHistoryTest(PortfolioTest):
             self.assertEqual('ok', status)
             self.assertEqual(portfolio.ostatok, Decimal(2000))
             self.assertEqual(portfolio.today_cash, Decimal(2000))
-            if portfolio == self.portfolio1:
-                ostatok_vklad = Decimal(1000)
-            else:
-                ostatok_vklad = Decimal(0)
-            self.assertEqual(self.user.vklad.ostatok, ostatok_vklad)
+            new_instance = PortfolioInvestHistory(
+                portfolio=portfolio,
+                date=now().date() - datetime.timedelta(days=1),
+                cash=Decimal(1000),
+                action='pv')
+            status = new_instance.save()
+            self.assertEqual('ok', status)
+            self.assertEqual(portfolio.ostatok, Decimal(1000))
+            self.assertEqual(portfolio.today_cash, Decimal(1000))
