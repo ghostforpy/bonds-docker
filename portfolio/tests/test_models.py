@@ -146,3 +146,20 @@ class PortfolioInvestHistoryTest(PortfolioTest):
             self.assertEqual('ok', status)
             self.assertEqual(portfolio.ostatok, Decimal(1000))
             self.assertEqual(portfolio.today_cash, Decimal(1000))
+    
+    def test_delese_invest_in_portfolio(self):
+        for portfolio in [self.portfolio1, self.portfolio2]:
+            new_instance = PortfolioInvestHistory(
+                portfolio=portfolio,
+                date=now().date() - datetime.timedelta(days=1),
+                cash=Decimal(1000),
+                action='vp')
+            status = new_instance.save()
+            self.assertEqual('ok', status)
+            self.assertEqual(portfolio.ostatok, Decimal(2000))
+            self.assertEqual(portfolio.today_cash, Decimal(2000))
+            status = new_instance.delete()
+            self.assertEqual('ok', status)
+            self.assertEqual(portfolio.ostatok, Decimal(1000))
+            self.assertEqual(portfolio.today_cash, Decimal(1000))
+
