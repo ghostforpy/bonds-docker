@@ -22,9 +22,13 @@ class UserVklad(models.Model):
                                               default=0)
 
     def calc_invest_cash(self):
-        vklads = self.vklads.all()
+        # vklads = self.vklads.all()
+        user = self.owner
         self.invest_cash = sum(
-            [i.cash * (-1) ** (not i.popolnenie) for i in vklads])
+            [i.invest_cash for i in user.portfolios.all()]
+        )
+        # self.invest_cash = sum(
+        #    [i.cash * (-1) ** (not i.popolnenie) for i in vklads])
 
     def calc_percent_profit(self):
         self.percent_profit = scripts.percent_profit(self.today_cash,
@@ -35,12 +39,22 @@ class UserVklad(models.Model):
     def calc_today_cash(self):
         t = self.owner.portfolios.all()
         total = [i.today_cash for i in t]
-        total.append(self.ostatok)
+        # total.append(self.ostatok)
         self.today_cash = sum(total)
 
     def calc_year_percent_profit(self):
-        t = self.vklads.all()
-        invest = [[i.cash * (-1)**(not i.popolnenie), i.date] for i in t]
+        #t = self.vklads.all()
+        portfolios = self.owner.portfolios.all()
+        invest = []
+        for portfolio in portfolios:
+            # выбор записей пополнения и снятия денег
+            t = portfolio.portfolio_invests.filter(
+                action__in=['pv', 'vp'])
+            #формирование списка инвестиций и снятий денег с датами
+            portfolio_invests = [
+                [i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
+            _ = [invest.append(i) for i in portfolio_invests]
+        #invest = [[i.cash * (-1)**(not i.popolnenie), i.date] for i in t]
         self.year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
 
