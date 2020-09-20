@@ -220,6 +220,9 @@ class PortfolioInvestHistory(models.Model):
         # или при уплате налога на доход, когда он не был уплачен ранее
         if self.action in ['bc', 'tax']:
             self.portfolio.ostatok -= self.cash
+            # без автоматического подсчета меняем today_cash руками
+            if self.portfolio.manual:
+                self.portfolio.today_cash -= self.cash
         super(PortfolioInvestHistory, self).save(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'
@@ -257,6 +260,9 @@ class PortfolioInvestHistory(models.Model):
         # удаление записи об уплате комиссии брокера, налога на доход
         if self.action in ['bc', 'tax']:
             self.portfolio.ostatok += self.cash
+            # без автоматического подсчета меняем today_cash руками
+            if self.portfolio.manual:
+                self.portfolio.today_cash += self.cash
         super(PortfolioInvestHistory, self).delete(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'

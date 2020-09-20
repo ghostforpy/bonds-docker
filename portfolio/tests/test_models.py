@@ -163,3 +163,80 @@ class PortfolioInvestHistoryTest(PortfolioTest):
             self.assertEqual(portfolio.ostatok, Decimal(1000))
             self.assertEqual(portfolio.today_cash, Decimal(1000))
 
+class PortfolioInvestHistoryTest2(PortfolioTest):
+    """Class for PortfolioInvestHistory methods tests
+    action tax, br, bc, tp on auto portfolio"""
+
+    def setUp(self):
+        self.portfolio1 = InvestmentPortfolio.objects.create(
+            owner=self.user,
+            title="test_title1",
+            manual=True,
+            today_cash=Decimal(1000),
+            ostatok=Decimal(1000))
+        
+    
+    def test_actions_add_delete_instance_portfolio_manual(self):
+        actions = ['tp', 'br', 'bc', 'tax']
+        for action in actions:
+            new_instance = PortfolioInvestHistory.objects.\
+                create(
+                    portfolio=self.portfolio1,
+                    cash=Decimal(100),
+                    action=action,
+                    date=now().date() - datetime.timedelta(days=1)
+                )
+            if action == 'tp':
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(1100))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(1100))
+                new_instance.delete()
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(1000))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(1000))
+            if action == 'br':
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(1100))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(1100))
+                new_instance.delete()
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(1000))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(1000))
+            if action == 'bc':
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(900))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(900))
+                new_instance.delete()
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(1000))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(1000))
+            if action == 'tax':
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(900))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(900))
+                new_instance.delete()
+                self.assertEqual(self.portfolio1.today_cash,\
+                    Decimal(1000))
+                self.assertEqual(self.portfolio1.ostatok,
+                    Decimal(1000))
+
+
+class PortfolioInvestHistoryTest3(PortfolioInvestHistoryTest2):
+    """Class for PortfolioInvestHistory methods tests
+    action tax, br, bc, tp on manual portfolio"""
+
+    def setUp(self):
+        self.portfolio1 = InvestmentPortfolio.objects.create(
+            owner=self.user,
+            title="test_title1",
+            manual=False,
+            today_cash=Decimal(1000),
+            ostatok=Decimal(1000))
+            
