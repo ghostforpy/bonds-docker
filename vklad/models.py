@@ -4,6 +4,8 @@ from django.urls import reverse
 from portfolio import scripts
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.db.models import Prefetch
+from portfolio.models import PortfolioInvestHistory
 # Create your models here.
 
 
@@ -22,41 +24,32 @@ class UserVklad(models.Model):
                                               default=0)
 
     def calc_invest_cash(self):
-        # vklads = self.vklads.all()
         user = self.owner
         self.invest_cash = sum(
             [i.invest_cash for i in user.portfolios.all()]
         )
-        # self.invest_cash = sum(
-        #    [i.cash * (-1) ** (not i.popolnenie) for i in vklads])
 
     def calc_percent_profit(self):
         self.percent_profit = scripts.percent_profit(self.today_cash,
                                                      self.invest_cash)
-        # return scripts.percent_profit(self.today_cash,
-        #                               self.invest_cash)
 
     def calc_today_cash(self):
         t = self.owner.portfolios.all()
         total = [i.today_cash for i in t]
-        # total.append(self.ostatok)
         self.today_cash = sum(total)
 
     def calc_year_percent_profit(self):
-        #t = self.vklads.all()
         portfolios = self.owner.portfolios.all()
-        invest = []
-        for portfolio in portfolios:
-            # выбор записей пополнения и снятия денег
-            t = portfolio.portfolio_invests.filter(
-                action__in=['pv', 'vp'])
-            #формирование списка инвестиций и снятий денег с датами
-            portfolio_invests = [
-                [i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
-            _ = [invest.append(i) for i in portfolio_invests]
-        #invest = [[i.cash * (-1)**(not i.popolnenie), i.date] for i in t]
+        queryset = PortfolioInvestHistory.objects.filter(
+            action__in=['vp', 'pv'])
+        prefecth = Prefetch('portfolio_invests',\
+                            queryset=queryset,\
+                            to_attr='invests')
+        portfolio_invests = portfolios.prefetch_related(prefecth)
+        res = [item for sublist in portfolio_invests for item in sublist.invests]
+        invests = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in res]
         self.year_percent_profit = scripts.year_percent_profit(
-            invest, self.today_cash)
+            invests, self.today_cash)
 
     def refresh_vklad(self):
         self.calc_invest_cash()
