@@ -74,7 +74,7 @@ class InvestmentPortfolio(models.Model):
     def calc_year_percent_profit(self):
         # выбор записей пополнения и снятия денег
         t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
-        #формирование списка инвестиций и снятий денег с датами
+        # формирование списка инвестиций и снятий денег с датами
         invest = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
         year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
@@ -168,7 +168,7 @@ class PortfolioInvestHistory(models.Model):
                                        ('bc', 'Комиссия брокера'),
                                        ('br',
                                         'Частичное погашение облигаций'),
-                                        ('tax',
+                                       ('tax',
                                         'Налог на доход')])
     # при получении дохода учитыавть НДФЛ
     ndfl = models.DecimalField(max_digits=10,

@@ -42,11 +42,12 @@ class UserVklad(models.Model):
         portfolios = self.owner.portfolios.all()
         queryset = PortfolioInvestHistory.objects.filter(
             action__in=['vp', 'pv'])
-        prefecth = Prefetch('portfolio_invests',\
-                            queryset=queryset,\
+        prefecth = Prefetch('portfolio_invests',
+                            queryset=queryset,
                             to_attr='invests')
         portfolio_invests = portfolios.prefetch_related(prefecth)
-        res = [item for sublist in portfolio_invests for item in sublist.invests]
+        res = [item for sublist in portfolio_invests
+               for item in sublist.invests]
         invests = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in res]
         self.year_percent_profit = scripts.year_percent_profit(
             invests, self.today_cash)
