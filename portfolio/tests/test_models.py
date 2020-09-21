@@ -1,11 +1,14 @@
-from django.test import TestCase
-from decimal import Decimal
-from django.utils.timezone import now
 import datetime
+from decimal import Decimal
+
 from django.core.exceptions import ObjectDoesNotExist
-from ..models import InvestmentPortfolio, PortfolioInvestHistory
+from django.test import TestCase
+from django.utils.timezone import now
 from vklad.models import VkladInvestHistory
+
 from bonds.users.models import User
+
+from ..models import InvestmentPortfolio, PortfolioInvestHistory
 
 
 class PortfolioTest(TestCase):
