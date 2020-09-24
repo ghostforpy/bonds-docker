@@ -10,7 +10,7 @@ from bonds.users.models import User
 
 from ..models import InvestmentPortfolio, PortfolioInvestHistory
 
-# dsdadadsdas
+
 class PortfolioTest(TestCase):
     """Base class for portfolio tests"""
     @classmethod
