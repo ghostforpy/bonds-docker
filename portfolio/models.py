@@ -103,7 +103,7 @@ class InvestmentPortfolio(models.Model):
 
     def save(self, *args, **kwargs):
         super(InvestmentPortfolio, self).save(*args, **kwargs)
-
+# ddsdsd
     def refresh_portfolio(self):
         self.calc_today_cash()
         self.calc_invest_cash_portfolio()
