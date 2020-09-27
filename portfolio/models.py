@@ -83,6 +83,19 @@ class InvestmentPortfolio(models.Model):
     def __str__(self):
         return self.title
 
+    def request_user_has_permission(self, request_user):
+        if request_user == self.owner:
+            return True
+        if self.private == 'da':
+            return False
+        if self.private == 'aa':
+            return True
+        if self.private == 'al':
+            return request_user.is_authenticated
+        if self.private == 'af':
+            return request_user.friends.is_friend(self.owner.friends)
+
+
     def get_absolute_url(self):
         return reverse('portfolio:detail', args=[self.id])
 
