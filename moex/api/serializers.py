@@ -24,7 +24,9 @@ class SecurityListSerializer(serializers.ModelSerializer):
                   "name",
                   "security_type",
                   "secid",
+                  "isin",
                   "emitent",
                   "today_price",
                   "last_update",
+                  "faceunit",
                   "url"]

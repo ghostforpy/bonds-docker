@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from bonds.users.api.views import UserViewSet
 from moex.api.views import SecurityViewSet
+from portfolio.api.views import PortfolioViewSet
 
 if settings.DEBUG:
     router = DefaultRouter()
@@ -11,6 +12,7 @@ else:
 
 router.register("users", UserViewSet)
 router.register("securities", SecurityViewSet)
+router.register("portfolios", PortfolioViewSet)
 
 app_name = "api"
 urlpatterns = router.urls
