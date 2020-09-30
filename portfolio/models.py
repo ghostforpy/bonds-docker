@@ -93,8 +93,11 @@ class InvestmentPortfolio(models.Model):
         if self.private == 'al':
             return request_user.is_authenticated
         if self.private == 'af':
-            return request_user.friends.is_friend(self.owner.friends)
-
+            if request_user.is_authenticated:
+                return request_user.friends.is_friend(
+                    self.owner.friends)
+            else:
+                return False
 
     def get_absolute_url(self):
         return reverse('portfolio:detail', args=[self.id])
