@@ -55,12 +55,12 @@ class PortfolioViewSet(ListModelMixin,
     pagination_class = PageNumberPaginationBy10
 
     def get_serializer_class(self):
-        print(self.action)
+        # print(self.action)
         if self.action == 'list':
             return InvestmentPortfolioListSerializer
         if self.action == 'create':
             return InvestmentPortfolioCreateSerializer
-        if self.action in ['update' , 'partial_update']:
+        if self.action in ['update', 'partial_update']:
             return InvestmentPortfolioUpdateSerializer
         elif self.action == 'retrieve':
             if self.request.user == self.get_object().owner:
@@ -80,7 +80,7 @@ class PortfolioViewSet(ListModelMixin,
             permission_classes = [AllowAny]
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
-        if self.action in ['update' , 'partial_update']:
+        if self.action in ['update', 'partial_update']:
             permission_classes = [PortfolioIsManual & IsOwnerOrReadOnlyAuthorized]
         else:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]

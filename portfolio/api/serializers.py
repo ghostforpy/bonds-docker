@@ -16,17 +16,22 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for create portfolio.
     """
+    url = serializers.HyperlinkedIdentityField(
+        view_name="api:investmentportfolio-detail")
     class Meta:
         model = InvestmentPortfolio
-        fields = ['title', 'private', 'strategia', 'manual', 'description']
+        fields = ['title', 'private', 'strategia', 'manual', 'description', 'url']
+        read_only_fields = ['url']
 
     def create(self, validated_data):
         new_object = InvestmentPortfolio(**validated_data)
         new_object.save()
-        #print(type(self.data))
-        #self.data['url'] = reverse(
-        #    viewname='api:investmentportfolio-detail', args=[new_object.id])
-        #print(self.data)
+        #print(type(self._validated_data))
+        #self._validated_data
+        # print(type(self.data))
+        self._validated_data['url'] = reverse(
+            viewname='api:investmentportfolio-detail', args=[new_object.id])
+        # print(self.data)
         return new_object
 
 
