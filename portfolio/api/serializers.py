@@ -18,6 +18,7 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
+
     class Meta:
         model = InvestmentPortfolio
         fields = ['title', 'private', 'strategia', 'manual', 'description', 'url']
@@ -26,12 +27,6 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         new_object = InvestmentPortfolio(**validated_data)
         new_object.save()
-        #print(type(self._validated_data))
-        #self._validated_data
-        # print(type(self.data))
-        self._validated_data['url'] = reverse(
-            viewname='api:investmentportfolio-detail', args=[new_object.id])
-        # print(self.data)
         return new_object
 
 
@@ -114,11 +109,13 @@ class InvestmentPortfolioListSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
     owner_name = serializers.CharField(source="owner")
+    owner_id = serializers.IntegerField(source="owner.id")
 
     class Meta:
         model = InvestmentPortfolio
         fields = ['owner',
                   'owner_name',
+                  'owner_id',
                   'url',
                   'title',
                   'percent_profit',
@@ -128,4 +125,23 @@ class InvestmentPortfolioListSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'owner': {"view_name": "api:user-detail",
                       'lookup_field': 'username'}
+        }
+
+
+class MyInvestmentPortfolioListSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = InvestmentPortfolio
+        fields = [
+            'url',
+            'title',
+            'invest_cash',
+            'today_cash',
+            'change_today_cash',
+            'percent_profit',
+            'change_percent_profit',
+            'year_percent_profit',
+            'change_year_percent_profit',
+        ]
+        extra_kwargs = {
+            'url': {"view_name": "api:investmentportfolio-detail"}
         }

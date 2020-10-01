@@ -12,7 +12,9 @@ else:
 
 router.register("users", UserViewSet)
 router.register("securities", SecurityViewSet)
-router.register("portfolios", PortfolioViewSet)
+router.register("portfolios", PortfolioViewSet, basename='investmentportfolio')
+# portfolios include 'my-list/' for list portfolios by owner
 
 app_name = "api"
+
 urlpatterns = router.urls

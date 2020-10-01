@@ -7,13 +7,16 @@ from rest_framework.permissions import (IsAuthenticated,
                                         SAFE_METHODS,
                                         BasePermission)
 from rest_framework.viewsets import GenericViewSet
+from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
 from ..models import PortfolioInvestHistory, InvestmentPortfolio
 from .serializers import (InvestmentPortfolioDetailSerializer,
                           InvestmentPortfolioListSerializer,
                           InvestmentPortfolioDetailOwnerSerializer,
                           InvestmentPortfolioCreateSerializer,
-                          InvestmentPortfolioUpdateSerializer)
+                          InvestmentPortfolioUpdateSerializer,
+                          MyInvestmentPortfolioListSerializer)
 
 
 class PageNumberPaginationBy10(PageNumberPagination):
@@ -47,17 +50,33 @@ class PortfolioViewSet(ListModelMixin,
                        RetrieveModelMixin,
                        UpdateModelMixin,
                        CreateModelMixin,
+                       # delete
                        GenericViewSet):
     """
-    Viewset for list and retrivie security model.
+    Viewset for list, retrivie,
+    create, update, delete security model.
+    Include url 'my-list/ for list user's portfolios.
+    Include query_params 'owner' for list portfolios by user
     """
-    queryset = InvestmentPortfolio.objects.all()
     pagination_class = PageNumberPaginationBy10
 
+    def get_queryset(self):
+        queryset = InvestmentPortfolio.objects.all()
+
+        if self.action == 'my_list':
+            user = self.request.user
+            return queryset.filter(owner=user)
+        if self.action == 'list':
+            if 'owner' in self.request.query_params:
+                q = self.request.query_params.get('owner')
+                return queryset.filter(owner__username=q)
+        return InvestmentPortfolio.objects.all()
+
     def get_serializer_class(self):
-        # print(self.action)
         if self.action == 'list':
             return InvestmentPortfolioListSerializer
+        if self.action == 'my_list':
+            return MyInvestmentPortfolioListSerializer
         if self.action == 'create':
             return InvestmentPortfolioCreateSerializer
         if self.action in ['update', 'partial_update']:
@@ -78,10 +97,16 @@ class PortfolioViewSet(ListModelMixin,
         """
         if self.action == 'list':
             permission_classes = [AllowAny]
-        if self.action == 'create':
+        if self.action in ['my_list', 'create']:
             permission_classes = [IsAuthenticated]
         if self.action in ['update', 'partial_update']:
             permission_classes = [PortfolioIsManual & IsOwnerOrReadOnlyAuthorized]
         else:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]
         return [permission() for permission in permission_classes]
+
+    @action(methods=['get'], detail=False,
+            url_path='my-list', url_name='my-list')
+    def my_list(self, request, *args, **kwargs):
+        return self.list(self, request, *args, **kwargs)
+
