@@ -1,11 +1,14 @@
 from rest_framework.mixins import (ListModelMixin,
                                    RetrieveModelMixin,
                                    CreateModelMixin,
-                                   UpdateModelMixin)
+                                   UpdateModelMixin,
+                                   DestroyModelMixin)
 from rest_framework.permissions import (IsAuthenticated,
                                         AllowAny,
                                         SAFE_METHODS,
                                         BasePermission)
+from rest_framework import status as response_status
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
@@ -46,23 +49,29 @@ class IsOwnerOrReadOnlyAuthorized(BasePermission):
         return False
 
 
+class FollowLikePermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.request_user_has_permission(request.user)
+
+
 class PortfolioViewSet(ListModelMixin,
                        RetrieveModelMixin,
                        UpdateModelMixin,
                        CreateModelMixin,
-                       # delete
+                       DestroyModelMixin,
                        GenericViewSet):
     """
     Viewset for list, retrivie,
-    create, update, delete security model.
+    create, update, delete portfolio model.
     Include url 'my-list/ for list user's portfolios.
     Include query_params 'owner' for list portfolios by user
+    Include url '{id}/follow/ method-post for follow-unfollow portfolios.
+    Include url '{id}/like/ method-post for like-unlike portfolios.
     """
     pagination_class = PageNumberPaginationBy10
 
     def get_queryset(self):
         queryset = InvestmentPortfolio.objects.all()
-
         if self.action == 'my_list':
             user = self.request.user
             return queryset.filter(owner=user)
@@ -81,7 +90,7 @@ class PortfolioViewSet(ListModelMixin,
             return InvestmentPortfolioCreateSerializer
         if self.action in ['update', 'partial_update']:
             return InvestmentPortfolioUpdateSerializer
-        elif self.action == 'retrieve':
+        elif self.action in ['retrieve', 'follow', 'like']:
             if self.request.user == self.get_object().owner:
                 return InvestmentPortfolioDetailOwnerSerializer
             else:
@@ -101,6 +110,8 @@ class PortfolioViewSet(ListModelMixin,
             permission_classes = [IsAuthenticated]
         if self.action in ['update', 'partial_update']:
             permission_classes = [PortfolioIsManual & IsOwnerOrReadOnlyAuthorized]
+        if self.action in ['follow', 'like']:
+            permission_classes = [FollowLikePermission]
         else:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]
         return [permission() for permission in permission_classes]
@@ -110,3 +121,30 @@ class PortfolioViewSet(ListModelMixin,
     def my_list(self, request, *args, **kwargs):
         return self.list(self, request, *args, **kwargs)
 
+    @action(methods=['post'], detail=True,
+            url_path='follow', url_name='follow')
+    def follow(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+        if request.user in instance.users_follows.all():
+            instance.users_follows.remove(request.user)
+            status = response_status.HTTP_204_NO_CONTENT
+        else:
+            instance.users_follows.add(request.user)
+            status = response_status.HTTP_200_OK
+        instance.save()
+        return Response(status=status)
+
+    @action(methods=['post'], detail=True,
+            url_path='like', url_name='like')
+    def like(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+        if request.user in instance.users_like.all():
+            instance.users_like.remove(request.user)
+            status = response_status.HTTP_204_NO_CONTENT
+        else:
+            instance.users_like.add(request.user)
+            status = response_status.HTTP_200_OK
+        instance.save()
+        return Response(status=status)
