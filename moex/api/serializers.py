@@ -16,9 +16,10 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
                    'monitor']
 
 
-class SecurityListSerializer(serializers.ModelSerializer):
+class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
     """ Serializer for list securities """
-    url = serializers.CharField(source='get_api_url', read_only=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name="api:security-detail")
     faceunit = serializers.CharField(source='get_faceunit_display')
 
     class Meta:
@@ -32,7 +33,7 @@ class SecurityListSerializer(serializers.ModelSerializer):
                   "today_price",
                   "last_update",
                   "faceunit",
-                  "url"]
+                  'url']
 
 
 class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
@@ -64,6 +65,7 @@ class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSeria
     security_name = serializers.CharField(source='security')
     security_faceunit = serializers.CharField(source='security.get_faceunit_display')
     id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = TradeHistory
         exclude = ['url', 'portfolio', 'owner']
