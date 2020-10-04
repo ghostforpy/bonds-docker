@@ -292,8 +292,8 @@ class TradeHistory(models.Model):
 
     def save(self, *args, **kwargs):
         # if self.security.security_type == 'bond':
-            # if self.nkd == 0:
-            #    return 'NKD must be more then 0'
+        # if self.nkd == 0:
+        #    return 'NKD must be more then 0'
         if self.buy:
             total_cost = self.price * self.count + self.commission + self.nkd
             if total_cost > self.portfolio.ostatok:
@@ -323,6 +323,9 @@ class TradeHistory(models.Model):
         if self.buy:
             if self.count <= s_p.count:
                 super(TradeHistory, self).delete(*args, **kwargs)
+                refresh_count_security_in_portfolio(TradeHistory,
+                                                    instance=self
+                                                    )
                 return 'ok'
             else:
                 return 'need more security in portfolio'
@@ -332,10 +335,15 @@ class TradeHistory(models.Model):
                 return 'need more money on portfolio ostatok'
             else:
                 super(TradeHistory, self).delete(*args, **kwargs)
+                refresh_count_security_in_portfolio(TradeHistory,
+                                                    instance=self
+                                                    )
                 return 'ok'
 
+# мешает каскадному удалению портфеля, поэтому вызываем руками
+# @receiver(post_delete, sender=TradeHistory)
 
-@receiver(post_delete, sender=TradeHistory)
+
 @receiver(post_save, sender=TradeHistory)
 def refresh_count_security_in_portfolio(sender,
                                         instance,
@@ -344,7 +352,7 @@ def refresh_count_security_in_portfolio(sender,
     portfolio = instance.portfolio
     owner = instance.owner
     security = instance.security
-    # при создании записи о продаже/покупке 
+    # при создании записи о продаже/покупке
     # берется из базы или создается объект
     # при удалении записи о продаже/покупке
     # если до этого была полная продажа(или полное погашение облигаций)
@@ -361,7 +369,7 @@ def refresh_count_security_in_portfolio(sender,
         s_p.count += instance.count * (-1) ** (not instance.buy)
     else:
         s_p.count += instance.count * (-1) ** (instance.buy)
-    
+
     # в облигациях учитывать НКД
     if security.security_type == 'bond':
         s_p.total_cost = float(s_p.count) * \
