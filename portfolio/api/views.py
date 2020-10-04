@@ -62,7 +62,10 @@ class IsOwnerOfPortfolioInvestObject(BasePermission):
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
         # # Instance must have an attribute named `owner`.
-        portfolio_id = request.data['portfolio']
+        try:
+            portfolio_id = request.data['portfolio']
+        except KeyError:
+            return False
         try:
             portfolio = InvestmentPortfolio.objects.get(
                 id=portfolio_id, owner=request.user
