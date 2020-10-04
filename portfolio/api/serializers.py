@@ -7,9 +7,21 @@ from moex.api.serializers import SecurityInPortfolioSerializer,\
 
 
 class PortfolioInvestHistorySerializer(serializers.ModelSerializer):
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        view_name='api:portfolio-invest-history-detail'
+    )
+    security = serializers.StringRelatedField()
+    action = serializers.CharField(source='get_action_display')
+
     class Meta:
         model = PortfolioInvestHistory
-        exclude = ['portfolio']
+        exclude = ['id', 'portfolio']
+
+
+class PortfolioInvestHistoryCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PortfolioInvestHistory
+        fields = '__all__'
 
 
 class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):

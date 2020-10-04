@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.mixins import (ListModelMixin,
                                    RetrieveModelMixin,
                                    CreateModelMixin,
@@ -19,7 +20,8 @@ from .serializers import (InvestmentPortfolioDetailSerializer,
                           InvestmentPortfolioDetailOwnerSerializer,
                           InvestmentPortfolioCreateSerializer,
                           InvestmentPortfolioUpdateSerializer,
-                          MyInvestmentPortfolioListSerializer)
+                          MyInvestmentPortfolioListSerializer,
+                          PortfolioInvestHistoryCreateSerializer)
 
 
 class PageNumberPaginationBy10(PageNumberPagination):
@@ -52,6 +54,26 @@ class IsOwnerOrReadOnlyAuthorized(BasePermission):
 class FollowLikePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.request_user_has_permission(request.user)
+
+
+class IsOwnerOfPortfolioInvestObject(BasePermission):
+    """
+    Object-level permission to only allow owners of an object to edit it.
+    Assumes the model instance has an `owner` attribute.
+    """
+
+    def has_permission(self, request, view):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        # # Instance must have an attribute named `owner`.
+        portfolio_id = request.data['portfolio']
+        try:
+            portfolio = InvestmentPortfolio.objects.get(
+                id=portfolio_id, owner=request.user
+            )
+        except ObjectDoesNotExist:
+            return False
+        return True
 
 
 class PortfolioViewSet(ListModelMixin,
@@ -148,3 +170,15 @@ class PortfolioViewSet(ListModelMixin,
             status = response_status.HTTP_200_OK
         instance.save()
         return Response(status=status)
+
+
+class PortfolioInvestHistoryViewSet(CreateModelMixin,
+                                    DestroyModelMixin,
+                                    GenericViewSet):
+    serializer_class = PortfolioInvestHistoryCreateSerializer
+    permission_classes = [IsOwnerOfPortfolioInvestObject]
+
+    def get_queryset(self):
+        queryset = PortfolioInvestHistory.objects.all()
+        user = self.request.user
+        return queryset.filter(portfolio__owner=user)
