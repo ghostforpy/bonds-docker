@@ -179,7 +179,9 @@ def portfolio_create(request):
 @ login_required
 def delete_portfolio(request, id):
     try:
-        portfolio = InvestmentPortfolio.objects.get(id=id)
+        portfolio = InvestmentPortfolio.objects.get(
+            owner=request.user, id=id
+        )
     except ObjectDoesNotExist:
         return redirect(request.META.get('HTTP_REFERER'))
 
