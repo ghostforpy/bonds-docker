@@ -19,18 +19,14 @@ from .serializers import (InvestmentPortfolioDetailSerializer,
                           InvestmentPortfolioListSerializer,
                           InvestmentPortfolioDetailOwnerSerializer,
                           InvestmentPortfolioCreateSerializer,
-                          InvestmentPortfolioUpdateSerializer,
+                          ManualInvestmentPortfolioUpdateSerializer,
+                          AllowInvestmentPortfolioUpdateSerializer,
                           MyInvestmentPortfolioListSerializer,
                           PortfolioInvestHistoryCreateSerializer)
 
 
 class PageNumberPaginationBy10(PageNumberPagination):
     page_size = 10
-
-
-class PortfolioIsManual(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.manual
 
 
 class IsOwnerOrReadOnlyAuthorized(BasePermission):
@@ -111,7 +107,11 @@ class PortfolioViewSet(ListModelMixin,
         if self.action == 'create':
             return InvestmentPortfolioCreateSerializer
         if self.action in ['update', 'partial_update']:
-            return InvestmentPortfolioUpdateSerializer
+            instance = self.get_object()
+            if instance.manual:
+                return ManualInvestmentPortfolioUpdateSerializer
+            else:
+                return AllowInvestmentPortfolioUpdateSerializer
         elif self.action in ['retrieve', 'follow', 'like']:
             if self.request.user == self.get_object().owner:
                 return InvestmentPortfolioDetailOwnerSerializer
@@ -128,11 +128,11 @@ class PortfolioViewSet(ListModelMixin,
         """
         if self.action == 'list':
             permission_classes = [AllowAny]
-        if self.action in ['my_list', 'create']:
+        elif self.action in ['my_list', 'create']:
             permission_classes = [IsAuthenticated]
-        if self.action in ['update', 'partial_update']:
-            permission_classes = [PortfolioIsManual & IsOwnerOrReadOnlyAuthorized]
-        if self.action in ['follow', 'like']:
+        elif self.action in ['update', 'partial_update']:
+            permission_classes = [IsOwnerOrReadOnlyAuthorized]
+        elif self.action in ['follow', 'like']:
             permission_classes = [FollowLikePermission]
         else:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]

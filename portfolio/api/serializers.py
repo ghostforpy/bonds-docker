@@ -42,13 +42,22 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
         return new_object
 
 
-class InvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
+class ManualInvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for update portfolio by owner.
     """
     class Meta:
         model = InvestmentPortfolio
         fields = ['today_cash', 'private']
+
+
+class AllowInvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for update portfolio by owner.
+    """
+    class Meta:
+        model = InvestmentPortfolio
+        fields = ['private']
 
 
 class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer):
