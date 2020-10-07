@@ -71,7 +71,8 @@ class Security(models.Model):
                                          ('EUR', 'EUR'),
                                          ('GBP', 'GBP'),
                                          ('CNY', 'CNY')],
-                                blank=True)
+                                blank=True,
+                                null=True)
     # Сумма купона, в валюте номинала
     couponvalue = models.DecimalField(max_digits=17, decimal_places=7,
                                       blank=True, null=True)
