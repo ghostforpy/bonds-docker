@@ -1,17 +1,44 @@
 # from rest_framework import status, viewsets
 # from django.shortcuts import get_object_or_404
 # from rest_framework.decorators import action
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.mixins import ListModelMixin,\
-    RetrieveModelMixin, DestroyModelMixin
+    RetrieveModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework import status as response_status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated,\
-    AllowAny
+    AllowAny, BasePermission
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
 from .serializers import SecurityRetrivieSerializer,\
-    SecurityListSerializer, TradeHistorySerializer
+    SecurityListSerializer, TradeHistorySerializer, \
+    TradeHistoryCreateSerializer, TradeHistorySerializerForPortfolioDetail
 from ..models import Security, TradeHistory
+from portfolio.models import InvestmentPortfolio
+
+
+class IsOwnerOfPortfolio(BasePermission):
+    """
+    Object-level permission to only allow owners of an object to edit it.
+    Assumes the model instance has an `owner` attribute.
+    """
+
+    def has_permission(self, request, view):
+        try:
+            portfolio_id = request.data['portfolio']
+        except KeyError:
+            return False
+        try:
+            portfolio = InvestmentPortfolio.objects.get(
+                id=portfolio_id, owner=request.user
+            )
+        except ObjectDoesNotExist:
+            return False
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
 
 
 class PageNumberPaginationBy5(PageNumberPagination):
@@ -45,27 +72,83 @@ class SecurityViewSet(ListModelMixin,
         return [permission() for permission in permission_classes]
 
 
-class TradeHistoryViewSet(  # DestroyModelMixin,
-        GenericViewSet):
-    permission_classes = [IsAuthenticated]
+class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
+    permission_classes = [IsOwnerOfPortfolio]
 
     def get_serializer_class(self):
         if self.action == 'destroy':
+            return TradeHistorySerializer
+        if self.action == 'create':
+            return TradeHistoryCreateSerializer
+        if self.action == 'list':
+            return TradeHistorySerializerForPortfolioDetail
+        if self.action in ['portfolio-list', 'security-list']:
             return TradeHistorySerializer
 
     def get_queryset(self):
         queryset = TradeHistory.objects.all()
         user = self.request.user
-        return queryset.filter(owner=user)
+        queryset = queryset.filter(owner=user)
+        if self.action == 'portfolio-list':
+            if 'porfolio' in self.request.query_params:
+                q = self.request.query_params.get('porfolio')
+                return queryset.filter(portfolio__id=q)
+            else:
+                return queryset.none()
+        if self.action == 'security-list':
+            if 'security' in self.request.query_params:
+                q = self.request.query_params.get('security')
+                return queryset.filter(security__id=q)
+            else:
+                return queryset.none()
+        return queryset  # action = list
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        s = self.perform_destroy(instance)
-        if s == 'ok':
+        delete_status = self.perform_destroy(instance)
+        if delete_status == 'ok':
             status = response_status.HTTP_204_NO_CONTENT
         else:
             status = response_status.HTTP_400_BAD_REQUEST
-        return Response(data=s, status=status)
+        return Response(data=delete_status, status=status)
 
     def perform_destroy(self, instance):
         return instance.delete()
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        create_status = self.perform_create(serializer)
+        if create_status == 'ok':
+            headers = self.get_success_headers(
+                serializer.data
+            )
+            status = response_status.HTTP_201_CREATED
+            response = Response(serializer.data,
+                                status=status,
+                                headers=headers)
+        else:
+            status = response_status.HTTP_400_BAD_REQUEST
+            response = Response(data=create_status,
+                                status=status)
+        return response
+
+    def perform_create(self, serializer):
+        return serializer.save(owner=self.request.user)
+
+    def get_success_headers(self, data):
+        try:
+            return {'Location': str(data[api_settings.URL_FIELD_NAME])}
+        except (TypeError, KeyError):
+            return {}
+
+    @action(methods=['get'], detail=False,
+            url_path='portfolio-list', url_name='portfolio-list')
+    def portfolio_list(self, request, *args, **kwargs):
+        return self.list(self, request, *args, **kwargs)
+
+    @action(methods=['get'], detail=False,
+            url_path='security-list', url_name='security-list')
+    def security_list(self, request, *args, **kwargs):
+        return self.list(self, request, *args, **kwargs)

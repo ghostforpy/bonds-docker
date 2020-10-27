@@ -87,3 +87,19 @@ class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
             'owner': {"view_name": "api:user-detail",
                       'lookup_field': 'username'}
         }
+
+
+class TradeHistoryCreateSerializer(serializers.HyperlinkedModelSerializer):
+    security = serializers.CharField()
+    portfolio = serializers.CharField()
+
+    class Meta:
+        model = TradeHistory
+        exclude = ['owner']
+        extra_kwargs = {
+            'url': {'view_name': 'api:securities-trade-history-detail'},
+        }
+
+    def create(self, validated_data):
+        new_object = TradeHistory(**validated_data)
+        return new_object.save()

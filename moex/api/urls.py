@@ -14,7 +14,9 @@ router.register('securities-trade-history',
                 TradeHistoryViewSet,
                 basename='securities-trade-history')
 # include delete method
-
+# include create method
+# include get method "securities-trade-history/portfolio-list/?portfolio=q
+# include get method "securities-trade-history/security-list/?security=q
 urlpatterns = [
     path('', include(router.urls)),
 ]
