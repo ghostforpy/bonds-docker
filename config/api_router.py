@@ -17,5 +17,6 @@ app_name = "api"
 urlpatterns = [
     path('', include('portfolio.api.urls')),
     path('', include('moex.api.urls')),
+    path('', include('informer.api.urls')),
 ]
 urlpatterns += router.urls
