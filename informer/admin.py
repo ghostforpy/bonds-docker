@@ -5,4 +5,5 @@ from .models import UserInformer
 
 @admin.register(UserInformer)
 class UserInformerAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['user', 'enable']
+    list_filter = ('user', 'enable',)
