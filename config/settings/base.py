@@ -81,6 +81,7 @@ LOCAL_APPS = [
     "vklad.apps.VkladConfig",
     "friends.apps.FriendsConfig",
     "moex.apps.MoexConfig",
+    "informer.apps.InformerConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -308,6 +309,6 @@ REST_FRAMEWORK = {
 
 # Your stuff...
 # ------------------------------------------------------------------------------
-#MOEX http://moex.ru
+# MOEX http://moex.ru
 MOEX_USER = env("MOEX_USER", default='caxeka7247@htwern.com')
-MOEX_PASSWORD  = env("MOEX_PASSWORD", default='gfhjkmmoex')
+MOEX_PASSWORD = env("MOEX_PASSWORD", default='gfhjkmmoex')
