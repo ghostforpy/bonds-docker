@@ -30,6 +30,7 @@
                 <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">E-Mail</a>
                 <a class="btn btn-primary" href="{% url 'socialaccount_connections' %}" role="button">Прикрепленные аккаунты социльных сетей</a>
                 <a class="btn btn-primary" href="{% url 'account_change_password' %}" role="button">Сменить пароль</a>
+                <a id="informer" class="btn {% if object.informer.enable %}btn-danger{%else%}btn-success{%endif%}" href="{% url 'api:informer-detail' user.id %}" role="button">Информер в<span id="informer_enable">{% if not object.informer.enable %}ы{%endif%}</span>ключен</a>
                 <!-- Your Stuff: Custom user template urls -->
             </div>
 
@@ -64,6 +65,9 @@
 {% endblock content %}
 
 {% block page_javascript %}
+  {% if object == request.user %}
+    <script src="{% static 'js/informer.js' %}"></script>
+  {% endif %}
     <script src="{% static 'js/friends.js' %}"></script>
     <script src="{% static 'js/toast/toast.js' %}"></script>
     <script src="{% static 'js/daterangepicker/moment.min.js' %}"></script>
