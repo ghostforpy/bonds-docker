@@ -19,7 +19,7 @@ class UserInformer(models.Model):
     )
 
     def __str__(self):
-        return self.user
+        return str(self.user)
 
 
 @receiver(post_save, sender=User)

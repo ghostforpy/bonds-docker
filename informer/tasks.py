@@ -12,17 +12,13 @@ from moex.utils import get_followed_securities_by_user,\
 User = get_user_model()
 
 
-@celery_app.task()
-def get_users_count():
-    """A pointless Celery task to demonstrate usage."""
-    return User.objects.count()
-
-
-'''
 @celery_app.task(bind=True,
                  name='user.informer')
 def informer(self, exclude_emails=None, *args, **kwargs):
-    users = User.objects.filter(is_active=True).exclude(email__in=args)
+    users = User.objects.\
+        filter(is_active=True).\
+        exclude(email__in=args).\
+        filter(informer__enable__exact=True)
     if exclude_emails:
         users = users.exclude(email__in=exclude_emails)
     result = dict()
@@ -58,4 +54,3 @@ def informer(self, exclude_emails=None, *args, **kwargs):
             fail_silently=False,
             html_message=html_message)
     return result
-'''
