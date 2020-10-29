@@ -18,5 +18,6 @@ urlpatterns = [
     path('', include('portfolio.api.urls')),
     path('', include('moex.api.urls')),
     path('', include('informer.api.urls')),
+    path('', include('breports.api.urls')),
 ]
 urlpatterns += router.urls

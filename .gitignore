@@ -284,3 +284,5 @@ bonds/templates/pages/privacy.html
 config/bonds*.sublime*
 .idea/
 .vscode/
+bonds/broker_reports/
+bonds/broker_reports/
