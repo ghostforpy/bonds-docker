@@ -82,6 +82,7 @@ LOCAL_APPS = [
     "friends.apps.FriendsConfig",
     "moex.apps.MoexConfig",
     "informer.apps.InformerConfig",
+    "breports.apps.BreportsConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
