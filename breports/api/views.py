@@ -40,5 +40,14 @@ class BReportFileUploadViewSet(CreateModelMixin,
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        pass
         serializer.save(owner=self.request.user,
                         filename=self.request.data.get('filename'))
+
+    @action(methods=['post'], detail=False,
+            url_path='year-profit', url_name='year-profit')
+    def year_profit(self, request, *args, **kwargs):
+        # check file xls/xlsx
+        file_data = self.request.data.get('filename')
+        status = response_status.HTTP_200_OK
+        return Response(status=status, data=file_data.name)
