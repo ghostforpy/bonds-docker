@@ -39,8 +39,8 @@ class MyData:
         print("|%15s|%15s|%15s|" % ("SECID", "CLOSE", "TRADES"))
         print("=" * 49)
         for sec in self.history:
-            print ("|%15s|%15.2f|%15d|" % (sec[0], sec[1], sec[2]))
-        print ("=" * 49)
+            print("|%15s|%15.2f|%15d|" % (sec[0], sec[1], sec[2]))
+        print("=" * 49)
 
 
 class MyDataHandler(MicexISSDataHandler):
@@ -90,8 +90,14 @@ def specification(secid):
     return None
 
 
+def get_security_by_secid_isin(secid=None, isin=None):
+    sec, b = specification(secid)
+
+    # return result
+
+
 if __name__ == '__main__':
     try:
         specification('dsky')
     except:
-        print ("Sorry:", sys.exc_type, ":", sys.exc_value)
+        print("Sorry:", sys.exc_type, ":", sys.exc_value)

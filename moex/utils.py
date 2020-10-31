@@ -227,3 +227,16 @@ def get_security_in_db_history_from_moex(security, date_since, date_until):
         reverse=True)
     result_history = {i: security_history[i] for i in days}
     return result_history
+
+
+def get_today_price_by_secid(secid, day=None):
+    if not caches['default'].get('moex_secid_' + secid):
+        prepare_new_security_by_secid(secid)
+    history = get_new_security_history_from_moex(secid)['result_history']
+    temp = {datetime.strptime(i, '%d.%m.%Y'): history[i] for i in history}
+    if day:
+        today_price = temp[day]
+    else:
+        max_day = max(temp.keys())
+        today_price = temp[max_day]
+    return today_price
