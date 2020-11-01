@@ -36,6 +36,7 @@ urlpatterns = [
     path("vklad/", include("vklad.urls", namespace="vklad")),
     path("securities/", include("moex.urls", namespace="moex")),
     path("friends/", include("friends.urls", namespace="friends")),
+    path("breports/", include("breports.urls", namespace="breports")),
     path("favicon.ico", favicon, name="favicon"),
     # Your stuff: custom urls includes go here
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
