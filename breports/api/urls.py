@@ -10,7 +10,6 @@ else:
     router = SimpleRouter()
 
 router.register('breports', BReportFileUploadViewSet, basename='breports')
-# <pk> not metter, allways return user_informer by requset.user
 
 urlpatterns = [
     path('', include(router.urls)),
