@@ -24,6 +24,10 @@ requests = {
 requests_history = 'https://iss.moex.com/iss/statistics/engines/stock/currentprices'
 
 
+class NoSecuritySecid(Exception):
+    pass
+
+
 class Config:
     def __init__(self, user='', password='', proxy_url='', debug_level=0):
         """ Container for all the configuration options:
@@ -66,7 +70,7 @@ class MicexAuth:
                 self.passport = cookie
                 break
         if self.passport is None:
-            print ("Cookie not found!")
+            print("Cookie not found!")
 
     def is_real_time(self):
         """ repeat auth request if failed last time or cookie expired
@@ -144,6 +148,8 @@ class MicexISSClient:
         res = self.opener.open(url)
         result = json.load(res)
         description = result['description']['data']
+        if not description:
+            raise NoSecuritySecid
         result_description = {i[0]: i[2]
                               for i in description if i[0] in ["SECID",
                                                                "NAME",
