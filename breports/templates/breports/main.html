@@ -38,20 +38,18 @@
         <b-button v-on:click="func3">func 3</b-button>
       </b-button-group>
     </div>
-    <div v-if="errors_visible" class="mt-3">
-    <p>Ошибка</p>
-      <ul>
-        <li v-for="item in errors">
-          [[item]]
-        </li>
-      </ul>
-    </div>
+    <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
     <div v-if="spiner_visible" class="d-flex justify-content-center mt-3">
       <b-spinner label="Loading..."></b-spinner>
     </div>
     <div id="year_profit_part" v-if="year_profit_visible" class="mt-3">
       <year-profit v-bind:year_profit="year_profit_data.year_profit"></year-profit>
-      <invests v-bind:invests="year_profit_data.invests"></invests>
+      <total-invests v-bind:total_invests="year_profit_data.invests"></total-invests>
+      <today-cash v-bind:today_cash="year_profit_data.today_cash"></today-cash>
+      <div class="row">
+        <invests class="col-12 col-lg-4" v-bind:invests="year_profit_data.invests"></invests>
+        <securities class="col-12 col-lg-8" v-bind:securities="year_profit_data.securities"></securities>
+      </div>
     </div>
   </div>
 </div>
