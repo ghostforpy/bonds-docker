@@ -439,9 +439,10 @@ def refresh_portfolios(sender, instance, **kwargs):
             i.total_cost = float(i.count) * \
                 (float(i.today_price) +
                  float(i.security.accint) +  # НКД за предыдущие дни
-                 float(i.couponvalue * i.couponfrequency / 365)  # НКД за текущий день
+                 # НКД за текущий день
+                 float(i.couponvalue) * float(i.couponfrequency) / 365)
                  )
         else:
-            i.total_cost = float(i.today_price) * float(i.count)
-        i.save(update_fields=['today_price', 'total_cost'])
+            i.total_cost=float(i.today_price) * float(i.count)
+        i.save(update_fields = ['today_price', 'total_cost'])
         i.portfolio.refresh_portfolio()
