@@ -437,7 +437,10 @@ def refresh_portfolios(sender, instance, **kwargs):
         # в облигациях учитывать НКД
         if security.security_type == 'bond':
             i.total_cost = float(i.count) * \
-                (float(i.today_price) + float(i.security.accint))
+                (float(i.today_price) +
+                 float(i.security.accint) +  # НКД за предыдущие дни
+                 float(i.couponvalue * i.couponfrequency / 365)  # НКД за текущий день
+                 )
         else:
             i.total_cost = float(i.today_price) * float(i.count)
         i.save(update_fields=['today_price', 'total_cost'])
