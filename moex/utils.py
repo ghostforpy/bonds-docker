@@ -1,11 +1,12 @@
 import re
 from datetime import datetime
 from django.core.cache import caches
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import (PermissionDenied,
+                                    ObjectDoesNotExist)
 from django.db.models import Q
-from .iss_simple_main import search as moex_search,\
-    specification as moex_specification,\
-    history as moex_history
+from .iss_simple_main import (search as moex_search,
+                              specification as moex_specification,
+                              history as moex_history)
 from .models import Security
 
 
@@ -229,14 +230,39 @@ def get_security_in_db_history_from_moex(security, date_since, date_until):
     return result_history
 
 
-def get_today_price_by_secid(secid, day=None):
-    if not caches['default'].get('moex_secid_' + secid):
-        prepare_new_security_by_secid(secid)
-    history = get_new_security_history_from_moex(secid)['result_history']
-    temp = {datetime.strptime(i, '%d.%m.%Y'): history[i] for i in history}
-    if day:
-        today_price = temp[day]
-    else:
-        max_day = max(temp.keys())
-        today_price = temp[max_day]
+def get_today_price_by_secid(secid, day=None, ignore_bond_nkd=False):
+    try:
+        security = Security.objects.get(secid=secid)
+        if day:
+            history = get_security_in_db_history_from_moex(security)
+            today_price = history[day]
+        else:
+            today_price = security.today_price
+    except ObjectDoesNotExist:
+        if not caches['default'].get('moex_secid_' + secid):
+            prepare_new_security_by_secid(secid)
+        security = caches['default'].get('moex_secid_' + secid)
+        if day:
+            history = get_new_security_history_from_moex(
+                secid)['result_history']
+            temp = {datetime.strptime(
+                i, '%d.%m.%Y'): history[i] for i in history}
+            today_price = temp[day]
+        else:
+            today_price = security.today_price
+    if security.security_type == 'bond' and not ignore_bond_nkd:
+        today_nkd = security.couponvalue * security.couponfrequency / 365
+        today_price += (security.accint +  # NKD
+                        today_nkd  # today NKD
+                        )
     return today_price
+
+
+def get_security_by_secid(secid):
+    try:
+        security = Security.objects.get(secid=secid)
+    except ObjectDoesNotExist:
+        if not caches['default'].get('moex_secid_' + secid):
+            prepare_new_security_by_secid(secid)
+        security = caches['default'].get('moex_secid_' + secid)
+    return security
