@@ -1,4 +1,6 @@
 import re
+import requests
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from django.core.cache import caches
 from django.core.exceptions import (PermissionDenied,
@@ -254,9 +256,9 @@ def get_today_price_by_secid(secid, day=None, ignore_bond_nkd=False):
         today_nkd = (float(security.couponvalue) *
                      float(security.couponfrequency) / 365
                      )
-        today_price += (security.accint +  # NKD
-                        today_nkd  # today NKD
-                        )
+        today_price = float(today_price) + (float(security.accint) +  # NKD
+                                            today_nkd  # today NKD
+                                            )
     return today_price
 
 
@@ -268,3 +270,41 @@ def get_security_by_secid(secid):
             prepare_new_security_by_secid(secid)
         security = caches['default'].get('moex_secid_' + secid)
     return security
+
+
+def get_cbr_xml_daily_curses(date=None):
+    """
+    date:datetime.date()
+    """
+    if not date:
+        date = datetime.now().date()
+    str_date = date.strftime('%d.%m.%Y').split('.')
+    if not caches['default'].get('daily_curses_' + '.'.join(str_date)):
+        url = 'http://www.cbr.ru/scripts/XML_daily.asp?date_req={}/{}/{}'\
+            .format(*str_date)
+        try:
+            r = requests.get(url)
+        except:
+            return None
+        root = root = ET.fromstring(r.text)
+        result = dict()
+        for valute in root.findall('Valute'):
+            char_code = valute.find('CharCode').text
+            num_code = valute.find('NumCode').text
+            value = float(valute.find('Value').text.replace(',', '.'))
+            name = valute.find('Name').text
+            result[char_code] = {'Value': value,
+                                 'Name': name,
+                                 'NumCode': num_code
+                                 }
+        caches['default'].add('daily_curses_' + '.'.join(str_date),
+                              result,
+                              timeout=10 * 60 * 60)
+    else:
+        result = caches['default'].get('daily_curses_' + '.'.join(str_date))
+    return {'Date': '.'.join(str_date), 'ValCurs': result}
+
+
+def get_valute_curse(valute, date=None):
+    data = get_cbr_xml_daily_curses(date)
+    return data['ValCurs'][valute]['Value']
