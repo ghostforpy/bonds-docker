@@ -251,7 +251,9 @@ def get_today_price_by_secid(secid, day=None, ignore_bond_nkd=False):
         else:
             today_price = security.today_price
     if security.security_type == 'bond' and not ignore_bond_nkd:
-        today_nkd = security.couponvalue * security.couponfrequency / 365
+        today_nkd = (float(security.couponvalue) *
+                     float(security.couponfrequency) / 365
+                     )
         today_price += (security.accint +  # NKD
                         today_nkd  # today NKD
                         )
