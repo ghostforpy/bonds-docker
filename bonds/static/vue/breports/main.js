@@ -76,9 +76,9 @@ var app = new Vue({
         ></b-form-file>
         <div class="mt-3">
             <b-button-group>
-                <b-button v-on:click="calc_year_profit">Year profit</b-button>
-                <b-button v-on:click="func2">func 2</b-button>
-                <b-button v-on:click="func3">func 3</b-button>
+                <b-button v-on:click="calc_year_profit">Среднегодовая доходность</b-button>
+                <b-button v-if="false" v-on:click="func2">func 2</b-button>
+                <b-button v-if="false" v-on:click="func3">func 3</b-button>
             </b-button-group>
         </div>
         <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
