@@ -39,7 +39,8 @@ class SimpleBReportUploadSerializer(serializers.Serializer):
         """
         Check that file is xls/xlsx.
         """
-        if filename.name.split('.')[1] not in ['xls', 'xlsx']:
+        if filename.name.split('.')[1] not in ['xls', 'xlsx',
+                                               'XLS', 'XLSX']:
             raise serializers.ValidationError(
                 "file must be xls/xlsx"
             )
