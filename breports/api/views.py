@@ -1,4 +1,7 @@
+from ..broker_parser.classes import FileNotSupported
+from ..scripts import *
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files import File
 from rest_framework.mixins import (ListModelMixin,
                                    RetrieveModelMixin,
                                    CreateModelMixin,
@@ -16,7 +19,10 @@ from rest_framework.parsers import FormParser, MultiPartParser
 #from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from ..models import BReport
-from .serializers import BReportUploadSerializer
+from .serializers import (BReportUploadSerializer,
+                          SimpleBReportUploadSerializer,
+                          NonZeroSecuritySerializer,
+                          InvestsOperationSerializer)
 
 
 class IsOwner(BasePermission):
@@ -35,19 +41,34 @@ class BReportFileUploadViewSet(CreateModelMixin,
                                GenericViewSet):
 
     queryset = BReport.objects.all()
-    serializer_class = BReportUploadSerializer
     parser_classes = (MultiPartParser, FormParser,)
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.action == 'year_profit':
+            return SimpleBReportUploadSerializer
+        return BReportUploadSerializer
+
     def perform_create(self, serializer):
-        pass
         serializer.save(owner=self.request.user,
                         filename=self.request.data.get('filename'))
 
     @action(methods=['post'], detail=False,
             url_path='year-profit', url_name='year-profit')
     def year_profit(self, request, *args, **kwargs):
-        # check file xls/xlsx
-        file_data = self.request.data.get('filename')
-        status = response_status.HTTP_200_OK
-        return Response(status=status, data=file_data.name)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        path_to_file, fs = serializer.save()
+        data = None
+        try:
+            br = init_broker_report(
+                path_to_file
+            )
+            data = calc_year_profit(br)
+
+            status = response_status.HTTP_200_OK
+        except FileNotSupported:
+            status = response_status.HTTP_400_BAD_REQUEST
+        finally:
+            fs.delete(path_to_file)
+        return Response(status=status, data=data)
