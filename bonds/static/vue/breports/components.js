@@ -28,7 +28,12 @@ Vue.component('total-invests', {
         computed_total_invests: function () {
             let i = this.total_invests.map(
                 function cash(item) {
-                    return parseFloat(item.cash_in_rub);
+                    if (item.action == 'Пополнение') {
+                        var sign = 1
+                    } else {
+                        var sign = -1
+                    };
+                    return sign * parseFloat(item.cash_in_rub);
                 }
             );
             return i.reduce((a, b) => a + b).toFixed(2)
