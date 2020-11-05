@@ -1,6 +1,7 @@
+let url = document.location.protocol + '//' + document.location.host
 const HTTP = axios.create({
     //baseURL: 'http://0.0.0.0:8000/api/',
-    baseURL: 'https://mybonds.space/api/',
+    baseURL: url + '/api/',
     headers: {
         'X-CSRFToken': csrftoken,
     }
