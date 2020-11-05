@@ -248,7 +248,7 @@ class TinkoffParserXLS:
                 temp = dict()
                 temp['date'] = i[2]
                 temp['action'] = i[3] == 'Пополнение счета'
-                temp['cash'] = i[4]
+                temp['cash'] = i[4] if temp['action'] else i[5]
                 temp['currency'] = currency
                 temp['ihash'] = hash(tuple(i))
                 t.append(temp)
