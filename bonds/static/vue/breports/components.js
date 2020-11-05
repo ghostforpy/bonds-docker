@@ -26,7 +26,7 @@ Vue.component('total-invests', {
         computed_total_invests: function () {
             let i = this.total_invests.map(
                 function cash(item) {
-                    return parseFloat(item.cash);
+                    return parseFloat(item.cash_in_rub);
                 }
             );
             return i.reduce((a, b) => a + b).toFixed(2)
@@ -59,6 +59,7 @@ Vue.component('invests', {
                     <ul>
                         <li v-for="item in computed_invests">
                             {{item.action}} {{item.date}} на {{item.cash}} {{item.currency}}
+                            <span v-if="(item.currency != 'РУБ')">({{item.cash_in_rub}} РУБ)</span>
                         </li>
                     </ul>
                 </div>`
