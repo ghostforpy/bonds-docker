@@ -440,7 +440,8 @@ def refresh_portfolios(sender, instance, **kwargs):
                 (float(i.today_price) +
                  float(i.security.accint) +  # НКД за предыдущие дни
                  # НКД за текущий день
-                 float(i.couponvalue) * float(i.couponfrequency) / 365
+                 float(i.security.couponvalue) * float(
+                     i.security.couponfrequency) / 365
                  )
         else:
             i.total_cost = float(i.today_price) * float(i.count)
