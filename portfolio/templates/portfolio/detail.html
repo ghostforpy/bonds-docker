@@ -206,10 +206,10 @@
                       <span class="d-md-none">Количество: </span><span>{{ security.count|delete_zeroes }} шт.</span>
                     </div>
                     <div class="col-md-2 col-12 mb-1 mt-1">
-                      <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} {{ security.get_faceunit_display}}</span>
+                      <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
                     </div>
                     <div class="col-md-2 col-12 mb-1 mt-1">
-                      <span class="d-md-none">Комиссия: </span><span>{{ security.commission|delete_zeroes }} {{ security.get_faceunit_display}}</span>
+                      <span class="d-md-none">Комиссия: </span><span>{{ security.commission|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
                     </div>
                     <div class="col-md-2 col-12 mb-1 mt-1">
                       <span class="d-md-none">Действие: </span><span>{% if security.buy %}Покупка{% else %}Продажа{% endif %}</span>
