@@ -45,7 +45,7 @@
     </div>
   </div>
     <div class="form-group row">
-      <label for="id_price" class="col-sm-2 col-form-label">Цена (руб.):</label>
+      <label for="id_price" class="col-sm-2 col-form-label">Цена ({{ security.get_faceunit_display }}):</label>
       <div class="col-sm-4">
         <input type="number" value="{{ form.price.value|int_to_str }}" class="{% if form.price.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" name="price" step="0.00000001" required="" id="id_price">
         <small id="sm_price" class="text-danger form-text collapse">Значение должно быть больше 0.</small>
@@ -78,7 +78,7 @@
     </div>
     
       <div class="form-group row" {% if security.security_type != 'bond' %}hidden="true"{% endif%} >
-        <label for="id_nkd" class="col-sm-2 col-form-label">НКД (руб.):</label>
+        <label for="id_nkd" class="col-sm-2 col-form-label">НКД ({{ security.get_faceunit_display }}):</label>
         <div class="col-sm-4">
           <input placeholder="Введите НКД" type="number" class="{% if form.nkd.errors %}is-invalid{% endif %} form-control form-control-sm mt-1 mb-2" min="0" name="nkd" step="0.0000001" required="" id="id_nkd" {% if security.security_type != 'bond' %}value="0"{% endif%}>
           <small id="sm_nkd" class="text-danger form-text collapse">Значение не должно быть меньше 0.</small>
@@ -127,7 +127,7 @@
       </div>
     </div>
       <div class="form-group row">
-        <label for="cost" class="col-sm-2 col-form-label">Общая сумма к {% if buy %}о{% else %}вы{% endif %}плате (руб.):</label>
+        <label for="cost" class="col-sm-2 col-form-label">Общая сумма к {% if buy %}о{% else %}вы{% endif %}плате ({{ security.get_faceunit_display }}):</label>
         <div class="col-sm-4">
           <input class="form-control" id="cost" readonly value="0"></input>
           <small id="sm" class="text-danger form-text collapse">Недостаточно средств на остатке портфеля</small>

@@ -214,7 +214,9 @@ def get_new_security_history_from_moex(secid):
         key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
         reverse=True)
     result_history = {i: result[i] for i in days}
-    return {'status': 'ok', 'result_history': result_history}
+    return {'status': 'ok',
+            'result_history': result_history,
+            'currency': newitem.get_faceunit_display()}
 
 
 def get_security_in_db_history_from_moex(security, date_since, date_until):
