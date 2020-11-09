@@ -128,7 +128,7 @@ def portfolio_del_invest(request, id):
 
 
 def portfolio_list(request):
-    portfolios = InvestmentPortfolio.objects.all()
+    portfolios = InvestmentPortfolio.objects.select_related('owner').all()
 
     return render(request,
                   'portfolio/list.html',
