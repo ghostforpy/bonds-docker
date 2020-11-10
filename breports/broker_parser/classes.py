@@ -376,7 +376,6 @@ class BrokerReport:
                 i.secid == query or i.isin == query)][0]
         outgoing_security_balance = security_movement.outgoing_balance
         result = list()
-
         while outgoing_security_balance > 0:
             try:
                 temp = transactions_buy.pop()
@@ -384,7 +383,7 @@ class BrokerReport:
                 break
             result.append(temp)
             outgoing_security_balance -= temp.count
-        if outgoing_security_balance:
+        if outgoing_security_balance > Decimal(0):
             if raise_exceptions:
                 raise NeedEarlierBrokerReport
             return result, outgoing_security_balance

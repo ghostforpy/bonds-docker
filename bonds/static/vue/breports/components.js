@@ -114,3 +114,153 @@ Vue.component('errors', {
                     </ul>   
                 </div>`
 })
+
+
+Vue.component('part_five_dot_one', {
+    props: ['dat'],
+    data: function () {
+        return {
+            last_row: null
+        }
+    },
+    beforeMount: function () {
+        var el = this.dat;
+        this.last_row = el.pop();
+    },
+    template: `<div>
+                <div class="row">
+                    <div class="col-3 d-none d-md-block">
+                        <strong>Наименование и организационно-правовая форма организации</strong>
+                    </div>
+                    <div class="col-3 d-none d-md-block">
+                        <strong>Доля участия</strong>
+                    </div>
+                    <div class="col-6 d-none d-md-block">
+                        <strong>Основание участия</strong>
+                    </div>
+                </div>
+                <div class="dropdown-divider d-none d-md-block"></div>
+                <div v-for="item in dat">
+                    <part_five_dot_one_row v-bind:one_row="item"></part_five_dot_one_row>
+                    <div class="dropdown-divider"></div>
+                </div>
+                <part_five_dot_one_row v-bind:one_row="last_row"></part_five_dot_one_row>
+            </div>`
+})
+
+Vue.component('part_five_dot_one_row', {
+    props: ['one_row'],
+    data: function () {
+        return {
+            last_participation_basis: null,
+            total: null
+        }
+    },
+    beforeMount: function () {
+        var el = this.one_row;
+        el.count = el.count.replace(/0*$/, "").replace(/\.*$/, "");
+        el.security.facevalue = el.security.facevalue
+            .replace(/0*$/, "")
+            .replace(/\.*$/, "");
+        this.last_participation_basis = el.participation_basis.pop();
+        this.total = (parseFloat(el.count) * parseFloat(el.security.facevalue))
+            .toFixed(7)
+            .replace(/0*$/, "")
+            .replace(/\.*$/, "");
+    },
+    template: `
+                <div class="row">
+                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                            {{one_row.security.emitent}}
+                        </div>
+                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                        Количество: {{one_row.count}} шт.,
+                        </br>
+                        Номинальная стоимость: {{one_row.security.facevalue}} 
+                        {{one_row.security.faceunit}}
+                        </br>
+                        Итого: {{total}} {{one_row.security.faceunit}}
+                        </div>
+                        <div class=" col-12 col-md-6 mb-1 mt-1">
+                            <span v-for="i in one_row.participation_basis">
+                                <span>сделка № {{i.deal_number}}
+                                (поручение № {{i.order_number}}) от {{i.date}},</span>
+                                </br>
+                            </span>
+                            <span>сделка № {{last_participation_basis.deal_number}}
+                            (поручение № {{last_participation_basis.order_number}}) от 
+                            {{last_participation_basis.date}}</span>
+                        </div>
+                    </div>
+    `
+})
+
+
+Vue.component('part_five_dot_two', {
+    props: ['dat'],
+    data: function () {
+        return {
+            last_row: null
+        }
+    },
+    beforeMount: function () {
+        var el = this.dat;
+        this.last_row = el.pop();
+    },
+    template: `<div>
+                <div class="row">
+                    <div class="col-3 d-none d-md-block">
+                        <strong>Вид ценной бумаги</strong>
+                    </div>
+                    <div class="col-2 d-none d-md-block">
+                        <strong>Лицо, выпустившее ценную бумагу</strong>
+                    </div>
+                    <div class="col-3 d-none d-md-block">
+                        <strong>Номинальная величина обязательства</br>(руб.)</strong>
+                    </div>
+                    <div class="col-1 d-none d-md-block">
+                        <strong>Общее количество</strong>
+                    </div>
+                    <div class="col-3 d-none d-md-block">
+                        <strong>Общая стоимость</br>(руб.)</strong>
+                    </div>
+                </div>
+                <div class="dropdown-divider d-none d-md-block"></div>
+                <div v-for="item in dat">
+                    <part_five_dot_two_row v-bind:one_row="item"></part_five_dot_two_row>
+                    <div class="dropdown-divider"></div>
+                </div>
+                <part_five_dot_two_row v-bind:one_row="last_row"></part_five_dot_two_row>
+            </div>`
+})
+
+Vue.component('part_five_dot_two_row', {
+    props: ['one_row'],
+    data: function () {
+        return {
+            total_cost: null
+        }
+    },
+    beforeMount: function () {
+        var el = this.one_row;
+        el.count = el.count.replace(/0*$/, "").replace(/\.*$/, "");
+        this.total_cost = el.security.facevalue * el.count;
+    },
+    template: `<div class="row">
+                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                            {{one_row.security.security_type}} "{{one_row.security.name}}"
+                        </div>
+                        <div class=" col-12 col-md-2 mb-1 mt-1">
+                            {{one_row.security.emitent}}
+                        </div>
+                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                            <span class="d-md-none">Номинальная величина обязательства(руб.): </span>{{total_cost}}
+                        </div>
+                        <div class=" col-12 col-md-1 mb-1 mt-1">
+                            <span class="d-md-none">Общее количество: </span>{{one_row.count}}
+                        </div>
+                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                            <span class="d-md-none">Общая стоимость(руб.): </span>{{total_cost}}
+                        </div>
+                    </div>`
+})

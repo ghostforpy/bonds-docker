@@ -1,6 +1,8 @@
 from decimal import Decimal
 from rest_framework.serializers import ValidationError
-from .broker_parser.classes import BrokerReport, FileNotSupported
+from .broker_parser.classes import (BrokerReport,
+                                    FileNotSupported,
+                                    NeedEarlierBrokerReport)
 from .broker_parser.parsers import AVAILEBLE_PARSERS, TinkoffParserXLS
 from portfolio.scripts import year_profit_approx
 from moex.iss_simple_client import NoSecuritySecid
@@ -11,7 +13,8 @@ from moex.utils import (get_new_security_history_from_moex,
                         get_security_by_secid,
                         get_valute_curse)
 from .api.serializers import (InvestsOperationSerializer,
-                              NonZeroSecuritySerializer)
+                              NonZeroSecuritySerializer,
+                              IncomeCertificateSecuritySerializer)
 import xlrd
 
 
@@ -42,7 +45,7 @@ class CountSecurity():
         try:
             self.security = get_security_by_secid(security.secid)
         except NoSecuritySecid:
-            raise ValidationError("can't find security.secid")
+            raise ValidationError("can't find {}".format(security.secid))
         self.total = self.count * Decimal(self.security.today_price)
         if self.security.faceunit != 'SUR':
             curse = get_valute_curse(self.security.faceunit)
@@ -62,7 +65,6 @@ def return_non_zero_securities(broker_report):
 
 
 def calc_year_profit(broker_report):
-    # пока что только по RUB
     # проверка нулевых входящих остатков
     if not broker_report.check_zero_incoming_balance_money() or\
             not broker_report.check_zero_incoming_balance_securities():
@@ -120,5 +122,63 @@ def calc_year_profit(broker_report):
         'today_cash': today_cash,
         'invests': invests,
         'securities': non_zero_securities
+    }
+    return result
+
+
+class IncomeCertificateSecurity():
+    def __init__(self, security, count, participation_basis):
+        try:
+            self.security = get_security_by_secid(security.secid)
+        except NoSecuritySecid:
+            raise ValidationError("can't find {}".format(security.secid))
+        self.count = count
+        self.participation_basis = participation_basis
+
+
+def income_certificate(broker_report):
+    securities = broker_report.\
+        return_none_zero_securities()
+    # проверка нулевых входящих остатков бумаг,
+    # по которым исходящий остаток больше 0.
+    securities_movements = broker_report.\
+        return_non_zero_outgoing_balance_securities()
+    for i in securities_movements:
+        if i.incoming_balance > Decimal(0):
+            raise ValidationError(
+                "incoming balance security must be zero ({})".format(i[1].secid))
+    part_five_one_temp = list()
+    part_five_two_temp = list()
+    for i in securities_movements:
+        security = broker_report.get_seurity_by_secid_isin(i.secid)
+        t = IncomeCertificateSecurity(
+            i,
+            i.outgoing_balance,
+            []
+        )
+        if t.security.security_type == 'share':  # проверка типа бумаги
+            try:
+                participation_basis = broker_report.return_docum_by_secid_isin(
+                    i.secid, raise_exceptions=True
+                )
+            except NeedEarlierBrokerReport:
+                raise ValidationError(
+                    "Need Earlier Broker Report by ({})".format(i.secid))
+            t.participation_basis = sorted(participation_basis,
+                                           key=lambda x: x.date)
+            part_five_one_temp.append(t)
+        else:
+            part_five_two_temp.append(t)
+    participation_basis_share = IncomeCertificateSecuritySerializer(
+        part_five_one_temp,
+        many=True
+    ).data
+    participation_basis_other = IncomeCertificateSecuritySerializer(
+        part_five_two_temp,
+        many=True
+    ).data
+    result = {
+        'part_five_one': participation_basis_share,
+        'part_five_two': participation_basis_other
     }
     return result

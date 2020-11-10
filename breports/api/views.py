@@ -1,5 +1,3 @@
-from ..broker_parser.classes import FileNotSupported
-from ..scripts import *
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from rest_framework.mixins import (ListModelMixin,
@@ -16,13 +14,14 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import generics
 from rest_framework.parsers import FormParser, MultiPartParser
-#from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from ..models import BReport
 from .serializers import (BReportUploadSerializer,
                           SimpleBReportUploadSerializer,
                           NonZeroSecuritySerializer,
                           InvestsOperationSerializer)
+from ..broker_parser.classes import FileNotSupported
+from ..scripts import *
 
 
 class IsOwner(BasePermission):
@@ -45,7 +44,7 @@ class BReportFileUploadViewSet(CreateModelMixin,
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action == 'year_profit':
+        if self.action in ['year_profit', 'income_certificate']:
             return SimpleBReportUploadSerializer
         return BReportUploadSerializer
 
@@ -56,6 +55,9 @@ class BReportFileUploadViewSet(CreateModelMixin,
     @action(methods=['post'], detail=False,
             url_path='year-profit', url_name='year-profit')
     def year_profit(self, request, *args, **kwargs):
+        """
+        Ручка для получения данных о среднегодовой доходности.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         path_to_file, fs = serializer.save()
@@ -66,6 +68,29 @@ class BReportFileUploadViewSet(CreateModelMixin,
             )
             data = calc_year_profit(br)
 
+            status = response_status.HTTP_200_OK
+        except FileNotSupported:
+            status = response_status.HTTP_400_BAD_REQUEST
+        finally:
+            fs.delete(path_to_file)
+        return Response(status=status, data=data)
+
+    @action(methods=['post'], detail=False,
+            url_path='income-certificate', url_name='income-certificate')
+    def income_certificate(self, request, *args, **kwargs):
+        """
+        Ручка для получения данных для заполнения
+        справки о доходах.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        path_to_file, fs = serializer.save()
+        data = None
+        try:
+            br = init_broker_report(
+                path_to_file
+            )
+            data = income_certificate(br)
             status = response_status.HTTP_200_OK
         except FileNotSupported:
             status = response_status.HTTP_400_BAD_REQUEST

@@ -104,3 +104,32 @@ class InvestsOperationSerializer(serializers.Serializer):
     date = serializers.DateField()
     action = serializers.BooleanField()
     currency = serializers.CharField()
+
+
+class SecuritySimpleSerializer(serializers.Serializer):
+    isin = serializers.CharField()
+    emitent = serializers.CharField()
+    secid = serializers.CharField()
+    facevalue = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    faceunit = serializers.CharField(source='get_faceunit_display')
+    security_type = serializers.CharField(
+        source='get_security_type_display')
+    name = serializers.CharField()
+
+
+class SecurityTransactionSerializer(serializers.Serializer):
+    deal_number = serializers.CharField()
+    order_number = serializers.CharField()
+    date = serializers.DateField()
+
+
+class IncomeCertificateSecuritySerializer(serializers.Serializer):
+    security = SecuritySimpleSerializer()
+    count = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    participation_basis = SecurityTransactionSerializer(many=True)
