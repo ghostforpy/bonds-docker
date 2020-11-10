@@ -8,7 +8,10 @@ register = template.Library()
 
 @register.filter(name='new_friends_count')
 def cut(user):
-    request_friends_to = user.friend_request_to.all()
+    try:
+        request_friends_to = user.friend_request_to.all()
+    except:
+        return 0
     request_friends_new = request_friends_to.filter(new=True)
     request_friends_new_count = request_friends_new.count()
     result = request_friends_new_count\
