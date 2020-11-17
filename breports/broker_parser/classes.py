@@ -318,7 +318,7 @@ class BrokerReport:
         return [i for i in self.securities_movement
                 if i.outgoing_balance > 0]
 
-    def get_seurity_by_secid_isin(self, secid=None, isin=None):
+    def get_security_by_secid_isin(self, secid=None, isin=None):
         sec_info = self.securities_info
         for i in sec_info:
             if i.secid == secid or i.isin == isin:
@@ -333,7 +333,7 @@ class BrokerReport:
         sec_movements = self.non_zero_securities_movements()
         result = list()
         for i in sec_movements:
-            security = self.get_seurity_by_secid_isin(
+            security = self.get_security_by_secid_isin(
                 secid=i.secid,
                 isin=i.isin
             )
