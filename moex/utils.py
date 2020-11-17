@@ -87,6 +87,7 @@ def prepare_new_security_by_secid(secid):
         couponpercent = get_value(description, "COUPONPERCENT")
         couponvalue = get_value(description, "COUPONVALUE")
         faceunit = get_value(description, "FACEUNIT")
+        main_board_faceunit = get_value(description, "MAINBOARDFACEUNIT")
         url = 'https://www.moex.com/ru/issue.aspx?code=' + description["SECID"]
         parce_url = 'http://iss.moex.com/iss/history/engines/' + \
             '{}/markets/{}/'.format(engine, market) + \
@@ -115,6 +116,7 @@ def prepare_new_security_by_secid(secid):
                            couponvalue=couponvalue,
                            accint=accint,
                            faceunit=faceunit,
+                           main_board_faceunit=main_board_faceunit,
                            oldest_date=datetime.now().date(),
                            today_price=today_price,
                            last_update=last_update,
@@ -216,7 +218,7 @@ def get_new_security_history_from_moex(secid):
     result_history = {i: result[i] for i in days}
     return {'status': 'ok',
             'result_history': result_history,
-            'currency': newitem.get_faceunit_display()}
+            'currency': newitem.get_main_board_faceunit_display()}
 
 
 def get_security_in_db_history_from_moex(security, date_since, date_until):

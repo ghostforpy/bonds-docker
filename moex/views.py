@@ -287,7 +287,7 @@ def get_security_history(request, id):
     content = dict()
     content['history'] = result_history
     content['status'] = 'ok'
-    content['currency'] = security.get_faceunit_display()
+    content['currency'] = security.get_main_board_faceunit_display()
     content['url'] = reverse('moex:buy', args=[security.id])
     return JsonResponse(content)
 

@@ -21,6 +21,8 @@ class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name="api:security-detail")
     faceunit = serializers.CharField(source='get_faceunit_display')
+    main_board_faceunit = serializers.CharField(
+        source='get_main_board_faceunit_display')
 
     class Meta:
         model = Security
@@ -33,13 +35,15 @@ class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
                   "today_price",
                   "last_update",
                   "faceunit",
+                  "main_board_faceunit"
                   'url']
 
 
 class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
     "serializer for SecurityPortfolios model"
     security_name = serializers.CharField(source='security')
-    security_faceunit = serializers.CharField(source='security.get_faceunit_display')
+    security_faceunit = serializers.CharField(
+        source='security.get_main_board_faceunit_display')
 
     class Meta:
         model = SecurityPortfolios
@@ -63,7 +67,8 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
 
 class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSerializer):
     security_name = serializers.CharField(source='security')
-    security_faceunit = serializers.CharField(source='security.get_faceunit_display')
+    security_faceunit = serializers.CharField(
+        source='security.get_main_board_faceunit_display')
     id = serializers.IntegerField(read_only=True)
     url_for_delete = serializers.HyperlinkedIdentityField(
         view_name='api:securities-trade-history-detail'

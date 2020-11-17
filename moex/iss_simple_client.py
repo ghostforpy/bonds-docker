@@ -172,15 +172,16 @@ class MicexISSClient:
         s = self.search(query)[query]
         result_description['primary_boardid'] = s['primary_boardid']
         result_description['emitent'] = s['emitent']
+        primary_boardid = result_description['primary_boardid']
+        d = boards['data']
+        m = list(filter(lambda x: x[1] == primary_boardid, d))
+        faceunit = m[0][-1]
+        result_description["MAINBOARDFACEUNIT"] = faceunit.replace('RUB', 'SUR')
         # для фондов необходимо определить валюту
         try:
             _ = result_description["FACEUNIT"]
         except KeyError:
-            primary_boardid = result_description['primary_boardid']
-            d = boards['data']
-            m = list(filter(lambda x: x[1] == primary_boardid, d))
-            faceunit = m[0][-1]
-            result_description["FACEUNIT"] = faceunit.replace('RUB', 'SUR')
+            result_description["FACEUNIT"] = result_description["MAINBOARDFACEUNIT"]
         return result_description, boards
 
     def get_history(self, url):

@@ -70,7 +70,7 @@
 
         <p>Эмитент: {{ security.emitent }}</p>
         <p>Тип: {{ security.get_security_type_display }}</p>
-        <p>Цена: {{ security.today_price }} {{ security.get_faceunit_display }} <span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></p>
+        <p>Цена: {{ security.today_price }} {{ security.get_main_board_faceunit_display }} <span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></p>
         <p>Дата обновления: {{ security.last_update }}</p>
         {% if security.description %}
         <p>Описание: {{ security.description }}</p>
@@ -176,7 +176,7 @@
                         <span class="d-md-none">Количество: </span><span>{{ security.count|delete_zeroes }} шт.</span>
                       </div>
                       <div class="col-md-2 col-12 mb-1 mt-1">
-                        <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} {{ security.security.get_faceunit_display }}</span>
+                        <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} {{ security.security.get_main_board_faceunit_display }}</span>
                       </div>
                       <div class="col-md-2 col-12 mb-1 mt-1">
                         <span class="d-md-none">Комиссия: </span><span>{{ security.commission|delete_zeroes }} руб.</span>
