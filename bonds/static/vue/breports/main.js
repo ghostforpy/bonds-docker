@@ -150,11 +150,19 @@ var app = new Vue({
             </div>
         </div>
         <div id="income_certificate_part" v-if="income_certificate_visible" class="mt-3">
-        <h3 class="mt-4">Раздел 5.1</h3>
-        <small>Примечание: Местонахождение организации, уставной капитал, долю участия необходимо найти самостоятельно.</small>
-        <part_five_dot_one class="mt-3" v-bind:dat="income_certificate_data.part_five_one"></part_five_dot_one>
-        <h3 class="mt-4">Раздел 5.2</h3>
-        <part_five_dot_two class="mt-3" v-bind:dat="income_certificate_data.part_five_two"></part_five_dot_two>
+            <h4 class="mt-4">Данные, необходимые для заполнения п.5 (Доход от ценных бумаг и долей участия в коммерческих организациях) раздела 1.</h4>
+            <part_one v-bind:profits="income_certificate_data.profits"></part_one>
+            <div v-if="income_certificate_data.part_five_one.length > 0">
+                <h3 class="mt-4">Раздел 5.1</h3>
+                <small>Примечание: Местонахождение организации, уставной капитал, долю участия необходимо найти самостоятельно.</small>
+                <part_five_dot_one class="mt-3" v-bind:dat="income_certificate_data.part_five_one"></part_five_dot_one>
+            </div>
+            <div v-if="income_certificate_data.part_five_two.length > 0">
+                <h3 class="mt-4">Раздел 5.2</h3>
+                <part_five_dot_two
+                class="mt-3"
+                v-bind:dat="income_certificate_data.part_five_two"></part_five_dot_two>
+            </div>
         </div>
     </div>
     `

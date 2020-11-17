@@ -264,3 +264,59 @@ Vue.component('part_five_dot_two_row', {
                         </div>
                     </div>`
 })
+
+Vue.component('part_one', {
+    props: ['profits'],
+    data: function () {
+        return {
+            profit_div_coupon: null,
+            profit_repo: null,
+            sells: null,
+            total_sells_profit: null,
+            total_profit: 0
+        }
+    },
+    beforeMount: function () {
+        var el = this.profits;
+        if (el.profit_div_coupon != null) {
+            this.profit_div_coupon = el.profit_div_coupon
+                .map(function (item) {
+                    item.value = item.value.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.currency = item.currency.replace("RUB", "РУБ");
+                    return item
+                });
+        };
+        if (el.profit_repo != null) {
+            this.profit_repo = el.profit_repo
+                .map(function (item) {
+                    item.value = item.value.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.currency = item.currency.replace("RUB", "РУБ");
+                    return item
+                });
+        };
+        if (el.sells != null) {
+            this.sells = el.sells
+                .map(function (item) {
+                    item.total_profit = item.total_profit.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.security.faceunit = item.security.faceunit.replace("RUB", "РУБ");
+                    return item
+                });
+        };
+
+    },
+    template: `
+        <div>
+            <ul v-if="profit_div_coupon != null">Доход, полученный от купонов и дивидендов:
+                <li v-for="i in profit_div_coupon">{{i.value}} {{i.currency}}</li>
+            </ul>
+            <ul v-if="profit_repo != null">Доход, полученный от сделок РЕПО:
+                <li v-for="i in profit_repo">{{i.value}} {{i.currency}}</li>
+            </ul>
+            <ul v-if="sells != null">Доход, полученный с продажи ценных бумаг:
+                <li v-for="i in sells">
+                    {{i.security.secid}}: {{i.total_profit}} {{i.security.faceunit}}
+                </li>
+            </ul>
+        </div>
+    `
+})

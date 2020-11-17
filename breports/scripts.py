@@ -14,7 +14,9 @@ from moex.utils import (get_new_security_history_from_moex,
                         get_valute_curse)
 from .api.serializers import (InvestsOperationSerializer,
                               NonZeroSecuritySerializer,
-                              IncomeCertificateSecuritySerializer)
+                              IncomeCertificateSecuritySerializer,
+                              ProfitSerializer,
+                              ProfitSellSerializer)
 import xlrd
 
 
@@ -136,6 +138,29 @@ class IncomeCertificateSecurity():
         self.participation_basis = participation_basis
 
 
+class Profit():
+    def __init__(self, value, currency):
+        self.value = value
+        self.currency = currency
+
+
+class ProfitSell():
+    def __init__(self,
+                 secid,
+                 total_profit,
+                 total_tax_base_without_commissions,
+                 total_commissions,
+                 total_tax_base):
+        try:
+            self.security = get_security_by_secid(secid)
+        except NoSecuritySecid:
+            raise ValidationError("can't find {}".format(security.secid))
+        self.total_profit = total_profit
+        self.total_tax_base_without_commissions = total_tax_base_without_commissions
+        self.total_commissions = total_commissions
+        self.total_tax_base = total_tax_base
+
+
 def income_certificate(broker_report):
     securities = broker_report.\
         return_none_zero_securities()
@@ -150,7 +175,7 @@ def income_certificate(broker_report):
     part_five_one_temp = list()
     part_five_two_temp = list()
     for i in securities_movements:
-        security = broker_report.get_seurity_by_secid_isin(i.secid)
+        security = broker_report.get_security_by_secid_isin(i.secid)
         t = IncomeCertificateSecurity(
             i,
             i.outgoing_balance,
@@ -177,7 +202,44 @@ def income_certificate(broker_report):
         part_five_two_temp,
         many=True
     ).data
+
+    profit_sells = list()
+    securities_sells = [
+        i for i in broker_report.securities_movement if i.writeoff > Decimal(0)
+    ]
+    for i in securities_sells:
+        try:
+            profit_and_taxes = broker_report.\
+                return_profit_and_taxes_sell_bonds_by_secid_isin(
+                    i.secid,
+                    raise_exceptions=True
+                )
+            if profit_and_taxes['total_profit'] > Decimal(0):
+                profit_sells.append(
+                    ProfitSell(i.secid, **profit_and_taxes)
+                )
+        except:
+            continue
+    profits = dict()
+    if profit_sells:
+        profits['sells'] = ProfitSellSerializer(
+            profit_sells,
+            many=True
+        ).data
+    profit_div_coupon = broker_report.total_profit()
+    profit_repo = broker_report.total_profit_repo()
+    if profit_div_coupon:
+        profits['profit_div_coupon'] = ProfitSerializer(
+            [Profit(profit_div_coupon[i], i) for i in profit_div_coupon],
+            many=True
+        ).data
+    if profit_repo:
+        profits['profit_repo'] = ProfitSerializer(
+            [Profit(profit_div_coupon[i], i) for i in profit_repo],
+            many=True
+        ).data
     result = {
+        'profits': profits,
         'part_five_one': participation_basis_share,
         'part_five_two': participation_basis_other
     }

@@ -133,3 +133,31 @@ class IncomeCertificateSecuritySerializer(serializers.Serializer):
         decimal_places=7
     )
     participation_basis = SecurityTransactionSerializer(many=True)
+
+
+class ProfitSerializer(serializers.Serializer):
+    value = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    currency = serializers.CharField()
+
+
+class ProfitSellSerializer(serializers.Serializer):
+    security = SecuritySimpleSerializer()
+    total_profit = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    total_tax_base_without_commissions = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    total_commissions = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    total_tax_base = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
