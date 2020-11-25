@@ -50,13 +50,18 @@ def refresh_valute_curse(valute, date=None):
     return [data['ValCurs'][valute]['Value'], data['Date']]
 
 
+def get_valute_code(valute):
+    data = get_cbr_xml_daily_curses()
+    return data['ValCurs'][valute]['ID']
+
+
 def get_valute_history(valute, date_since=None, date_until=None):
     if date_until is None:
         date_until = datetime.now().date()
     if date_since is None:
         date_since = date_until - timedelta(days=365)
     data = get_cbr_xml_daily_curses()
-    code_id = data['ValCurs'][valute]['ID']
+    code_id = get_valute_code(valute)
     date_since = date_since.strftime('%d/%m/%Y')
     date_until = date_until.strftime('%d/%m/%Y')
     print(date_since, date_until, code_id)
