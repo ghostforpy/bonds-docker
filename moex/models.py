@@ -14,6 +14,7 @@ import django.dispatch
 from .rshb import *
 from .iss_simple_main import history as moex_history,\
     specification as moex_specification
+from .utils_valute import refresh_valute_curse, get_valute_history
 # Create your models here.
 
 refresh_price_security = django.dispatch.Signal(providing_args=["price"])
@@ -152,6 +153,22 @@ class Security(models.Model):
                             result['date_publication']
                 return 'no data', self.today_price, self.last_update
             return 'already update', self.today_price, self.last_update
+        elif self.security_type == 'currency':
+            try:
+                res = refresh_valute_curse(self.name.replace('RUB', ''))
+            except Exception:
+                return 'no data', self.today_price, self.last_update
+            date = datetime.strptime(res[1], '%d.%m.%Y').date()
+            if self.last_update < date or force:
+                self.today_price = res[0]
+                self.last_update = date
+                self.save()
+                refresh_price_security.send(
+                    sender=self.__class__,
+                    instance=self,
+                    price=self.today_price)
+                return 'ok', self.today_price, date
+            return 'already update', self.today_price, self.last_update
         else:
             if force or self.last_update < now().date():
                 try:
@@ -219,6 +236,9 @@ class Security(models.Model):
             except Exception:
                 return None
             return result
+        if self.security_type == 'currency':
+            return get_valute_history(
+                self.name.replace('RUB', ''))
         else:
             result = moex_history(self.parce_url)
             history = {}
