@@ -10,9 +10,30 @@ var app = new Vue({
         year_profit_visible: false,
         year_profit_data: null,
         income_certificate_visible: false,
-        income_certificate_data: null
+        income_certificate_data: null,
+        income_sertificate_datepicker_visible: false,
+        income_sertificate_datepicker_date: null,
+        selected: 'calc_year_profit',
+        options: [
+            { value: 'calc_year_profit', text: 'Среднегодовая доходность' },
+            { value: 'income_certificate', text: 'Справка о доходах' },
+            { value: 'b', text: 'Selected Option' },
+            { value: 'd', text: 'This one is disabled', disabled: true }
+        ]
     },
     methods: {
+        yesterday: function () {
+            var date = new Date();
+            date.setDate(date.getDate() - 1);
+            return date
+        },
+        send: function () {
+            if (this.selected == 'calc_year_profit') {
+                this.calc_year_profit();
+            } else if (this.selected == 'income_certificate') {
+                this.income_certificate();
+            }
+        },
         calc_year_profit: function () {
             var em = this;
             if (this.file) {
@@ -69,6 +90,7 @@ var app = new Vue({
                 em.errors_visible = false;
                 let formData = new FormData();
                 formData.append('filename', this.file);
+                formData.append('date', this.income_sertificate_datepicker_date);
                 HTTP.post(
                     'breports/income-certificate/',
                     formData
@@ -117,15 +139,27 @@ var app = new Vue({
         <b-form-file
         v-model="file"
         :state="Boolean(file)"
+        browseText="Обзор"
         placeholder="Выберите или перетащите файл..."
         drop-placeholder="Перетащите файл..."
         accept=".xls, .xlsx"
         ></b-form-file>
-        <div>
-            <b-button class="mt-3" v-on:click="calc_year_profit">Среднегодовая доходность</b-button>
-            <b-button class="mt-3" v-on:click="income_certificate">Справка о доходах</b-button>
-            <b-button class="mt-3" v-if="false" v-on:click="func3">func 3</b-button>
-        </div>
+        <b-form-select
+        size="sm"
+        class="mt-3 col-12 col-md-6"
+        v-model="selected"
+        :options="options"></b-form-select>
+        <div class="w-100"></div>
+        <b-form-datepicker
+        v-if="selected == 'income_certificate'"
+        class="mt-3 col-12 col-md-6"
+        :max="yesterday()"
+        size="sm"
+        id="income-sertificate-datepicker"
+        label-no-date-selected="Выберите дату"
+        v-model="income_sertificate_datepicker_date"></b-form-datepicker>
+        <div class="w-100"></div>
+        <b-button class="mt-3" v-on:click="send">Отправить</b-button>
         <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
         <div v-if="spiner_visible" class="d-flex justify-content-center mt-3">
             <b-spinner label="Loading..."></b-spinner>

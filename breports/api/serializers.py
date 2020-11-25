@@ -1,6 +1,7 @@
 from rest_framework import serializers
 #from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
+from django.utils import timezone
 from config.settings.base import APPS_DIR
 from moex.api.serializers import SecurityRetrivieSerializer
 from ..models import BReport
@@ -45,6 +46,17 @@ class SimpleBReportUploadSerializer(serializers.Serializer):
                 "file must be xls/xlsx"
             )
         return data
+
+
+class IncomeCertificateSerializer(SimpleBReportUploadSerializer):
+    date = serializers.DateField()
+
+    def validate_date(self, value):
+        now = timezone.now()
+        print(now.date(), value)
+        if now.date() <= value:
+            raise serializers.ValidationError("Date must be yesterday or earlier.")
+        return value
 
 
 class SecuritySerializer(SecurityRetrivieSerializer):
