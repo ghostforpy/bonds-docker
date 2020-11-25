@@ -31,7 +31,8 @@ class Security(models.Model):
                                               ('bond', 'Облигация'),
                                               ('futures', 'Фьючерс'),
                                               ('index', 'Индекс'),
-                                              ('etf_ppif', 'ETF'), ])
+                                              ('etf_ppif', 'ETF'),
+                                              ('currency', 'Валюта'), ])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)
     shortname = models.CharField(max_length=50, blank=True, unique=True)
