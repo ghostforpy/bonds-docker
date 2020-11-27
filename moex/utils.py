@@ -16,7 +16,8 @@ get_valute_curse = g_v_c
 
 
 def get_securities_in_portfolios_by_user(user):
-    return [i.security for i in user.securities.all()]
+    qs = user.securities.all().prefetch_related('security')
+    return [i.security for i in qs]
 
 
 def get_followed_securities_by_user(user, exclude_portfolios=True):
