@@ -139,6 +139,7 @@ class MicexISSClient:
                          'shortname': i[2],
                          'name': i[4],
                          'emitent': i[8],
+                         'type': i[12],
                          'primary_boardid': i[14],
                          'isin': i[5]} for i in jres}
         return result

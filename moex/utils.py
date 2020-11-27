@@ -196,7 +196,15 @@ def security_search_in_moex(query):
         securities = Security.objects.all()
         secids = [i.secid for i in securities]
         # delete securities if exist in base
-        res = {i: result[i] for i in result if i not in secids}
+        res = {
+            i: result[i] for i in result if re.search(
+                r'bond|etf_ppif|ppif|share|futures|index',
+                result[i]['type']
+            )
+        }
+        res = {i: res[i] for i in res if i not in secids}
+        print(res)
+
         if res:
             caches['default'].add('moex_search_' + query,
                                   res, timeout=24 * 60 * 60)
