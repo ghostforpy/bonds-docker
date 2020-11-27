@@ -17,6 +17,7 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.decorators import action
 from ..models import BReport
 from .serializers import (BReportUploadSerializer,
+                          IncomeCertificateSerializer,
                           SimpleBReportUploadSerializer,
                           NonZeroSecuritySerializer,
                           InvestsOperationSerializer)
@@ -44,8 +45,10 @@ class BReportFileUploadViewSet(CreateModelMixin,
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action in ['year_profit', 'income_certificate']:
+        if self.action in ['year_profit']:
             return SimpleBReportUploadSerializer
+        if self.action in ['income_certificate']:
+            return IncomeCertificateSerializer
         return BReportUploadSerializer
 
     def perform_create(self, serializer):
@@ -85,6 +88,8 @@ class BReportFileUploadViewSet(CreateModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         path_to_file, fs = serializer.save()
+        date = serializer.validated_data['date']
+
         data = None
         try:
             br = init_broker_report(
