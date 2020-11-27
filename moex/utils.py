@@ -10,10 +10,14 @@ from .iss_simple_main import (search as moex_search,
                               specification as moex_specification,
                               history as moex_history)
 from .models import Security
+from .utils_valute import get_valute_curse as g_v_c
+
+get_valute_curse = g_v_c
 
 
 def get_securities_in_portfolios_by_user(user):
-    return [i.security for i in user.securities.all()]
+    qs = user.securities.all().prefetch_related('security')
+    return [i.security for i in qs]
 
 
 def get_followed_securities_by_user(user, exclude_portfolios=True):
@@ -192,7 +196,15 @@ def security_search_in_moex(query):
         securities = Security.objects.all()
         secids = [i.secid for i in securities]
         # delete securities if exist in base
-        res = {i: result[i] for i in result if i not in secids}
+        res = {
+            i: result[i] for i in result if re.search(
+                r'bond|etf_ppif|ppif|share|futures|index',
+                result[i]['type']
+            )
+        }
+        res = {i: res[i] for i in res if i not in secids}
+        print(res)
+
         if res:
             caches['default'].add('moex_search_' + query,
                                   res, timeout=24 * 60 * 60)
@@ -274,41 +286,3 @@ def get_security_by_secid(secid):
             prepare_new_security_by_secid(secid)
         security = caches['default'].get('moex_secid_' + secid)
     return security
-
-
-def get_cbr_xml_daily_curses(date=None):
-    """
-    date:datetime.date()
-    """
-    if not date:
-        date = datetime.now().date()
-    str_date = date.strftime('%d.%m.%Y').split('.')
-    if not caches['default'].get('daily_curses_' + '.'.join(str_date)):
-        url = 'http://www.cbr.ru/scripts/XML_daily.asp?date_req={}/{}/{}'\
-            .format(*str_date)
-        try:
-            r = requests.get(url)
-        except:
-            return None
-        root = root = ET.fromstring(r.text)
-        result = dict()
-        for valute in root.findall('Valute'):
-            char_code = valute.find('CharCode').text
-            num_code = valute.find('NumCode').text
-            value = float(valute.find('Value').text.replace(',', '.'))
-            name = valute.find('Name').text
-            result[char_code] = {'Value': value,
-                                 'Name': name,
-                                 'NumCode': num_code
-                                 }
-        caches['default'].add('daily_curses_' + '.'.join(str_date),
-                              result,
-                              timeout=10 * 60 * 60)
-    else:
-        result = caches['default'].get('daily_curses_' + '.'.join(str_date))
-    return {'Date': '.'.join(str_date), 'ValCurs': result}
-
-
-def get_valute_curse(valute, date=None):
-    data = get_cbr_xml_daily_curses(date)
-    return data['ValCurs'][valute]['Value']

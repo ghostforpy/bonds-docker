@@ -26,24 +26,30 @@
   {% endif %}
     <div class="row">
       <div class="col-md-4">
-        <a href="{{ security.url }}">Перейти на сайт</a>
-        <p>Полное наименование: {{ security.fullname }}</p>
-        {% if security.code %}
-          <p>Код: {{ security.code }}</p>
+        {% if security.url %}
+          <a href="{{ security.url }}">Перейти на сайт</a>
         {% endif %}
-        {% if security.regnumber %}
-          <p>Рег.номер: {{ security.regnumber }}</p>
-        {% endif %}
-        {% if security.secid %}
-          <p>SECID: {{ security.secid }}</p>
-        {% endif %}
-        {% if security.isin %}
-          <p>ISIN: {{ security.isin }}</p>
+        {% if security.security_type != 'currency' %}
+          {% if security.fullname%}
+            <p>Полное наименование: {{ security.fullname }}</p>
+          {% endif %}
+          {% if security.code %}
+            <p>Код: {{ security.code }}</p>
+          {% endif %}
+          {% if security.regnumber %}
+            <p>Рег.номер: {{ security.regnumber }}</p>
+          {% endif %}
+          {% if security.secid %}
+            <p>SECID: {{ security.secid }}</p>
+          {% endif %}
+          {% if security.isin %}
+            <p>ISIN: {{ security.isin }}</p>
+          {% endif %}
         {% endif %}
         {% if security.facevalue %}
           <p>Номинальная стоимость: {{ security.facevalue }}</p>
         {% endif %}
-        {% if security.faceunit %}
+        {% if security.faceunit and security.security_type != 'currency' %}
           <p>Валюта номинала: {{ security.get_faceunit_display }}</p>
         {% endif %}
         {% if security.initialfacevalue %}
@@ -67,10 +73,11 @@
         {% if security.accint %}
           <p>НКД: {{ security.accint }}</p>
         {% endif %}
-
-        <p>Эмитент: {{ security.emitent }}</p>
+        {% if security.emitent %}
+          <p>Эмитент: {{ security.emitent }}</p>
+        {% endif %}
         <p>Тип: {{ security.get_security_type_display }}</p>
-        <p>Цена: {{ security.today_price }} {{ security.get_main_board_faceunit_display }} <span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></p>
+        <p>Цена: {{ security.today_price|delete_zeroes }} {{ security.get_main_board_faceunit_display }} <span class="{% if security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.change_price_percent}}%)</span></p>
         <p>Дата обновления: {{ security.last_update }}</p>
         {% if security.description %}
         <p>Описание: {{ security.description }}</p>

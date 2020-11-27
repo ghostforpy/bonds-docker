@@ -14,6 +14,7 @@ import django.dispatch
 from .rshb import *
 from .iss_simple_main import history as moex_history,\
     specification as moex_specification
+from .utils_valute import refresh_valute_curse, get_valute_history
 # Create your models here.
 
 refresh_price_security = django.dispatch.Signal(providing_args=["price"])
@@ -31,7 +32,8 @@ class Security(models.Model):
                                               ('bond', 'Облигация'),
                                               ('futures', 'Фьючерс'),
                                               ('index', 'Индекс'),
-                                              ('etf_ppif', 'ETF'), ])
+                                              ('etf_ppif', 'ETF'),
+                                              ('currency', 'Валюта'), ])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)
     shortname = models.CharField(max_length=50, blank=True, unique=True)
@@ -151,6 +153,22 @@ class Security(models.Model):
                             result['date_publication']
                 return 'no data', self.today_price, self.last_update
             return 'already update', self.today_price, self.last_update
+        elif self.security_type == 'currency':
+            try:
+                res = refresh_valute_curse(self.name.replace('RUB', ''))
+            except Exception:
+                return 'no data', self.today_price, self.last_update
+            date = datetime.strptime(res[1], '%d.%m.%Y').date()
+            if self.last_update < date or force:
+                self.today_price = res[0]
+                self.last_update = date
+                self.save()
+                refresh_price_security.send(
+                    sender=self.__class__,
+                    instance=self,
+                    price=self.today_price)
+                return 'ok', self.today_price, date
+            return 'already update', self.today_price, self.last_update
         else:
             if force or self.last_update < now().date():
                 try:
@@ -218,6 +236,9 @@ class Security(models.Model):
             except Exception:
                 return None
             return result
+        if self.security_type == 'currency':
+            return get_valute_history(
+                self.name.replace('RUB', ''))
         else:
             result = moex_history(self.parce_url)
             history = {}
@@ -302,12 +323,23 @@ class TradeHistory(models.Model):
         ordering = ['-date']
 
     def save(self, *args, **kwargs):
-        # if self.security.security_type == 'bond':
-        # if self.nkd == 0:
-        #    return 'NKD must be more then 0'
         if self.buy:
             total_cost = self.price * self.count + self.commission + self.nkd
-            if total_cost > self.portfolio.ostatok:
+            if self.security.main_board_faceunit != 'SUR':
+                portfolio = self.portfolio
+                try:
+                    valute = portfolio.securities.filter(
+                        security__security_type__exact='currency'
+                    ).filter(
+                        security__name__istartswith=self.security.
+                        main_board_faceunit
+                    ).get()
+                    ostatok = valute.count
+                except ObjectDoesNotExist:
+                    ostatok = Decimal(0)
+            else:
+                ostatok = self.portfolio.ostatok
+            if total_cost > ostatok:
                 return 'no money on portfolio.ostatok'
             else:
                 super(TradeHistory, self).save(*args, **kwargs)
@@ -342,7 +374,21 @@ class TradeHistory(models.Model):
                 return 'need more security in portfolio'
         else:
             total_cost = self.commission + self.count * self.price + self.ndfl
-            if self.portfolio.ostatok < total_cost:
+            if self.security.main_board_faceunit != 'SUR':
+                portfolio = self.portfolio
+                try:
+                    valute = portfolio.securities.filter(
+                        security__security_type__exact='currency'
+                    ).filter(
+                        security__name__istartswith=security.
+                        main_board_faceunit
+                    ).get()
+                    ostatok = valute.count
+                except ObjectDoesNotExist:
+                    ostatok = Decimal(0)
+            else:
+                ostatok = self.portfolio.ostatok
+            if ostatok < total_cost:
                 return 'need more money on portfolio ostatok'
             else:
                 super(TradeHistory, self).delete(*args, **kwargs)
@@ -396,13 +442,34 @@ def refresh_count_security_in_portfolio(sender,
 @receiver(post_save, sender=TradeHistory)
 def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
     portfolio = instance.portfolio
+    security = instance.security
     total_cost = instance.price * instance.count + instance.nkd + \
         instance.commission * (-1) ** (not instance.buy) + \
         instance.ndfl * (-1) ** (not instance.buy)
     if created:
-        portfolio.ostatok += total_cost * (-1) ** (instance.buy)
+        if security.main_board_faceunit != 'SUR':
+            valute = portfolio.securities.filter(
+                security__security_type__exact='currency'
+            ).filter(
+                security__name__istartswith=security.
+                main_board_faceunit
+            ).get()
+            valute.count = valute.count + total_cost * (-1) ** (instance.buy)
+            valute.save()
+        else:
+            portfolio.ostatok += total_cost * (-1) ** (instance.buy)
     else:
-        portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
+        if security.main_board_faceunit != 'SUR':
+            valute = portfolio.securities.filter(
+                security__security_type__exact='currency'
+            ).filter(
+                security__name__istartswith=security.
+                main_board_faceunit
+            ).get()
+            valute.count = valute.count + total_cost * (-1) ** (not instance.buy)
+            valute.save()
+        else:
+            portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
     portfolio.save(update_fields=['ostatok'])
     portfolio.refresh_portfolio()
     # refresh portfolio previos state
