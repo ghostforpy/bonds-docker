@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from .models import InvestmentPortfolio, PortfolioInvestHistory
 from .forms import PortfolioCreateForm, PortfolioInvestForm, RefreshPortfolio
 from django.views.decorators.http import require_POST
@@ -9,6 +10,7 @@ from django.http import JsonResponse
 from django.urls import reverse
 from rest_framework import viewsets
 from .serializers import InvestmentPortfolioSerializer
+from moex.models import SecurityPortfolios, TradeHistory
 
 # Create your views here.
 
@@ -27,37 +29,49 @@ def updated_portfolio(portfolio):
 
 def portfolio_detail(request, id):
     try:
-        portfolio = InvestmentPortfolio.objects.get(id=id)
+        qs_no_valute = SecurityPortfolios.objects.all().exclude(
+            security__security_type='currency').prefetch_related('security')
+        qs_valute = SecurityPortfolios.objects.all().filter(
+            security__security_type='currency').prefetch_related('security')
+        qs_trade = TradeHistory.objects.all().prefetch_related('security')
+        qs_invests = PortfolioInvestHistory.objects.all()
+        portfolio = InvestmentPortfolio.objects.prefetch_related(
+            Prefetch('owner', to_attr='own'),
+        ).get(id=id)
+
         history = None
         form_refresh = None
-        owner_url = portfolio.owner.get_absolute_url()
-        owner_name = portfolio.owner.name or portfolio.owner.username
-        portfolio_title = portfolio.title
-        res = True
+        owner_url = None
+        owner_name = None
+        #res = True
         securities_result = None
-        if portfolio.owner == request.user:
-            history = portfolio.portfolio_invests.all()
+        portfolio_title = portfolio.title
+        if portfolio.own == request.user:
+            portfolio = InvestmentPortfolio.objects.prefetch_related(
+                Prefetch('securities', queryset=qs_no_valute, to_attr='securit'),
+                Prefetch('securities', queryset=qs_valute, to_attr='valute'),
+                Prefetch('trade_securities', queryset=qs_trade, to_attr='trade'),
+                Prefetch('portfolio_invests', queryset=qs_invests, to_attr='invests')
+            ).get(id=id)
+            history = portfolio.invests
             form_refresh = RefreshPortfolio(instance=portfolio)
-            securities = portfolio.trade_securities.all()
+            securities = portfolio.securit
             securities_result = set(i.security for i in securities)
-            res = False
-        if res and (portfolio.private == 'da'):
-            portfolio = None
-            res = False
-        if res and (portfolio.private == 'aa'):
-            res = False
-        if res and (not(request.user.is_authenticated) and
-                    (portfolio.private == 'al')):
-            portfolio = None
-            res = False
-        if res and (request.user.is_authenticated and
-                    (portfolio.private == 'af')):
-            if not request.user.friends.is_friend(portfolio.owner.friends):
+            owner = True
+        else:
+            owner = False
+            if portfolio.request_user_has_permission(request.user, check_owner=False):
+                portfolio = InvestmentPortfolio.objects.prefetch_related(
+                    Prefetch('securities', queryset=qs_no_valute, to_attr='securit'),
+                ).get(id=id)
+            else:
+                owner_url = portfolio.own.get_absolute_url()
+                owner_name = portfolio.own.name or portfolio.own.username
                 portfolio = None
-            res = False
         return render(request,
                       'portfolio/detail.html',
                       {'portfolio': portfolio,
+                       'owner': owner,
                        'securities_result': securities_result,
                        'form_refresh': form_refresh,
                        'history': history,

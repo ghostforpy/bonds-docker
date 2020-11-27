@@ -83,8 +83,8 @@ class InvestmentPortfolio(models.Model):
     def __str__(self):
         return self.title
 
-    def request_user_has_permission(self, request_user):
-        if request_user == self.owner:
+    def request_user_has_permission(self, request_user, check_owner=True):
+        if check_owner and request_user == self.owner:
             return True
         if self.private == 'da':
             return False
