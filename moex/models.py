@@ -288,6 +288,9 @@ class SecurityPortfolios(models.Model):
                                       default=0)
     total_cost = models.DecimalField(max_digits=17, decimal_places=7,
                                      default=0)
+    total_cost_in_rub = models.DecimalField(max_digits=17,
+                                            decimal_places=7,
+                                            default=0)
 
     class Meta:
         ordering = ['id']
@@ -320,7 +323,7 @@ class TradeHistory(models.Model):
                                default=0)
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['-date', '-id']
 
     def save(self, *args, **kwargs):
         if self.buy:
@@ -433,6 +436,15 @@ def refresh_count_security_in_portfolio(sender,
             (float(s_p.today_price) + float(s_p.security.accint))
     else:
         s_p.total_cost = float(s_p.count) * float(s_p.today_price)
+        if s_p.security.main_board_faceunit != 'SUR':
+            valute = Security.objects.filter(
+                shortname=s_p.security.main_board_faceunit
+            ).get()
+            s_p.total_cost_in_rub = Decimal(
+                s_p.total_cost * valute.today_price
+            )
+        else:
+            s_p.total_cost_in_rub = s_p.total_cost
     s_p.save()
     if s_p.count == 0:
         s_p.delete()
@@ -522,5 +534,13 @@ def refresh_portfolios(sender, instance, **kwargs):
                  )
         else:
             i.total_cost = float(i.today_price) * float(i.count)
-        i.save(update_fields=['today_price', 'total_cost'])
+        if security.main_board_faceunit != 'SUR':
+            valute = Security.objects.filter(
+                shortname=security.main_board_faceunit
+            ).get()
+            i.total_cost_in_rub = Decimal(
+                i.total_cost) * Decimal(valute.today_price)
+        else:
+            i.total_cost_in_rub = i.total_cost
+        i.save(update_fields=['today_price', 'total_cost', 'total_cost_in_rub'])
         i.portfolio.refresh_portfolio()

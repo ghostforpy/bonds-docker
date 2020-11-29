@@ -38,9 +38,9 @@
           <p>Остаток (руб.): <span id="ostatok">{{portfolio.ostatok}}</span></p>
           {% if portfolio.valute %}
             <div class="row">
-              <div class="col-6">Остаток валюты:</div>
+              <div class="col-6"><span>Остаток валюты:</span></div>
               <div class="col-6">
-              {% for i in portfolio.valute %}<p>{{i.count|delete_zeroes}} {{i.security.shortname}}</p>{% endfor %}
+              {% for i in portfolio.valute %}<p>{{i.count|delete_zeroes}} {{i.security.shortname}} ({{i.total_cost_in_rub|delete_zeroes}} РУБ)</p>{% endfor %}
               </div>
             </div>
           {% endif %}
@@ -168,6 +168,7 @@
                         </div>
                         <div class="col-lg-2 col-12 mb-1 mt-1">
                           <span class="d-md-none">Итого: </span><span>{{ security.total_cost|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
+                          {% if security.security.main_board_faceunit != 'SUR'%}</br><span>({{ security.total_cost_in_rub|delete_zeroes }} РУБ)</span>{% endif %}
                         </div>
                         <div class="col-lg-1 col-12 mb-1 mt-1">
                           <a class="btn btn-success btn-sm mb-1 mt-1" href="{% url 'moex:buy' security.security.id %}?portfolio={{ portfolio.id }}&buy=true">Купить</a>
