@@ -203,7 +203,6 @@ def security_search_in_moex(query):
             )
         }
         res = {i: res[i] for i in res if i not in secids}
-        print(res)
 
         if res:
             caches['default'].add('moex_search_' + query,
