@@ -19,7 +19,7 @@ from .utils import upload_history,\
     prepare_new_security_by_secid,\
     security_search_in_db,\
     security_search_in_moex,\
-    get_new_security_history_from_moex,\
+    get_new_security_history as get_new_sec_hist,\
     get_security_in_db_history_from_moex
 # upload_search_moex_to_cache,\
 
@@ -176,6 +176,8 @@ def security_buy(request, id):
 def new_security_buy(request, secid):
     security = caches['default'].get('moex_secid_' + secid)
     if not security:
+        security = caches['default'].get('yfinance_secid_' + secid)
+    if not security:
         return redirect(reverse('moex:list'))
     portfolios = request.user.portfolios.filter(manual=False)
     if security.main_board_faceunit != 'SUR':
@@ -244,6 +246,8 @@ def new_security_buy(request, secid):
 @require_POST
 def add_new_security_for_staff(request, secid):
     security = caches['default'].get('moex_secid_' + secid)
+    if not security:
+        security = caches['default'].get('yfinance_secid_' + secid)
     if security:
         security.save()
         messages.success(request, 'Ценная бумага успешно добавлена.')
@@ -256,12 +260,15 @@ def add_new_security_for_staff(request, secid):
 @login_required
 def new_security_detail(request, secid):
     newitem = prepare_new_security_by_secid(secid)
-    # print(newitem.parce_url)
-    return render(request,
-                  'moex/detail.html',
-                  {'security': newitem,
-                   'security_in_user_portfolios': None,
-                   'new_security': True})
+    if newitem:
+        return render(request,
+                      'moex/detail.html',
+                      {'security': newitem,
+                       'security_in_user_portfolios': None,
+                       'new_security': True})
+    else:
+        messages.error(request, 'Ценная бумага не найдена')
+        return redirect(request.META.get('HTTP_REFERER'))
 
 
 def updated_portfolio(portfolio):
@@ -351,7 +358,7 @@ def get_security_history(request, id):
 
 
 def get_new_security_history(request, secid):
-    res = get_new_security_history_from_moex(secid)
+    res = get_new_sec_hist(secid)
     if res['status'] == 'no_secid_security':
         return JsonResponse(res)
     result_history = res['result_history']

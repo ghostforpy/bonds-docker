@@ -177,7 +177,10 @@ class MicexISSClient:
                                                                "FACEUNIT",
                                                                ]}
         boards = result['boards']
-        s = self.search(query)[query]
+        try:
+            s = self.search(query)[query]
+        except KeyError:
+            raise NoSecuritySecid
         result_description['primary_boardid'] = s['primary_boardid']
         result_description['emitent'] = s['emitent']
         primary_boardid = result_description['primary_boardid']
