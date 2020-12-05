@@ -1,16 +1,22 @@
 import re
 import requests
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, date
+import threading
 from django.core.cache import caches
 from django.core.exceptions import (PermissionDenied,
                                     ObjectDoesNotExist)
 from django.db.models import Q
 from .iss_simple_main import (search as moex_search,
                               specification as moex_specification,
-                              history as moex_history)
+                              history as moex_history,
+                              NoSecurityMoex)
 from .models import Security
 from .utils_valute import get_valute_curse as g_v_c
+from .utils_yfinance import (search_in_yfinance,
+                             NoSecurityYFinance,
+                             get_security_yfinance,
+                             get_history_by_secid)
 
 get_valute_curse = g_v_c
 
@@ -47,6 +53,7 @@ def staff_only(function):
 
 
 def upload_search_moex_to_cache(query):
+    # not used
     cache = caches['default']
     result = moex_search(query)
     securities = Security.objects.all()
@@ -57,7 +64,7 @@ def upload_search_moex_to_cache(query):
               res, timeout=24 * 60 * 60)
 
 
-def prepare_new_security_by_secid(secid):
+def prepare_new_security_by_secid_on_moex(secid):
     description, boards = moex_specification(secid)
     if not caches['default'].get('moex_secid_' + description["SECID"]):
         data = boards['data']
@@ -124,11 +131,52 @@ def prepare_new_security_by_secid(secid):
                            oldest_date=datetime.now().date(),
                            today_price=today_price,
                            last_update=last_update,
-                           change_price_percent=change_price_percent)
+                           change_price_percent=change_price_percent,
+                           source='moex')
         caches['default'].add('moex_secid_' + description["SECID"],
                               newitem, timeout=60 * 60)
     else:
         newitem = caches['default'].get('moex_secid_' + description["SECID"])
+    return newitem
+
+
+def upload_history_yfinance_to_cache(secid):
+    history = get_history_by_secid(secid)
+    caches['default'].add('yfinance_security_history_secid_' + secid,
+                          history, timeout=60 * 60)
+
+
+def prepare_new_security_by_secid_yfinance(secid):
+    if not caches['default'].get('yfinance_secid_' + secid):
+        new = get_security_yfinance(secid)
+        newitem = Security(
+            source='yfinance',
+            last_update=datetime.now().date(),
+            oldest_date=datetime.now().date(),
+            **new)
+        caches['default'].add('yfinance_secid_' + secid,
+                              newitem, timeout=60 * 60)
+    else:
+        newitem = caches['default'].get('yfinance_secid_' + secid)
+    if not caches['default'].get('yfinance_security_history_secid_' + secid):
+        # блок кеширования исторических данных поценной бумаге
+        # для дальнейшей загрузки через ajax-запрос
+        t = threading.Thread(target=upload_history_yfinance_to_cache, args=(secid,))
+        t.start()
+        # конец блока кеширования
+    return newitem
+
+
+def prepare_new_security_by_secid(secid):
+    try:
+        newitem = prepare_new_security_by_secid_on_moex(secid)
+    except NoSecurityMoex:
+        newitem = None
+    if newitem is None:
+        try:
+            newitem = prepare_new_security_by_secid_yfinance(secid)
+        except NoSecurityYFinance:
+            newitem = None
     return newitem
 
 
@@ -203,8 +251,10 @@ def security_search_in_moex(query):
             )
         }
         res = {i: res[i] for i in res if i not in secids}
-        print(res)
-
+        result_yfinance = search_in_yfinance(query)
+        if result_yfinance:
+            if query not in secids:
+                res[result_yfinance['name']] = result_yfinance
         if res:
             caches['default'].add('moex_search_' + query,
                                   res, timeout=24 * 60 * 60)
@@ -233,6 +283,43 @@ def get_new_security_history_from_moex(secid):
             'currency': newitem.get_main_board_faceunit_display()}
 
 
+def get_new_security_history_from_yfinance(secid):
+    if caches['default'].get('yfinance_secid_' + secid):
+        newitem = caches['default'].get('yfinance_secid_' + secid)
+    else:
+        return {'status': 'no_secid_security'}
+    if not caches['default'].get(
+            'yfinance_security_history_secid_' + secid):
+        upload_history_yfinance_to_cache(secid)
+
+    result = caches['default'].get(
+        'yfinance_security_history_secid_' + secid
+    )
+    days = sorted(
+        result,
+        key=lambda i: i,
+        reverse=True
+    )
+    result_history = {
+        datetime.strftime(i, '%d.%m.%Y'): float("{0:.2f}".format(result[i]))
+        for i in days
+    }
+    return {'status': 'ok',
+            'result_history': result_history,
+            'currency': newitem.get_main_board_faceunit_display()}
+
+
+def get_new_security_history(secid):
+    history = get_new_security_history_from_moex(secid)
+    if history['status'] == 'ok':
+        return history
+    history = get_new_security_history_from_yfinance(secid)
+    if history['status'] == 'ok':
+        return history
+    # если ни один метод не вернул status ok
+    return {'status': 'no_secid_security'}
+
+
 def get_security_in_db_history_from_moex(security, date_since, date_until):
     cache = caches['default']
     security_history = cache.get('security_history_by_id' + str(security.id))
@@ -240,11 +327,21 @@ def get_security_in_db_history_from_moex(security, date_since, date_until):
         security_history = security.get_history(date_since,
                                                 date_until,
                                                 format_result='str')
-    days = sorted(
-        security_history,
-        key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
-        reverse=True)
-    result_history = {i: security_history[i] for i in days}
+    try:
+        days = sorted(
+            security_history,
+            key=lambda i: datetime.strptime(i, '%d.%m.%Y').date(),
+            reverse=True)
+        result_history = {i: security_history[i] for i in days}
+    except TypeError:
+        days = sorted(
+            security_history,
+            key=lambda i: i,
+            reverse=True)
+        result_history = {
+            datetime.strftime(i, '%d.%m.%Y'): float("{0:.2f}".format(
+                security_history[i]))
+            for i in days}
     return result_history
 
 
