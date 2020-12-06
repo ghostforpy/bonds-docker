@@ -83,8 +83,8 @@ class InvestmentPortfolio(models.Model):
     def __str__(self):
         return self.title
 
-    def request_user_has_permission(self, request_user):
-        if request_user == self.owner:
+    def request_user_has_permission(self, request_user, check_owner=True):
+        if check_owner and request_user == self.owner:
             return True
         if self.private == 'da':
             return False
@@ -110,7 +110,7 @@ class InvestmentPortfolio(models.Model):
     def calc_today_cash(self):
         if not self.manual:
             securities = self.securities.all()
-            total = sum([i.total_cost for i in securities])
+            total = sum([i.total_cost_in_rub for i in securities])
             self.today_cash = total + self.ostatok
             self.save(update_fields=['today_cash'])
             return True

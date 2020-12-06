@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
+from django.db.models import Prefetch
 from django.urls import reverse
 from django.core.paginator import Paginator
 from django.utils.timezone import now
@@ -18,7 +19,7 @@ from .utils import upload_history,\
     prepare_new_security_by_secid,\
     security_search_in_db,\
     security_search_in_moex,\
-    get_new_security_history_from_moex,\
+    get_new_security_history as get_new_sec_hist,\
     get_security_in_db_history_from_moex
 # upload_search_moex_to_cache,\
 
@@ -95,20 +96,40 @@ def security_search_moex(request):
 @login_required
 def security_buy(request, id):
     if request.method == 'GET':
-        portfolio_id = request.GET.get('portfolio')
-        date = request.GET.get('date') or now().date()
-        buy = True if request.GET.get('buy') == 'true' else False
-        try:
-            portfolio = request.user.portfolios.get(id=portfolio_id)
-        #    portfolios = None
-        except ObjectDoesNotExist:
-            portfolio = None
-        portfolios = request.user.portfolios.filter(manual=False)
-        # JsonResponse({'status': 'no portfolio id'})
         try:
             security = get_object_or_404(Security, id=id)
         except ObjectDoesNotExist:
             JsonResponse({'status': 'no security id'})
+        portfolio_id = request.GET.get('portfolio')
+        date = request.GET.get('date') or now().date()
+        buy = True if request.GET.get('buy') == 'true' else False
+        portfolios = request.user.portfolios.filter(manual=False)
+        if security.main_board_faceunit != 'SUR':
+            # если валюта ценной бумаги отличная от нуля
+            # предварительно подгружаем SecurityPortfolios
+            qs = SecurityPortfolios.objects.filter(
+                security__security_type__exact='currency'
+            ).filter(
+                security__name__istartswith=security.
+                main_board_faceunit
+            )
+            portfolios = portfolios.prefetch_related(
+                Prefetch('securities',
+                         queryset=qs,
+                         to_attr='sec')
+            )
+        portfolio = None
+        for i in portfolios:
+            if security.main_board_faceunit != 'SUR':
+                # если валюта ценной бумаги отличная от нуля
+                # на рендер страницы отправляем количество валюты
+                # как остаток в портфеле
+                if i.sec:
+                    i.ostatok = i.sec[0].count
+                else:
+                    i.ostatok = 0
+            if i.id == portfolio_id:
+                portfolio = i
         price = request.GET.get('price') or security.today_price
         newitem = TradeHistory(date=date,
                                price=price)
@@ -153,11 +174,37 @@ def security_buy(request, id):
 
 @login_required
 def new_security_buy(request, secid):
-    portfolios = request.user.portfolios.filter(manual=False)
-    buy = True
     security = caches['default'].get('moex_secid_' + secid)
     if not security:
+        security = caches['default'].get('yfinance_secid_' + secid)
+    if not security:
         return redirect(reverse('moex:list'))
+    portfolios = request.user.portfolios.filter(manual=False)
+    if security.main_board_faceunit != 'SUR':
+        # если валюта ценной бумаги отличная от нуля
+        # предварительно подгружаем SecurityPortfolios
+        qs = SecurityPortfolios.objects.filter(
+            security__security_type__exact='currency'
+        ).filter(
+            security__name__istartswith=security.
+            main_board_faceunit
+        )
+        portfolios = portfolios.prefetch_related(
+            Prefetch('securities',
+                     queryset=qs,
+                     to_attr='sec')
+        )
+    for i in portfolios:
+        if security.main_board_faceunit != 'SUR':
+            # если валюта ценной бумаги отличная от нуля
+            # на рендер страницы отправляем количество валюты
+            # как остаток в портфеле
+            if i.sec:
+                i.ostatok = i.sec[0].count
+            else:
+                i.ostatok = 0
+    buy = True
+
     if request.method == 'GET':
         date = request.GET.get('date') or now().date()
         price = request.GET.get('price') or security.today_price
@@ -199,6 +246,8 @@ def new_security_buy(request, secid):
 @require_POST
 def add_new_security_for_staff(request, secid):
     security = caches['default'].get('moex_secid_' + secid)
+    if not security:
+        security = caches['default'].get('yfinance_secid_' + secid)
     if security:
         security.save()
         messages.success(request, 'Ценная бумага успешно добавлена.')
@@ -211,12 +260,15 @@ def add_new_security_for_staff(request, secid):
 @login_required
 def new_security_detail(request, secid):
     newitem = prepare_new_security_by_secid(secid)
-    # print(newitem.parce_url)
-    return render(request,
-                  'moex/detail.html',
-                  {'security': newitem,
-                   'security_in_user_portfolios': None,
-                   'new_security': True})
+    if newitem:
+        return render(request,
+                      'moex/detail.html',
+                      {'security': newitem,
+                       'security_in_user_portfolios': None,
+                       'new_security': True})
+    else:
+        messages.error(request, 'Ценная бумага не найдена')
+        return redirect(request.META.get('HTTP_REFERER'))
 
 
 def updated_portfolio(portfolio):
@@ -257,17 +309,30 @@ def sp(request, id_p, id_s):
     ostatok = 0
     ostatok_sec = 0
     try:
-        portfolio = request.user.portfolios.get(id=id_p)
-        ostatok = portfolio.ostatok
-    except ObjectDoesNotExist:
-        ostatok = 0
-    try:
         security = Security.objects.get(id=id_s)
-        s_p = portfolio.securities.get(
-            security=security)
+        s_p = security.portfolios.get(
+            portfolio__id=id_p)
         ostatok_sec = s_p.count
     except ObjectDoesNotExist:
         ostatok_sec = 0
+    try:
+        portfolio = request.user.portfolios.get(id=id_p)
+        if security.main_board_faceunit != 'SUR':
+            # если валюта ценной бумаги отличная от нуля
+            # предварительно подгружаем SecurityPortfolios
+            try:
+                valute = portfolio.securities.filter(
+                    security__name__istartswith=security.
+                    main_board_faceunit
+                ).get()
+                ostatok = valute.count
+            except ObjectDoesNotExist:
+                ostatok = 0
+        else:
+            ostatok = portfolio.ostatok
+    except ObjectDoesNotExist:
+        ostatok = 0
+
     ostatok = str(ostatok)
     return JsonResponse({'status': 'ok',
                          'ostatok_sec': ostatok_sec,
@@ -293,7 +358,7 @@ def get_security_history(request, id):
 
 
 def get_new_security_history(request, secid):
-    res = get_new_security_history_from_moex(secid)
+    res = get_new_sec_hist(secid)
     if res['status'] == 'no_secid_security':
         return JsonResponse(res)
     result_history = res['result_history']

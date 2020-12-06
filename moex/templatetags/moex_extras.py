@@ -40,7 +40,11 @@ def int_to_str(s):
 
 @register.filter(name='delete_zeroes')
 def delete_zeroes(s):
-    return float("{0:.2f}".format(s))
+    if type(s) is str:
+        s = float("{0:.2s}".format(s))
+    else:
+        s = float("{0:.2f}".format(s))
+    return s
 
 
 @register.filter(name='return_color_and_fas_bootstrap')

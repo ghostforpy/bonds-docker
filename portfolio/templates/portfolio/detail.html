@@ -11,7 +11,7 @@
 <div class="container">
   <div class="mb-3 d-flex justify-content-between">
       <h3 class="align-self-center">Портфель: {{portfolio_title}}</h3>
-      {% if portfolio != None and request.user != portfolio.owner %}
+      {% if portfolio != None and not owner %}
         {% if request.user in portfolio.users_follows.all %}
           <a id="follow" class="btn btn-danger btn-sm align-self-center" href="{% url 'portfolio:follow' portfolio.id %}">Отписаться</a>
         {% else %}
@@ -22,9 +22,9 @@
     <div class="row">
       <div class="col-sm-4">
         {% if portfolio != None %}
-          {% if request.user != portfolio.owner %}<p>Владелец: <a href="{{ portfolio.owner.get_absolute_url }}">{{owner_name}}</a></p>{% endif %}
+          {% if not owner %}<p>Владелец: <a href="{{ portfolio.own.get_absolute_url }}">{{owner_name}}</a></p>{% endif %}
           <p>Всего инвестиций (руб.): <span id="invest_cash">{{portfolio.invest_cash}}</span></p>
-          {% if request.user == portfolio.owner %}
+          {% if owner %}
             <div class="form-group row">
               <label for="id_today_cash" class="col-sm-12 col-form-label">Текущий баланс (руб.):</label>
               <div class="col-sm-12">
@@ -36,9 +36,17 @@
           {%endif%}
           <p id="manual" hidden="true">{{ portfolio.manual }}</p>
           <p>Остаток (руб.): <span id="ostatok">{{portfolio.ostatok}}</span></p>
+          {% if portfolio.valute %}
+            <div class="row">
+              <div class="col-6"><span>Остаток валюты:</span></div>
+              <div class="col-6">
+              {% for i in portfolio.valute %}<p>{{i.count|delete_zeroes}} {{i.security.shortname}} ({{i.total_cost_in_rub|delete_zeroes}} РУБ)</p>{% endfor %}
+              </div>
+            </div>
+          {% endif %}
           <p>Доходность (%): <span id="percent_profit">{{portfolio.percent_profit}}</span> <span class="{% if portfolio.change_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{portfolio.change_percent_profit}}%)</span></p>
           <p>Годовая доходность (%): <span id="year_percent_profit">{{portfolio.year_percent_profit}}</span> <span class="{% if portfolio.change_year_percent_profit > 0 %}text-success fas fa-angle-double-up{% elif portfolio.change_year_percent_profit < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{portfolio.change_year_percent_profit}}%)</span></p>
-          {% if request.user == portfolio.owner %}
+          {% if owner %}
             <div class="form-group mb-2">
               <label for="id_private">Приватность:</label>
               <select class="form-control form-control-sm" id="id_private">
@@ -53,7 +61,7 @@
             <p class="mt-3">Стратегия: <span>{{ portfolio.strategia }}</span></p>
           {% endif %}
           <p class="mt-3">Создан: {{portfolio.created}}</p>
-          {% if request.user == portfolio.owner %}
+          {% if owner %}
             <a class="mb-4 refresh-portfolio btn btn-info btn-sm" href="{% url 'portfolio:refresh_portfolio' portfolio.id %}">Обновить</a>
             <a class="mb-4 delete-portfolio btn btn-danger btn-sm" href="{% url 'portfolio:delete_portfolio' portfolio.id %}">Удалить портфель</a>
            {%endif%}
@@ -64,7 +72,7 @@
 
         <div class="col-sm-8">
 
-        {% if portfolio.owner == request.user %}
+        {% if owner %}
         <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyPortfolioButton" data-toggle="collapse" data-target="#collapseHistoryPortfolio" aria-expanded="false" aria-controls="collapseHistoryPortfolio">
             История движения денежных средств
             </button>
@@ -125,7 +133,7 @@
               </div>
             </div>
           {% endif %}
-          {% if portfolio.securities.count > 0 %}  
+          {% if portfolio.securit %}  
           <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapsePortfolio" aria-expanded="false" aria-controls="collapsePortfolio">
             Состав портфеля
             </button>
@@ -147,7 +155,7 @@
                 </div>
               </div>
               <div class="dropdown-divider d-none d-md-block"></div>
-              {% for security in portfolio.securities.all %}
+              {% for security in portfolio.securit %}
                 <div class="row align-items-center mt-2">
                       <div class="col-lg-3 col-12 mb-1 mt-1">
                           <a class="btn btn-warning btn-sm" href="{{ security.security.get_absolute_url }}">{{ security.security.name }}</a>
@@ -160,6 +168,7 @@
                         </div>
                         <div class="col-lg-2 col-12 mb-1 mt-1">
                           <span class="d-md-none">Итого: </span><span>{{ security.total_cost|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
+                          {% if security.security.main_board_faceunit != 'SUR'%}</br><span>({{ security.total_cost_in_rub|delete_zeroes }} РУБ)</span>{% endif %}
                         </div>
                         <div class="col-lg-1 col-12 mb-1 mt-1">
                           <a class="btn btn-success btn-sm mb-1 mt-1" href="{% url 'moex:buy' security.security.id %}?portfolio={{ portfolio.id }}&buy=true">Купить</a>
@@ -170,8 +179,8 @@
               {% endfor %}
             </div>
           {% endif %}
-          {% if portfolio.owner == request.user %}
-            {% if portfolio.trade_securities.count > 0 %}
+          {% if owner %}
+            {% if portfolio.trade %}
               <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyButton" data-toggle="collapse" data-target="#collapseHistory" aria-expanded="false" aria-controls="collapseHistory">
               История торгов
               </button>
@@ -197,7 +206,7 @@
                   </div>
                 </div>
                 <div class="dropdown-divider d-none d-md-block"></div>
-              {% for security in portfolio.trade_securities.all %}
+              {% for security in portfolio.trade %}
                 <div class="row align-items-center mt-2">
                     <div class="col-md-2 col-12 mb-1 mt-1">
                       <a class="btn btn-warning btn-sm" href="{{ security.security.get_absolute_url }}">{{ security.security.name }}</a>
@@ -234,7 +243,7 @@
 
 
 {% block page_javascript %}
-      {% if request.user == portfolio.owner %}
+      {% if owner %}
         <script src="{% static 'js/portfolio_detail.js' %}"></script>
       {% endif %}
     <script src="{% static 'js/follow.js' %}"></script>

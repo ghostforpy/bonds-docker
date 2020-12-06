@@ -1,3 +1,4 @@
+from config.settings.base import env
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from django.core.mail import send_mail
@@ -9,7 +10,11 @@ from moex.models import SecurityPortfolios
 from config import celery_app
 from moex.utils import get_followed_securities_by_user,\
     get_securities_in_portfolios_by_user
+
 User = get_user_model()
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_SERVER_EMAIL", default="bonds <noreply@mybonds.space>"
+)
 
 
 @celery_app.task(bind=True,
@@ -49,7 +54,7 @@ def informer(self, exclude_emails=None, *args, **kwargs):
         send_mail(
             subject,
             plain_message,
-            'info@mybonds.space',
+            DEFAULT_FROM_EMAIL,
             [user.email],
             fail_silently=False,
             html_message=html_message)

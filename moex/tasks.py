@@ -1,8 +1,13 @@
+from config.settings.base import env
 from .models import Security
 
 from config import celery_app
 from django.utils.timezone import now
 from django.core.mail import send_mail
+
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_SERVER_EMAIL", default="bonds <noreply@mybonds.space>"
+)
 
 
 @celery_app.task(bind=True,
@@ -44,7 +49,7 @@ def refresh_security_from_moex(self, *args):
         send_mail(
             'refresh moex',
             message,
-            'info@mybonds.space',
+            DEFAULT_FROM_EMAIL,
             [i for i in args],
             fail_silently=False,
         )

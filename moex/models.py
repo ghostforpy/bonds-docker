@@ -14,6 +14,8 @@ import django.dispatch
 from .rshb import *
 from .iss_simple_main import history as moex_history,\
     specification as moex_specification
+from .utils_valute import refresh_valute_curse, get_valute_history
+from .utils_yfinance import get_history_by_secid
 # Create your models here.
 
 refresh_price_security = django.dispatch.Signal(providing_args=["price"])
@@ -31,7 +33,8 @@ class Security(models.Model):
                                               ('bond', 'Облигация'),
                                               ('futures', 'Фьючерс'),
                                               ('index', 'Индекс'),
-                                              ('etf_ppif', 'ETF'), ])
+                                              ('etf_ppif', 'ETF'),
+                                              ('currency', 'Валюта'), ])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)
     shortname = models.CharField(max_length=50, blank=True, unique=True)
@@ -45,6 +48,13 @@ class Security(models.Model):
     engine = models.CharField(max_length=250, blank=True)
     market = models.CharField(max_length=250, blank=True)
     description = models.CharField(max_length=250, blank=True)
+    source = models.CharField(max_length=20,
+                              default='moex',
+                              choices=[('rshb', 'РСХБ'),
+                                       ('moex', 'МосБиржа'),
+                                       ('yfinance', 'YFinance'),
+                                       ('cbr', 'Центробанк')])
+    website = models.CharField(max_length=250, blank=True)
     # Номинальная стоимость
     facevalue = models.DecimalField(max_digits=17, decimal_places=7,
                                     blank=True, default=0)
@@ -121,7 +131,31 @@ class Security(models.Model):
         #     item.portfolio.refresh_portfolio()
 
     def refresh_price(self, first=False, force=False):
-        if self.security_type == 'pif_rshb':
+        if self.source == 'yfinane':
+            if force or self.last_update < now().date():
+                try:
+                    history = get_history_by_secid(
+                        self.secid,
+                        period='1d')
+                except:
+                    return 'no data', self.today_price, self.last_update
+                max_day = max(history.keys())
+                if force or max_day > self.last_update:
+                    self.change_price_percent = (
+                        Decimal(history[max_day]) - self.today_price)\
+                        / self.today_price * 100
+                    self.last_update = max_day
+                    self.today_price = Decimal(history[max_day])
+                    self.save()
+                    refresh_price_security.send(
+                        sender=self.__class__,
+                        instance=self,
+                        price=history[max_day])
+                    return 'ok',\
+                        history[max_day],\
+                        max_day
+            return 'already update', self.today_price, self.last_update
+        elif self.source == 'rshb':
             if force or self.last_update < now().date():
                 try:
                     result = rshb(self.parce_url,
@@ -151,7 +185,23 @@ class Security(models.Model):
                             result['date_publication']
                 return 'no data', self.today_price, self.last_update
             return 'already update', self.today_price, self.last_update
-        else:
+        elif self.source == 'cbr':
+            try:
+                res = refresh_valute_curse(self.name.replace('RUB', ''))
+            except Exception:
+                return 'no data', self.today_price, self.last_update
+            date = datetime.strptime(res[1], '%d.%m.%Y').date()
+            if self.last_update < date or force:
+                self.today_price = res[0]
+                self.last_update = date
+                self.save()
+                refresh_price_security.send(
+                    sender=self.__class__,
+                    instance=self,
+                    price=self.today_price)
+                return 'ok', self.today_price, date
+            return 'already update', self.today_price, self.last_update
+        elif self.source == 'moex':
             if force or self.last_update < now().date():
                 try:
                     result = moex_history(self.parce_url)
@@ -209,7 +259,14 @@ class Security(models.Model):
             return 'already update', self.today_price, self.last_update
 
     def get_history(self, date_since, date_until, format_result):
-        if self.security_type == 'pif_rshb':
+        if self.source == 'yfinance':
+            try:
+                return get_history_by_secid(
+                    self.secid, start=date_since, end=date_until
+                )
+            except:
+                return None
+        elif self.source == 'rshb':
             try:
                 result = rshb_history(self.parce_url,
                                       date_since,
@@ -218,7 +275,10 @@ class Security(models.Model):
             except Exception:
                 return None
             return result
-        else:
+        elif self.source == 'cbr':
+            return get_valute_history(
+                self.name.replace('RUB', ''))
+        elif self.source == 'moex':
             result = moex_history(self.parce_url)
             history = {}
             if self.security_type == 'bond':
@@ -267,9 +327,15 @@ class SecurityPortfolios(models.Model):
                                       default=0)
     total_cost = models.DecimalField(max_digits=17, decimal_places=7,
                                      default=0)
+    total_cost_in_rub = models.DecimalField(max_digits=17,
+                                            decimal_places=7,
+                                            default=0)
 
     class Meta:
         ordering = ['id']
+
+    def save(self, *args, **kwargs):
+        super(SecurityPortfolios, self).save(*args, **kwargs)
 
 
 class TradeHistory(models.Model):
@@ -299,15 +365,26 @@ class TradeHistory(models.Model):
                                default=0)
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['-date', '-id']
 
     def save(self, *args, **kwargs):
-        # if self.security.security_type == 'bond':
-        # if self.nkd == 0:
-        #    return 'NKD must be more then 0'
         if self.buy:
             total_cost = self.price * self.count + self.commission + self.nkd
-            if total_cost > self.portfolio.ostatok:
+            if self.security.main_board_faceunit != 'SUR':
+                portfolio = self.portfolio
+                try:
+                    valute = portfolio.securities.filter(
+                        security__security_type__exact='currency'
+                    ).filter(
+                        security__name__istartswith=self.security.
+                        main_board_faceunit
+                    ).get()
+                    ostatok = valute.count
+                except ObjectDoesNotExist:
+                    ostatok = Decimal(0)
+            else:
+                ostatok = self.portfolio.ostatok
+            if total_cost > ostatok:
                 return 'no money on portfolio.ostatok'
             else:
                 super(TradeHistory, self).save(*args, **kwargs)
@@ -333,22 +410,36 @@ class TradeHistory(models.Model):
             return 'no delete'
         if self.buy:
             if self.count <= s_p.count:
-                super(TradeHistory, self).delete(*args, **kwargs)
                 refresh_count_security_in_portfolio(TradeHistory,
                                                     instance=self
                                                     )
+                super(TradeHistory, self).delete(*args, **kwargs)
                 return 'ok'
             else:
                 return 'need more security in portfolio'
         else:
             total_cost = self.commission + self.count * self.price + self.ndfl
-            if self.portfolio.ostatok < total_cost:
+            if self.security.main_board_faceunit != 'SUR':
+                portfolio = self.portfolio
+                try:
+                    valute = portfolio.securities.filter(
+                        security__security_type__exact='currency'
+                    ).filter(
+                        security__name__istartswith=self.security.
+                        main_board_faceunit
+                    ).get()
+                    ostatok = valute.count
+                except ObjectDoesNotExist:
+                    ostatok = Decimal(0)
+            else:
+                ostatok = self.portfolio.ostatok
+            if ostatok < total_cost:
                 return 'need more money on portfolio ostatok'
             else:
-                super(TradeHistory, self).delete(*args, **kwargs)
                 refresh_count_security_in_portfolio(TradeHistory,
                                                     instance=self
                                                     )
+                super(TradeHistory, self).delete(*args, **kwargs)
                 return 'ok'
 
 # мешает каскадному удалению портфеля, поэтому вызываем руками
@@ -387,6 +478,15 @@ def refresh_count_security_in_portfolio(sender,
             (float(s_p.today_price) + float(s_p.security.accint))
     else:
         s_p.total_cost = float(s_p.count) * float(s_p.today_price)
+    if s_p.security.main_board_faceunit != 'SUR':
+        valute = Security.objects.filter(
+            shortname=s_p.security.main_board_faceunit
+        ).get()
+        s_p.total_cost_in_rub = Decimal(
+            Decimal(s_p.total_cost) * valute.today_price
+        )
+    else:
+        s_p.total_cost_in_rub = s_p.total_cost
     s_p.save()
     if s_p.count == 0:
         s_p.delete()
@@ -396,13 +496,38 @@ def refresh_count_security_in_portfolio(sender,
 @receiver(post_save, sender=TradeHistory)
 def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
     portfolio = instance.portfolio
+    security = instance.security
     total_cost = instance.price * instance.count + instance.nkd + \
         instance.commission * (-1) ** (not instance.buy) + \
         instance.ndfl * (-1) ** (not instance.buy)
     if created:
-        portfolio.ostatok += total_cost * (-1) ** (instance.buy)
+        if security.main_board_faceunit != 'SUR':
+            valute = portfolio.securities.filter(
+                security__security_type__exact='currency'
+            ).filter(
+                security__name__istartswith=security.
+                main_board_faceunit
+            ).get()
+            valute.count = valute.count + total_cost * (-1) ** (instance.buy)
+            valute.total_cost = valute.count * valute.security.today_price
+            valute.total_cost_in_rub = valute.total_cost
+            valute.save()
+        else:
+            portfolio.ostatok += total_cost * (-1) ** (instance.buy)
     else:
-        portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
+        if security.main_board_faceunit != 'SUR':
+            valute = portfolio.securities.filter(
+                security__security_type__exact='currency'
+            ).filter(
+                security__name__istartswith=security.
+                main_board_faceunit
+            ).get()
+            valute.count = valute.count + total_cost * (-1) ** (not instance.buy)
+            valute.total_cost = valute.count * valute.security.today_price
+            valute.total_cost_in_rub = valute.total_cost
+            valute.save()
+        else:
+            portfolio.ostatok += total_cost * (-1) ** (not instance.buy)
     portfolio.save(update_fields=['ostatok'])
     portfolio.refresh_portfolio()
     # refresh portfolio previos state
@@ -455,5 +580,13 @@ def refresh_portfolios(sender, instance, **kwargs):
                  )
         else:
             i.total_cost = float(i.today_price) * float(i.count)
-        i.save(update_fields=['today_price', 'total_cost'])
+        if security.main_board_faceunit != 'SUR':
+            valute = Security.objects.filter(
+                shortname=security.main_board_faceunit
+            ).get()
+            i.total_cost_in_rub = Decimal(
+                i.total_cost) * Decimal(valute.today_price)
+        else:
+            i.total_cost_in_rub = i.total_cost
+        i.save(update_fields=['today_price', 'total_cost', 'total_cost_in_rub'])
         i.portfolio.refresh_portfolio()

@@ -17,12 +17,17 @@ from .iss_simple_client import Config
 from .iss_simple_client import MicexAuth
 from .iss_simple_client import MicexISSClient
 from .iss_simple_client import MicexISSDataHandler
+from .iss_simple_client import NoSecuritySecid
 from config.settings.base import MOEX_USER, MOEX_PASSWORD
 
 my_config = Config(user=MOEX_USER,
                    password=MOEX_PASSWORD,
                    proxy_url='')
 my_auth = MicexAuth(my_config)
+
+
+class NoSecurityMoex(Exception):
+    pass
 
 
 class MyData:
@@ -85,7 +90,10 @@ def history(url):
 def specification(secid):
     if my_auth.is_real_time():
         iss = MicexISSClient(my_config, my_auth)
-        description, boards = iss.specification(secid)
+        try:
+            description, boards = iss.specification(secid)
+        except NoSecuritySecid:
+            raise NoSecurityMoex
         return description, boards
     return None
 

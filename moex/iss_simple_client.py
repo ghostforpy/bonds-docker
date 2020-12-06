@@ -139,8 +139,16 @@ class MicexISSClient:
                          'shortname': i[2],
                          'name': i[4],
                          'emitent': i[8],
+                         'type': i[12],
                          'primary_boardid': i[14],
-                         'isin': i[5]} for i in jres}
+                         'isin': i[5]} for i in jres if i[14] in [
+                             'TQTD',
+                             'TQTE',
+                             'TQCB',
+                             'TQBR',
+                             'TQTF'
+        ]
+        }
         return result
 
     def specification(self, query):
@@ -169,19 +177,29 @@ class MicexISSClient:
                                                                "FACEUNIT",
                                                                ]}
         boards = result['boards']
-        s = self.search(query)[query]
+        try:
+            s = self.search(query)[query]
+        except KeyError:
+            raise NoSecuritySecid
         result_description['primary_boardid'] = s['primary_boardid']
         result_description['emitent'] = s['emitent']
         primary_boardid = result_description['primary_boardid']
         d = boards['data']
         m = list(filter(lambda x: x[1] == primary_boardid, d))
         faceunit = m[0][-1]
-        result_description["MAINBOARDFACEUNIT"] = faceunit.replace('RUB', 'SUR')
+        try:
+            result_description["MAINBOARDFACEUNIT"] = faceunit.replace('RUB', 'SUR')
+        except AttributeError:
+            result_description["MAINBOARDFACEUNIT"] = None
         # для фондов необходимо определить валюту
+
         try:
             _ = result_description["FACEUNIT"]
         except KeyError:
             result_description["FACEUNIT"] = result_description["MAINBOARDFACEUNIT"]
+        if (not result_description["MAINBOARDFACEUNIT"] and
+                result_description["FACEUNIT"]):
+            result_description["MAINBOARDFACEUNIT"] = result_description["FACEUNIT"]
         return result_description, boards
 
     def get_history(self, url):
@@ -195,7 +213,10 @@ class MicexISSClient:
             jhist = jres['history']
             jdata = jhist['data']
             jcols = jhist['columns']
-            closeIdx = jcols.index('CLOSE')
+            try:
+                closeIdx = jcols.index('CLOSE')
+            except ValueError:
+                return None
             try:
                 closeIdxx = jcols.index('LEGALCLOSEPRICE')
             except ValueError:
