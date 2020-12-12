@@ -131,7 +131,7 @@ class Security(models.Model):
         #     item.portfolio.refresh_portfolio()
 
     def refresh_price(self, first=False, force=False):
-        if self.source == 'yfinane':
+        if self.source == 'yfinance':
             if force or self.last_update < now().date():
                 try:
                     history = get_history_by_secid(

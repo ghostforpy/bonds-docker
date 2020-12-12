@@ -37,7 +37,7 @@ def refresh_security_from_moex(self, *args):
     today = now().date()
     securities = Security.objects.\
         filter(last_update__lt=today).\
-        exclude(security_type='pif_rshb').\
+        filter(source__in=['moex', 'yfinance']).\
         filter(monitor=True)
     result = dict()
     for security in securities:
@@ -53,6 +53,25 @@ def refresh_security_from_moex(self, *args):
             [i for i in args],
             fail_silently=False,
         )
+    if securities.count():
+        if securities.count() > len(
+                [i for i in result if 'ok' == result[i][0]]):
+            raise self.retry()
+    return result
+
+
+@celery_app.task(bind=True,
+                 name='moex.refresh_security_cbr',
+                 default_retry_delay=30 * 60,
+                 max_retries=2)
+def refresh_security_cbr(self, *args):
+    today = now().date()
+    securities = Security.objects.\
+        filter(last_update__lt=today).\
+        filter(source__in=['cbr'])
+    result = dict()
+    for security in securities:
+        result[security.name] = security.refresh_price()
     if securities.count():
         if securities.count() > len(
                 [i for i in result if 'ok' == result[i][0]]):
