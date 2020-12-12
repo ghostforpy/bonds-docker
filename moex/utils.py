@@ -243,14 +243,17 @@ def security_search_in_moex(query):
         result = moex_search(query)
         securities = Security.objects.all()
         secids = [i.secid for i in securities]
-        # delete securities if exist in base
-        res = {
-            i: result[i] for i in result if re.search(
-                r'bond|etf_ppif|ppif|share|futures|index',
-                result[i]['type']
-            )
-        }
-        res = {i: res[i] for i in res if i not in secids}
+        if result:
+            # delete securities if exist in base
+            res = {
+                i: result[i] for i in result if re.search(
+                    r'bond|etf_ppif|ppif|share|futures|index',
+                    result[i]['type']
+                )
+            }
+            res = {i: res[i] for i in res if i not in secids}
+        else:
+            res = dict()
         result_yfinance = search_in_yfinance(query)
         if result_yfinance:
             if query not in secids:

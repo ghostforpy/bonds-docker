@@ -1,5 +1,6 @@
 from datetime import datetime, date
-import yfinance as yf
+#import yfinance as yf
+from .yahoo_finance.ticker import Ticker
 
 
 class NoSecurityYFinance(Exception):
@@ -12,7 +13,7 @@ class NoSecurityYFinanceHistory(Exception):
 
 def search_in_yfinance(query, raise_exceptions=False):
     try:
-        q = yf.Ticker(query)
+        q = Ticker(query)
         info = q.info
     except KeyError:
         if raise_exceptions:
@@ -33,7 +34,7 @@ def search_in_yfinance(query, raise_exceptions=False):
 
 def get_security_yfinance(secid, raise_exceptions=True):
     try:
-        q = yf.Ticker(secid)
+        q = Ticker(secid)
         info = q.info
     except KeyError:
         if raise_exceptions:
@@ -71,13 +72,12 @@ def get_history_by_secid(secid, period=None, start=None, end=None):
     if start is None or not isinstance(period, str):
         kwargs['period'] = '2y'
     try:
-        q = yf.Ticker(secid)
+        q = Ticker(secid)
         history = q.history(**kwargs)
-        history_close = history['Close'].to_dict()
         return {
-            datetime.fromtimestamp(datetime.timestamp(i)).date():
-            history_close[i]
-            for i in history_close
+            i:
+            history[i]['Close']
+            for i in history
         }
     except KeyError:
         if raise_exceptions:
