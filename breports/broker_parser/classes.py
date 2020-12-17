@@ -581,8 +581,11 @@ class BrokerReport:
         currencies = self.return_currency_money_movements()
         result = list()
         for i in currencies:
-            for j in self.invest_operations[i]:
-                result.append(j)
+            try:
+                for j in self.invest_operations[i]:
+                    result.append(j)
+            except KeyError:
+                continue
         return result
 
 
