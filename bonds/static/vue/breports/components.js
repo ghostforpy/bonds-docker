@@ -83,7 +83,12 @@ Vue.component('securities', {
                 security.security.today_price = security.security.today_price
                     .replace(/0*$/, "")
                     .replace(/\.*$/, "");
-
+                security.price_in_rub = security.price_in_rub
+                    .replace(/0*$/, "")
+                    .replace(/\.*$/, "");
+                security.total_in_rub = security.total_in_rub
+                    .replace(/0*$/, "")
+                    .replace(/\.*$/, "");
                 return el
             })
         }
@@ -96,7 +101,7 @@ Vue.component('securities', {
                             в количестве {{item.count}} штук
                             на общую сумму {{item.total}} {{item.security.faceunit}}
                             <span v-if="(item.security.faceunit != 'РУБ')">
-                                (по {{item.price_in_rub}} РУБ на общую сумму {{item.total_in_rub}})
+                                (по {{item.price_in_rub}} РУБ на общую сумму {{item.total_in_rub}} РУБ)
                             </span>
                         </li>
                     </ul>

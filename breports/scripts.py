@@ -12,6 +12,7 @@ from moex.utils import (get_new_security_history_from_moex,
                         get_today_price_by_secid,
                         get_security_by_secid,
                         get_valute_curse)
+from moex.utils_yfinance import NoSecurityYFinance
 from .api.serializers import (InvestsOperationSerializer,
                               NonZeroSecuritySerializer,
                               IncomeCertificateSecuritySerializer,
@@ -51,7 +52,9 @@ class CountSecurity():
         self.total = self.count * Decimal(self.security.today_price)
         if self.security.faceunit != 'SUR':
             curse = get_valute_curse(self.security.faceunit)
-            self.price_in_rub = float(self.security.today_price) * curse
+            self.price_in_rub = Decimal(
+                float(self.security.today_price) * curse
+            )
             self.total_in_rub = self.price_in_rub * self.count
         else:
             self.price_in_rub = 0
@@ -74,8 +77,11 @@ def calc_year_profit(broker_report):
     currencies = broker_report.return_currency_money_movements()
     invests = list()
     for i in currencies:
-        temp = broker_report.\
-            return_invests_operations_list_by_currency(i)
+        try:
+            temp = broker_report.\
+                return_invests_operations_list_by_currency(i)
+        except KeyError:
+            continue
         if i != 'RUB':
             temp = map(lambda x: [
                 x[0] * Decimal(get_valute_curse(i, x[1])),
@@ -88,8 +94,8 @@ def calc_year_profit(broker_report):
     for i in securities:
         try:
             today_price = Decimal(get_today_price_by_secid(i.secid))
-        except NoSecuritySecid:
-            raise ValidationError("can't find i.secid")
+        except (NoSecuritySecid, NoSecurityYFinance):
+            raise ValidationError("can't find {}".format(i.secid))
         today_cash += today_price * i.outgoing_balance
 
     for cur in currencies:
