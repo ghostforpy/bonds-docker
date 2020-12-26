@@ -223,7 +223,10 @@ def parce_section_2(sheet, currency, mode):
             try:
                 security_isin = securities[row[6].split('/')[0]]
                 temp.append(security_isin)
+                count = Decimal(row[6].split('/')[1].split()[0])
+                temp.append(count)
             except (UnboundLocalError, TypeError):
+                temp.append('')
                 temp.append('')
             result.append(temp)
     return result

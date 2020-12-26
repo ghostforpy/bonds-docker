@@ -88,7 +88,20 @@ class BReportFileUploadViewSet(CreateModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         path_to_file, fs = serializer.save()
-        date = serializer.validated_data['date']
+        to_date = serializer.validated_data['to_date']
+        since_date = serializer.validated_data['since_date']
+        data = None
+        try:
+            br = init_broker_report(
+                path_to_file
+            )
+            data = income_certificate(br, since_date, to_date)
+            status = response_status.HTTP_200_OK
+        except FileNotSupported:
+            status = response_status.HTTP_400_BAD_REQUEST
+        finally:
+            fs.delete(path_to_file)
+        return Response(status=status, data=data)
 
         data = None
         try:

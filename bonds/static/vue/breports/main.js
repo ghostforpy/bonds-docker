@@ -12,7 +12,9 @@ var app = new Vue({
         income_certificate_visible: false,
         income_certificate_data: null,
         income_sertificate_datepicker_visible: false,
-        income_sertificate_datepicker_date: null,
+        income_sertificate_datepicker_since_date: null,
+        income_sertificate_datepicker_to_date: null,
+        tax_load_visible: false,
         selected: 'calc_year_profit',
         options: [
             { value: 'calc_year_profit', text: 'Среднегодовая доходность' },
@@ -90,7 +92,8 @@ var app = new Vue({
                 em.errors_visible = false;
                 let formData = new FormData();
                 formData.append('filename', this.file);
-                formData.append('date', this.income_sertificate_datepicker_date);
+                formData.append('since_date', this.income_sertificate_datepicker_since_date);
+                formData.append('to_date', this.income_sertificate_datepicker_to_date);
                 HTTP.post(
                     'breports/income-certificate/',
                     formData
@@ -153,11 +156,18 @@ var app = new Vue({
         <b-form-datepicker
         v-if="selected == 'income_certificate'"
         class="mt-3 col-12 col-md-6"
+        size="sm"
+        id="income-sertificate-datepicker-since"
+        label-no-date-selected="Выберите дату начала"
+        v-model="income_sertificate_datepicker_since_date"></b-form-datepicker>
+        <b-form-datepicker
+        v-if="selected == 'income_certificate'"
+        class="mt-3 col-12 col-md-6"
         :max="yesterday()"
         size="sm"
-        id="income-sertificate-datepicker"
-        label-no-date-selected="Выберите дату"
-        v-model="income_sertificate_datepicker_date"></b-form-datepicker>
+        id="income-sertificate-datepicker-to"
+        label-no-date-selected="Выберите дату окончания"
+        v-model="income_sertificate_datepicker_to_date"></b-form-datepicker>
         <div class="w-100"></div>
         <b-button class="mt-3" v-on:click="send">Отправить</b-button>
         <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
@@ -184,15 +194,16 @@ var app = new Vue({
             </div>
         </div>
         <div id="income_certificate_part" v-if="income_certificate_visible" class="mt-3">
-            <h4 class="mt-4">Данные, необходимые для заполнения п.5 (Доход от ценных бумаг и долей участия в коммерческих организациях) раздела 1.</h4>
+            <h4 class="mt-4">Данные, необходимые для заполнения п.5 раздела 1<br>
+            (Доход от ценных бумаг и долей участия в коммерческих организациях).</h4>
             <part_one v-bind:profits="income_certificate_data.profits"></part_one>
             <div v-if="income_certificate_data.part_five_one.length > 0">
-                <h3 class="mt-4">Раздел 5.1</h3>
+                <h3 class="mt-5">Раздел 5.1</h3>
                 <small>Примечание: Местонахождение организации, уставной капитал, долю участия необходимо найти самостоятельно.</small>
                 <part_five_dot_one class="mt-3" v-bind:dat="income_certificate_data.part_five_one"></part_five_dot_one>
             </div>
             <div v-if="income_certificate_data.part_five_two.length > 0">
-                <h3 class="mt-4">Раздел 5.2</h3>
+                <h3 class="mt-5">Раздел 5.2</h3>
                 <part_five_dot_two
                 class="mt-3"
                 v-bind:dat="income_certificate_data.part_five_two"></part_five_dot_two>

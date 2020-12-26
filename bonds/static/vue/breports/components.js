@@ -275,11 +275,24 @@ Vue.component('part_one', {
     data: function () {
         return {
             profit_div_coupon: null,
+            profit_div_coupon_operations: null,
+            rotate: 0,
             profit_repo: null,
             sells: null,
+            last_sell: null,
+            sells_exists: false,
             total_sells_profit: null,
             total_profit: 0
         }
+    },
+    methods: {
+        rotate_method: function () {
+            if (this.rotate == 0) {
+                this.rotate = 180
+            } else {
+                this.rotate = 0
+            }
+        },
     },
     beforeMount: function () {
         var el = this.profits;
@@ -288,6 +301,13 @@ Vue.component('part_one', {
                 .map(function (item) {
                     item.value = item.value.replace(/0*$/, "").replace(/\.*$/, "");
                     item.currency = item.currency.replace("RUB", "РУБ");
+                    return item
+                });
+            this.profit_div_coupon_operations = el.profit_div_coupon_operations
+                .map(function (item) {
+                    item.cash = item.cash.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.currency = item.currency.replace("RUB", "РУБ");
+                    item.tax = item.tax.replace(/0*$/, "").replace(/\.*$/, "");
                     return item
                 });
         };
@@ -300,28 +320,146 @@ Vue.component('part_one', {
                 });
         };
         if (el.sells != null) {
+            this.sells_exists = true;
             this.sells = el.sells
                 .map(function (item) {
                     item.total_profit = item.total_profit.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.total_tax_base_without_commissions = item
+                        .total_tax_base_without_commissions.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.total_tax_base = item
+                        .total_tax_base.replace(/0*$/, "").replace(/\.*$/, "");
                     item.security.faceunit = item.security.faceunit.replace("RUB", "РУБ");
                     return item
                 });
+            this.last_sell = this.sells.pop();
         };
 
     },
     template: `
         <div>
-            <ul v-if="profit_div_coupon != null">Доход, полученный от купонов и дивидендов:
+            <ul v-if="profit_div_coupon != null">
+            <b-button
+            v-b-toggle.profit_div_coupon_operations
+            variant="info"
+            size="sm"
+            v-on:click="rotate_method">
+                <b-icon
+                icon="chevron-double-down"
+                :rotate="rotate"
+                ></b-icon>
+            </b-button>
+            Доход, полученный от купонов и дивидендов:
                 <li v-for="i in profit_div_coupon">{{i.value}} {{i.currency}}</li>
             </ul>
+            <b-collapse
+            v-if="profit_div_coupon != null"
+            id="profit_div_coupon_operations"
+            class="mt-2">
+                <div v-for="(i,ind) in profit_div_coupon_operations">
+                    <div class="row" v-bind:class="{ 'bg-light': (ind % 2) }">
+                        {{i.date}} {{i.action}} по {{i.security.name}}({{i.security.isin}}) в размере
+                        {{i.cash}} {{i.currency}}<span v-if="(i.tax > 0)">(Налог: {{i.tax}})</span>
+                    </div>
+                </div>
+            </b-collapse>
             <ul v-if="profit_repo != null">Доход, полученный от сделок РЕПО:
                 <li v-for="i in profit_repo">{{i.value}} {{i.currency}}</li>
             </ul>
-            <ul v-if="sells != null">Доход, полученный с продажи ценных бумаг:
-                <li v-for="i in sells">
-                    {{i.security.secid}}: {{i.total_profit}} {{i.security.faceunit}}
-                </li>
-            </ul>
+            <div v-if="sells_exists" class="mt-3">
+                <strong>Финансовый результат, полученный с продажи ценных бумаг:</strong>
+                <div class="row">
+                    <div class="col-3">
+                        Наименование
+                    </div>
+                    <div class="col-2">
+                        Доход с продажи
+                    </div>
+                    <div class="col-2">
+                        Налоговая база
+                    </div>
+                    <div class="col-4">
+                        Налоговая база с учетом комиссий
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div v-for="(i, index) in sells">
+                    <part_one_simple_row :one_row="i" :index="index"></part_one_simple_row>
+                    <div class="dropdown-divider"></div>
+                </div>
+                <part_one_simple_row :one_row="last_sell" :index="sells.length"></part_one_simple_row>
+            </div>
+        </div>
+    `
+})
+
+Vue.component('part_one_simple_row', {
+    props: ['one_row', 'index'],
+    data: function () {
+        return {
+            index_number: null,
+            rotate: 0
+        }
+    },
+    beforeMount: function () {
+        this.index_number = 'collapse-' + this.index.toString();
+        this.one_row.sells = this.one_row.sells
+            .map(function (item) {
+                item.count = item.count.replace(/0*$/, "").replace(/\.*$/, "");
+                item.price = item.price.replace(/0*$/, "").replace(/\.*$/, "");
+                item.sells = item.sells
+                    .map(function (i) {
+                        i.count = i.count.replace(/0*$/, "").replace(/\.*$/, "");
+                        i.price = i.price.replace(/0*$/, "").replace(/\.*$/, "");
+                        return i
+                    })
+                return item
+            });
+    },
+    methods: {
+        rotate_method: function () {
+            if (this.rotate == 0) {
+                this.rotate = 180
+            } else {
+                this.rotate = 0
+            }
+        },
+    },
+    template: `
+        <div>
+            <div class="row">
+                <div class="col-3">
+                    <b-button v-b-toggle="index_number" variant="info" size="sm" v-on:click="rotate_method">
+                        <b-icon
+                        icon="chevron-double-down"
+                        :rotate="rotate"
+                        ></b-icon>
+                    </b-button>
+                    {{one_row.security.name}} ({{one_row.security.secid}}):
+                </div>
+                <div class="col-2">
+                    {{one_row.total_profit}} {{one_row.security.faceunit}}
+                </div>
+                <div class="col-2">
+                    {{one_row.total_tax_base_without_commissions}} {{one_row.security.faceunit}}
+                </div>
+                <div class="col-4">
+                    {{one_row.total_tax_base}} {{one_row.security.faceunit}}
+                </div>
+            </div>
+            <b-collapse v-bind:id="index_number" class="mt-2">
+                <div class="" v-for="(x, ind) in one_row.sells">
+                  <div class="row mt-2" v-bind:class="{ 'bg-light': (ind % 2) }">
+                    <div class="col-6">
+                        {{x.date}} {{x.action}} {{x.count}} шт. по {{x.price}} {{one_row.security.faceunit}}
+                    </div>
+                    <div class="col-6">
+                    <p v-for="y in x.sells">
+                        {{y.date}} {{y.action}} {{y.count}} шт. по {{y.price}} {{one_row.security.faceunit}}
+                    </p>
+                    </div>
+                  </div>
+                </div>
+            </b-collapse>
         </div>
     `
 })
