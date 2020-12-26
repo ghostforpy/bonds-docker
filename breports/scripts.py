@@ -1,4 +1,6 @@
 from decimal import Decimal
+from django.utils.timezone import now
+from datetime import datetime
 from rest_framework.serializers import ValidationError
 from .broker_parser.classes import (BrokerReport,
                                     FileNotSupported,
@@ -17,7 +19,8 @@ from .api.serializers import (InvestsOperationSerializer,
                               NonZeroSecuritySerializer,
                               IncomeCertificateSecuritySerializer,
                               ProfitSerializer,
-                              ProfitSellSerializer)
+                              ProfitSellSerializer,
+                              ProfitOperationSerializer)
 import xlrd
 
 
@@ -156,7 +159,10 @@ class ProfitSell():
                  total_profit,
                  total_tax_base_without_commissions,
                  total_commissions,
-                 total_tax_base):
+                 total_tax_base,
+                 sells,
+                 *args,
+                 **kwargs):
         try:
             self.security = get_security_by_secid(secid)
         except NoSecuritySecid:
@@ -165,9 +171,15 @@ class ProfitSell():
         self.total_tax_base_without_commissions = total_tax_base_without_commissions
         self.total_commissions = total_commissions
         self.total_tax_base = total_tax_base
+        self.sells = list()
+        for i in sells:
+            i.sells = sells[i]
+            self.sells.append(i)
 
 
-def income_certificate(broker_report):
+def income_certificate(broker_report,
+                       since_date=None,
+                       to_date=None):
     securities = broker_report.\
         return_none_zero_securities()
     # проверка нулевых входящих остатков бумаг,
@@ -218,13 +230,16 @@ def income_certificate(broker_report):
             profit_and_taxes = broker_report.\
                 return_profit_and_taxes_sell_bonds_by_secid_isin(
                     i.secid,
+                    since=since_date,
+                    to=to_date,
                     raise_exceptions=True
                 )
-            if profit_and_taxes['total_profit'] > Decimal(0):
-                profit_sells.append(
-                    ProfitSell(i.secid, **profit_and_taxes)
-                )
-        except:
+            # if profit_and_taxes['total_profit'] > Decimal(0):
+            profit_sells.append(
+                ProfitSell(i.secid, **profit_and_taxes)
+            )
+        except Exception as e:
+            # print(e)
             continue
     profits = dict()
     if profit_sells:
@@ -232,16 +247,30 @@ def income_certificate(broker_report):
             profit_sells,
             many=True
         ).data
-    profit_div_coupon = broker_report.total_profit()
-    profit_repo = broker_report.total_profit_repo()
-    if profit_div_coupon:
+    profit_div_coupon = broker_report.total_profit(since_date, to_date)
+    profit_repo = broker_report.total_profit_repo(since_date, to_date)
+    profit_div_coupon_operations = list()
+    for j in profit_div_coupon['operations']:
+        for i in profit_div_coupon['operations'][j]:
+            security = broker_report.get_security_by_secid_isin(isin=i.isin)
+            i.security = get_security_by_secid(security.secid)
+            if i.security.security_type == 'bond':
+                i.action = 'Купон'
+            else:
+                i.action = 'Дивиденды'
+            profit_div_coupon_operations.append(i)
+    if profit_div_coupon['total']:
         profits['profit_div_coupon'] = ProfitSerializer(
-            [Profit(profit_div_coupon[i], i) for i in profit_div_coupon],
+            [Profit(profit_div_coupon['total'][i], i) for i in profit_div_coupon['total']],
             many=True
         ).data
-    if profit_repo:
+        profits['profit_div_coupon_operations'] = ProfitOperationSerializer(
+            profit_div_coupon_operations,
+            many=True
+        ).data
+    if profit_repo['total']:
         profits['profit_repo'] = ProfitSerializer(
-            [Profit(profit_div_coupon[i], i) for i in profit_repo],
+            [Profit(profit_repo['total'][i], i) for i in profit_repo['total']],
             many=True
         ).data
     result = {

@@ -267,27 +267,48 @@ class BrokerReport:
         result = {i: [Amortisation(**j) for j in data[i]] for i in data}
         return result
 
-    def total_profit(self):
+    def return_base_profit(self, profits_list, since=None, to=None):
+        period = self.period
+        if not since:
+            since = period[0]
+        if not to:
+            to = period[1]
+        if since > to:
+            since, to = period[0], period[1]
+        result = {i: sum(
+            map(lambda x: x.cash,
+                filter(
+                    lambda y: since <= y.date <= to,
+                    profits_list[i]
+                ))
+        ) for i in profits_list}
+        return {
+            'total': result,
+            'operations': profits_list
+        }
+
+    def total_profit(self, since=None, to=None):
         """
         Возвращает dict с суммами полученного дохода
         без учета дохода от повышения цен,
         где ключами является валюта дохода.
         Т.е. учитывается только доход от дивидендов и купонов.
+        :param since: datetime.date
+        :param to: datetime.date
         :return: dict
         """
-        profits = self.profit_operations
-        result = {i: sum([j.cash for j in profits[i]]) for i in profits}
-        return result
 
-    def total_profit_repo(self):
+        return self.return_base_profit(self.profit_operations, since, to)
+
+    def total_profit_repo(self, since=None, to=None):
         """
         Возвращает dict с суммами полученного дохода по сделкам РЕПО,
         где ключами является валюта дохода
+        :param since: datetime.date
+        :param to: datetime.date
         :return: dict
         """
-        profits = self.repo_profit
-        result = {i: sum([j.cash for j in profits[i]]) for i in profits}
-        return result
+        return self.return_base_profit(self.repo_profit, since, to)
 
     def total_ndfl(self):
         """
@@ -389,6 +410,36 @@ class BrokerReport:
             return result, outgoing_security_balance
         return result
 
+    def return_amortisations_by_isin(self,
+                                     query,
+                                     since=None,
+                                     to=datetime.now().date(),
+                                     raise_exceptions=False):
+        """
+        Вощзвращает список операций амортизаций по isin.
+        query: list
+        """
+        security = list(filter(
+            lambda x: x.isin in query, self.securities_info
+        ))  # поиск бумаги по isin
+        if security:
+            currency = security[0].currency
+        else:
+            if raise_exceptions:
+                raise WrongQuery
+            else:
+                return
+        amortisations = list(filter(
+            lambda x: ((x.isin in query) and (x.date < to)),
+            self.amortisations[currency]
+        ))
+        if since:
+            amortisations = list(filter(
+                lambda x: x.date > since,
+                amortisations
+            ))
+        return amortisations
+
     def return_profit_and_taxes_sell_bonds_by_secid_isin(self,
                                                          query,
                                                          since=None,
@@ -433,6 +484,18 @@ class BrokerReport:
         transaction = self.return_transactions_by_secid_isin([query])
         sell_transactions = [i for i in transaction if i.action == 'Продажа']
         sell_transactions.sort(key=lambda x: x.deal_number)
+        amortisations = self.return_amortisations_by_isin(query)
+        price_amortisations = list()
+        if amortisations:
+            price_amortisations = list(
+                filter(lambda x: not x.full, amortisations)
+            )
+
+            full_amortisation = list(filter(
+                lambda x: x.full, amortisations
+            ))  # выбор полного погашения облигации
+            if full_amortisation:
+                sell_transactions.append(full_amortisation[0])
         buy_transactions = [i for i in transaction if i.action == 'Покупка']
         buy_transactions.sort(key=lambda x: x.deal_number)
         result = {}
@@ -443,8 +506,7 @@ class BrokerReport:
                 if buy_transactions[0].count > count:
                     buy_transaction = deepcopy(buy_transactions)[0]
                     buy_transaction.count = count
-                    buy_transaction.broker_commission = \
-                        buy_transactions[0].broker_commission * \
+                    buy_transaction.broker_commission = buy_transactions[0].broker_commission * \
                         count / buy_transactions[0].count
                     result[i].append(buy_transaction)
                     buy_transactions[0].count -= count
@@ -460,30 +522,84 @@ class BrokerReport:
             for i in list(result.keys()):
                 if i.date < since:
                     del result[i]
-        if to != datetime.now().date():
+        if to != datetime.now().date() and not to is None:
             for i in list(result.keys()):
                 if i.date > to:
                     del result[i]
         if not result:
             if raise_exceptions:
                 raise NoMovements
-            return 'No sell since {} to {}'.format(since or self.period[0], to)
+            return 'No sell since {} to {}'.format(
+                since or self.period[0], to)
+
+        def return_amortisation_sum(amortisation_list, buy_date, sell_date):
+            """
+            Возвращает сумму амортизаций между операциями покупки и продажи
+            """
+            if amortisation_list:
+                amort = list(
+                    filter(
+                        lambda x: (
+                            buy_date < x.date < sell_date
+                        ), amortisation_list)
+                )  # выбор амортизаций между покупкой и продажей
+                return Decimal(sum(map(lambda x: (x.cash / x.count), amort)))
+            return Decimal(0)
+        res = dict()
+        for i in result.keys():
+            if isinstance(i, Amortisation):
+                i.price = Decimal(i.cash / i.count)
+                i.broker_commission = Decimal(0)
+                i.action = 'Погашение облигаций'
+        res['sells'] = deepcopy(result)
         for i in result.keys():
             commission = i.broker_commission + sum(
                 map(lambda x: x.broker_commission, result[i]))
-            tax_base = i.count * i.price - sum(
-                map(lambda x: x.count * x.price, result[i]))
-            profit_transactions = [k for k in result[i] if k.price < i.price]
-            profit = i.price * sum(map(
-                lambda x: x.count, profit_transactions)) - sum(
-                map(lambda x: x.count * x.price, profit_transactions))
+            tax_base = sum(
+                map(lambda x: (
+                    # уменьшение цены покупки на сумму амортизаций
+                    # между датой покупки и продажи
+                    (i.price - (x.price - return_amortisation_sum(
+                        price_amortisations,
+                        x.date,
+                        i.date
+                    ))
+                    ) * x.count), result[i])
+            )
+            profit_transactions = list(
+                # транзакция продажи считается прибыльной
+                # если цена продажи выше, чем цена покупки,
+                # уменьшенная на величину амортизаций
+                filter(
+                    lambda x: (
+                        i.price > (
+                            x.price - return_amortisation_sum(
+                                price_amortisations,
+                                x.date,
+                                i.date)
+                        )),
+                    result[i]
+                )
+            )
+            profit = sum(
+                map(
+                    lambda x: (
+                        x.count * (
+                            i.price + return_amortisation_sum(
+                                price_amortisations,
+                                x.date,
+                                i.date) - x.price
+                        )
+                    ), profit_transactions
+                )
+            )
             result[i].append(['tax_base', tax_base])
             total_tax_base += tax_base
             result[i].append(['profit', profit])
             total_profit += profit
             result[i].append(['commission', commission])
             total_commissions += commission
-        res = dict()
+
         res['total_profit'] = total_profit
         res['total_tax_base_without_commissions'] = total_tax_base
         res['total_commissions'] = total_commissions
@@ -720,16 +836,18 @@ class Amortisation(SimpleHashMixin):
                  full: bool = None,
                  cash: Decimal = None,
                  isin: str = None,
+                 count: Decimal = None,
                  **kwargs):
         SimpleHashMixin.__init__(self, **kwargs)
         self.cash = cash
         self.date = date
         self.isin = isin
         self.full = full
+        self.count = count
 
     def __str__(self):
         action = 'Full' if self.full else 'Part'
-        t = [self.date, action, self.cash, self.isin]
+        t = [self.date, action, self.cash, self.isin, self.count, 'pcs']
         return ' '.join([str(i) for i in t])
 
     def __repr__(self):

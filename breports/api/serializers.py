@@ -49,14 +49,30 @@ class SimpleBReportUploadSerializer(serializers.Serializer):
 
 
 class IncomeCertificateSerializer(SimpleBReportUploadSerializer):
-    date = serializers.DateField()
+    to_date = serializers.DateField()
+    since_date = serializers.DateField()
 
-    def validate_date(self, value):
+    def validate_since_date(self, value):
         now = timezone.now()
-        print(now.date(), value)
         if now.date() <= value:
             raise serializers.ValidationError("Date must be yesterday or earlier.")
         return value
+
+    def validate_to_date(self, value):
+        now = timezone.now()
+        if now.date() <= value:
+            raise serializers.ValidationError("Date must be yesterday or earlier.")
+        return value
+
+    def validate(self, data):
+        """
+        Check that since_date earlier then to_date
+        """
+        if data['since_date'] >= data['to_date']:
+            raise serializers.ValidationError(
+                "start date must be earlier then end date"
+            )
+        return data
 
 
 class SecuritySerializer(SecurityRetrivieSerializer):
@@ -126,7 +142,7 @@ class SecuritySimpleSerializer(serializers.Serializer):
         max_digits=17,
         decimal_places=7
     )
-    faceunit = serializers.CharField(source='get_faceunit_display')
+    faceunit = serializers.CharField(source='get_main_board_faceunit_display')
     security_type = serializers.CharField(
         source='get_security_type_display')
     name = serializers.CharField()
@@ -155,6 +171,38 @@ class ProfitSerializer(serializers.Serializer):
     currency = serializers.CharField()
 
 
+class ProfitOperationSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    action = serializers.CharField()
+    cash = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    tax = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    currency = serializers.CharField()
+    security = SecuritySimpleSerializer()
+
+
+class BuySerializer(serializers.Serializer):
+    date = serializers.DateField()
+    action = serializers.CharField()
+    price = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+    count = serializers.DecimalField(
+        max_digits=17,
+        decimal_places=7
+    )
+
+
+class SellSerializer(BuySerializer):
+    sells = BuySerializer(many=True)
+
+
 class ProfitSellSerializer(serializers.Serializer):
     security = SecuritySimpleSerializer()
     total_profit = serializers.DecimalField(
@@ -173,3 +221,4 @@ class ProfitSellSerializer(serializers.Serializer):
         max_digits=17,
         decimal_places=7
     )
+    sells = SellSerializer(many=True)

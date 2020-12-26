@@ -289,6 +289,7 @@ class TinkoffParserXLS:
                 temp['full'] = i[3] == 'Погашение облигации'
                 temp['cash'] = i[4]
                 temp['isin'] = i[6]
+                temp['count'] = i[7]
                 temp['ihash'] = hash(tuple(i))
                 t.append(temp)
             if t:
