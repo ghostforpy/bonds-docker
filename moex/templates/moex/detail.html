@@ -49,8 +49,8 @@
         {% if security.facevalue %}
           <p>Номинальная стоимость: {{ security.facevalue }}</p>
         {% endif %}
-        {% if security.faceunit and security.security_type != 'currency' %}
-          <p>Валюта номинала: {{ security.get_faceunit_display }}</p>
+        {% if security.main_board_faceunit and security.security_type != 'currency' %}
+          <p>Валюта номинала: {{ security.get_main_board_faceunit_display }}</p>
         {% endif %}
         {% if security.initialfacevalue %}
           <p>Первоначальная номинальная стоимость: {{ security.initialfacevalue }}</p>
