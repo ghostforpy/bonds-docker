@@ -164,10 +164,10 @@
                           <span class="d-md-none">Количество: </span><span>{{ security.count|delete_zeroes }} шт.</span>
                         </div>
                         <div class="col-lg-2 col-12 mb-1 mt-1">
-                          <span class="d-md-none">Цена: </span><span>{{ security.today_price|delete_zeroes }} {{ security.security.get_faceunit_display}}<br class="d-md-inline d-none"><span class="d-md-none d-inline"> </span><span class="{% if security.security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.security.change_price_percent}}%)</span></span>
+                          <span class="d-md-none">Цена: </span><span>{{ security.today_price|delete_zeroes }} {{ security.security.get_main_board_faceunit_display}}<br class="d-md-inline d-none"><span class="d-md-none d-inline"> </span><span class="{% if security.security.change_price_percent > 0 %}text-success fas fa-angle-double-up{% elif security.security.change_price_percent < 0%}text-danger fas fa-angle-double-down{% else %}text-secondary{% endif %}">({{security.security.change_price_percent}}%)</span></span>
                         </div>
                         <div class="col-lg-2 col-12 mb-1 mt-1">
-                          <span class="d-md-none">Итого: </span><span>{{ security.total_cost|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
+                          <span class="d-md-none">Итого: </span><span>{{ security.total_cost|delete_zeroes }} {{ security.security.get_main_board_faceunit_display}}</span>
                           {% if security.security.main_board_faceunit != 'SUR'%}</br><span>({{ security.total_cost_in_rub|delete_zeroes }} РУБ)</span>{% endif %}
                         </div>
                         <div class="col-lg-1 col-12 mb-1 mt-1">
@@ -215,10 +215,10 @@
                       <span class="d-md-none">Количество: </span><span>{{ security.count|delete_zeroes }} шт.</span>
                     </div>
                     <div class="col-md-2 col-12 mb-1 mt-1">
-                      <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
+                      <span class="d-md-none">Цена: </span><span>{{ security.price|delete_zeroes }} {{ security.security.get_main_board_faceunit_display}}</span>
                     </div>
                     <div class="col-md-2 col-12 mb-1 mt-1">
-                      <span class="d-md-none">Комиссия: </span><span>{{ security.commission|delete_zeroes }} {{ security.security.get_faceunit_display}}</span>
+                      <span class="d-md-none">Комиссия: </span><span>{{ security.commission|delete_zeroes }} {{ security.security.get_main_board_faceunit_display}}</span>
                     </div>
                     <div class="col-md-2 col-12 mb-1 mt-1">
                       <span class="d-md-none">Действие: </span><span>{% if security.buy %}Покупка{% else %}Продажа{% endif %}</span>
