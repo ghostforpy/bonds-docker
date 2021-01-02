@@ -76,33 +76,7 @@
         <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="historyPortfolioButton" data-toggle="collapse" data-target="#collapseHistoryPortfolio" aria-expanded="false" aria-controls="collapseHistoryPortfolio">
             История движения денежных средств
             </button>
-              <div class="collapse history-table container-in-collapse" id="collapseHistoryPortfolio"> 
-              {% if history != None %}
-                {% for i in history %}
-                  <div class="row align-items-center">
-                    <div class="col-9">
-                      <div class="row">
-                        <div class="col-md-4">
-                          {{ i.date }}
-                        </div>
-                        <div class="col-md-4">
-                          {{ i.cash }} {{ i.get_currency_display }}
-                          {% if i.currency != 'SUR'%}</br>({{i.cash_in_rub}} РУБ){% endif %}
-                          {% if i.action == 'tp' %}</br>(НДФЛ: {{ i.ndfl }} {{i.get_currency_display}}){% endif %}
-                        </div>
-                        <div class="col-md-4">
-                         {{ i.get_action_display }}</br>
-                         {{ i.security.name }}
-                        </div>
-                      </div>
-                    </div>
-                      <div class="col-3">
-                        <a class="delete-invest btn btn-danger btn-sm" href="{% url 'portfolio:del_invest' i.id %}">Удалить</a>
-                      </div>
-                  </div>
-                  <div class="dropdown-divider"></div>
-                {% endfor %}
-              {%endif%}
+            <div class="collapse history-table container-in-collapse" id="collapseHistoryPortfolio"> 
               <div class="row align-items-center">
                 <div class="col-9">
                   <div class="row align-items-center">
@@ -129,6 +103,7 @@
                         <option value="bc">Комиссия брокера</option>
                         <option selected value="vp">Пополнение</option>
                         <option value="pv">Снятие</option>
+                        <option value="tax">Налог на доход</option>
                        </select>
                     </div>
                   </div>
@@ -137,6 +112,32 @@
                   <a id="add_invest" class="btn btn-success btn-sm mt-1 mb-2" href="{% url 'portfolio:add_invest' portfolio.id %}">Добавить</a>
                 </div>
               </div>
+              {% if history != None %}
+                {% for i in history %}
+                  <div class="dropdown-divider"></div>
+                  <div class="row align-items-center">
+                    <div class="col-9">
+                      <div class="row">
+                        <div class="col-md-4">
+                          {{ i.date }}
+                        </div>
+                        <div class="col-md-4">
+                          {{ i.cash }} {{ i.get_currency_display }}
+                          {% if i.currency != 'SUR'%}</br>({{i.cash_in_rub}} РУБ){% endif %}
+                          {% if i.action == 'tp' %}</br>(НДФЛ: {{ i.ndfl }} {{i.get_currency_display}}){% endif %}
+                        </div>
+                        <div class="col-md-4">
+                         {{ i.get_action_display }}</br>
+                         {{ i.security.name }}
+                        </div>
+                      </div>
+                    </div>
+                      <div class="col-3">
+                        <a class="delete-invest btn btn-danger btn-sm" href="{% url 'portfolio:del_invest' i.id %}">Удалить</a>
+                      </div>
+                  </div>
+                {% endfor %}
+              {%endif%}
             </div>
           {% endif %}
           {% if portfolio.securit %}  

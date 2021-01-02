@@ -18,6 +18,9 @@ $('#id_action').change(function (e) {
     if ($(this).val() == 'tp') {
         $('#id_ndfl').slideDown("fast", "linear");
         $('#id_security').slideDown("fast", "linear");
+    } else if ($(this).val() == 'tax') {
+        $('#id_ndfl').slideUp("fast", "linear");
+        $('#id_security').slideDown("fast", "linear");
     } else {
         $('#id_ndfl').slideUp("fast", "linear");
         $('#id_security').slideUp("fast", "linear");
@@ -45,8 +48,10 @@ $(document).on('click', '#add_invest', function (e) {
         action = 'Комиссия брокера';
     } else if (action == 'br') {
         action = 'Частичное погашении облигаций';
-    } else {
+    } else if (action == 'pv') {
         action = 'Снятие';
+    } else if (action == 'tax') {
+        action = 'Налог на доход'
     };
     $.post(
         $(this).attr('href'),
@@ -61,7 +66,7 @@ $(document).on('click', '#add_invest', function (e) {
         function (data) {
             if (data['status'] == 'ok') {
                 id = data['id'];
-                var out = '<div class="row align-items-center">';
+                var out = '<div class="dropdown-divider"></div><div class="row align-items-center">';
                 out += '<div class="col-9"><div class="row"><div class="col-md-4">';
                 out += date + '</div><div class="col-md-4">' + cash + ` ${currency}`;
                 if (action == 'Доход') {
@@ -77,8 +82,8 @@ $(document).on('click', '#add_invest', function (e) {
                 out += '</div></div></div><div class="col-3">';
                 out += '<a class="delete-invest btn btn-danger btn-sm"';
                 out += ' href="/portfolio/del_invest/' + id + '/">Удалить</a>';
-                out += '</div></div><div class="dropdown-divider"></div>';
-                $('.history-table > .row:first').before(out);
+                out += '</div></div>';
+                $('.history-table > .row:first').after(out);
                 updated_portfolio(data);
                 $.toast({
                     title: 'Bonds',
