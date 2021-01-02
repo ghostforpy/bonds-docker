@@ -86,8 +86,9 @@
                           {{ i.date }}
                         </div>
                         <div class="col-md-4">
-                          {{ i.cash }}
-                        {% if i.action == 'tp' %}</br>(НДФЛ: {{ i.ndfl }}){% endif %}
+                          {{ i.cash }} {{ i.get_currency_display }}
+                          {% if i.currency != 'SUR'%}</br>({{i.cash_in_rub}} РУБ){% endif %}
+                          {% if i.action == 'tp' %}</br>(НДФЛ: {{ i.ndfl }} {{i.get_currency_display}}){% endif %}
                         </div>
                         <div class="col-md-4">
                          {{ i.get_action_display }}</br>
@@ -108,6 +109,11 @@
                     <div class="col-md-4"><input type="text" class="form-control form-control-sm mt-1 mb-2" name="date" required="" id="id_date"></div>
                     <div class="col-md-4">
                       <input placeholder="Введите сумму" type="number" class="form-control form-control-sm mt-1 mb-2" name="cash" step="0.01" required="" id="id_cash">
+                      <select id="id_currency" class="form-control form-control-sm mt-1 mb-2">
+                        <option selected value="SUR">РУБ</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                      </select>
                       <input placeholder="НДФЛ" type="number" class="form-control form-control-sm mt-1 mb-2" name="ndfl" step="0.01" id="id_ndfl" style="display: none;">
                       <select class="form-control form-control-sm mt-1 mb-2" name="portfolio" required="" id="id_security" style="display: none;">
                         <option value="" selected>Выберите бумагу</option>
