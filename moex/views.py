@@ -57,7 +57,7 @@ def security_list(request):
     if 'query' in request.GET:
         form = SearchForm(request.GET)
         if form.is_valid():
-            query = form.cleaned_data['query']
+            query = form.cleaned_data['query'].upper()
             securities_list = security_search_in_db(query)
             if caches['default'].get('moex_search_' + query):
                 moex_dict = caches['default'].get('moex_search_' + query)
