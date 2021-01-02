@@ -1,6 +1,6 @@
 from django.db import models
 from decimal import Decimal
-from portfolio.models import InvestmentPortfolio
+#from portfolio.models import InvestmentPortfolio
 from django.core.exceptions import ObjectDoesNotExist
 from bonds.users.models import User
 from django.urls import reverse
@@ -315,7 +315,7 @@ class SecurityPortfolios(models.Model):
     owner = models.ForeignKey(User,
                               related_name='securities',
                               on_delete=models.CASCADE,)
-    portfolio = models.ForeignKey(InvestmentPortfolio,
+    portfolio = models.ForeignKey('portfolio.InvestmentPortfolio',
                                   related_name='securities',
                                   on_delete=models.CASCADE,)
     security = models.ForeignKey(Security,
@@ -342,7 +342,7 @@ class TradeHistory(models.Model):
     owner = models.ForeignKey(User,
                               related_name='trades',
                               on_delete=models.CASCADE,)
-    portfolio = models.ForeignKey(InvestmentPortfolio,
+    portfolio = models.ForeignKey('portfolio.InvestmentPortfolio',
                                   related_name='trade_securities',
                                   on_delete=models.CASCADE,)
     security = models.ForeignKey(Security,

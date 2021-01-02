@@ -48,7 +48,7 @@ class UserVklad(models.Model):
         portfolio_invests = portfolios.prefetch_related(prefecth)
         res = [item for sublist in portfolio_invests
                for item in sublist.invests]
-        invests = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in res]
+        invests = [[i.cash_in_rub * (-1)**(i.action == 'pv'), i.date] for i in res]
         self.year_percent_profit = scripts.year_percent_profit(
             invests, self.today_cash)
 

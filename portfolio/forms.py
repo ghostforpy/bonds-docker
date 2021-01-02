@@ -14,7 +14,7 @@ class PortfolioInvestForm(forms.ModelForm):
 
     class Meta:
         model = PortfolioInvestHistory
-        exclude = ['portfolio']
+        exclude = ['portfolio', 'cash_in_rub']
 
 
 class RefreshPortfolio(forms.ModelForm):

@@ -1,9 +1,12 @@
 from django.db import models
 from bonds.users.models import User
 from django.urls import reverse
+from django.core.exceptions import ObjectDoesNotExist
 from decimal import Decimal, DivisionByZero
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
+from moex.models import Security
+from moex.utils_valute import get_valute_curse
 from . import scripts
 
 # Create your models here.
@@ -75,7 +78,7 @@ class InvestmentPortfolio(models.Model):
         # выбор записей пополнения и снятия денег
         t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
         # формирование списка инвестиций и снятий денег с датами
-        invest = [[i.cash * (-1)**(i.action == 'pv'), i.date] for i in t]
+        invest = [[i.cash_in_rub * (-1)**(i.action == 'pv'), i.date] for i in t]
         year_percent_profit = scripts.year_percent_profit(
             invest, self.today_cash)
         self.year_percent_profit = year_percent_profit
@@ -105,7 +108,7 @@ class InvestmentPortfolio(models.Model):
     def calc_invest_cash_portfolio(self):
         # выбор записей пополнения и снятия денег
         t = self.portfolio_invests.filter(action__in=['pv', 'vp'])
-        self.invest_cash = sum([i.cash * (-1)**(i.action == 'pv') for i in t])
+        self.invest_cash = sum([i.cash_in_rub * (-1)**(i.action == 'pv') for i in t])
 
     def calc_today_cash(self):
         if not self.manual:
@@ -176,6 +179,8 @@ class PortfolioInvestHistory(models.Model):
     date = models.DateField()
     cash = models.DecimalField(max_digits=10,
                                decimal_places=2, default=0)
+    cash_in_rub = models.DecimalField(max_digits=10,
+                                      decimal_places=2, default=0)
     action = models.CharField(max_length=20,
                               default='vklad_to_portfolio',
                               choices=[('vp', 'Пополнение'),
@@ -194,11 +199,62 @@ class PortfolioInvestHistory(models.Model):
                                  on_delete=models.SET_NULL,
                                  blank=True,
                                  null=True)
+    currency = models.CharField(max_length=20,
+                                default='SUR',
+                                choices=[('SUR', 'РУБ'),
+                                         ('USD', 'USD'),
+                                         ('EUR', 'EUR'),
+                                         ('GBP', 'GBP'),
+                                         ('CNY', 'CNY')],
+                                blank=True,
+                                null=True)
 
     class Meta:
         ordering = ['-date', 'cash']
 
-    def save(self, *args, **kwargs):
+    def add_custom_currеncy_cash(self, withdraw=False):
+        # функция добавления наличных в иностранной валюте
+        # при withdraw=True - снятие наличных
+        try:
+            valute = self.portfolio.securities.filter(
+                security__security_type__exact='currency'
+            ).filter(
+                security__name__istartswith=self.currency
+            ).get()
+            if not withdraw:
+                valute.count = valute.count + self.cash - self.ndfl
+            else:
+                if self.cash > valute.count:
+                    return False
+                else:
+                    valute.count -= self.cash + self.ndfl
+                    if valute.count == 0:
+                        valute.delete()
+                        return True
+        except ObjectDoesNotExist:
+            if withdraw:
+                return False
+            valute = self.portfolio.securities.create(
+                owner=self.portfolio.owner,
+                portfolio=self.portfolio,
+                security=Security.objects.get(
+                    name='{}RUB'.format(self.currency)
+                )
+            )
+            valute.count = self.cash - self.ndfl
+            valute.today_price = valute.security.today_price
+        valute.total_cost = valute.count * valute.today_price
+        valute.total_cost_in_rub = valute.total_cost
+        valute.save()
+        self.cash_in_rub = self.cash * Decimal(get_valute_curse(
+            self.currency, date=self.date
+        ))
+        return True
+
+    def save(self, simple_update=False, *args, **kwargs):
+        if simple_update:
+            super(PortfolioInvestHistory, self).save(*args, **kwargs)
+            return 'ok'
         if self.action not in ['vp',
                                'pv',
                                'tp',
@@ -206,39 +262,60 @@ class PortfolioInvestHistory(models.Model):
                                'bc',
                                'tax']:
             return 'wrong_action'
+        if self.currency == 'SUR':
+            self.cash_in_rub = self.cash
         if self.action == 'vp':
-            # Увеличиваем остаток на величину
-            # внесенных денег
-            self.portfolio.ostatok += self.cash
-            # без автоматического подсчета меняем today_cash руками
-            if self.portfolio.manual:
-                self.portfolio.today_cash += self.cash
-        if self.action == 'pv':
-            # Снятие денег(перевод на вклад) происходит только,
-            # если на остатке портфеля есть деньги
-            if self.cash > self.portfolio.ostatok:
-                return 'no money on portfolio'
-            else:
-              #  self.portfolio.owner.vklad.ostatok += self.cash
-              #  self.portfolio.owner.vklad.save()
-                self.portfolio.ostatok -= self.cash
+            if self.currency == 'SUR':
+                # Увеличиваем остаток на величину
+                # внесенных денег
+                self.portfolio.ostatok += self.cash
                 # без автоматического подсчета меняем today_cash руками
                 if self.portfolio.manual:
-                    self.portfolio.today_cash -= self.cash
+                    self.portfolio.today_cash += self.cash
+            else:
+                self.add_custom_currеncy_cash()
+
+        if self.action == 'pv':
+            if self.currency == 'SUR':
+                # Снятие денег происходит только,
+                # если на остатке портфеля есть деньги
+                if self.cash > self.portfolio.ostatok:
+                    return 'no money on portfolio'
+                else:
+                    #  self.portfolio.owner.vklad.ostatok += self.cash
+                    #  self.portfolio.owner.vklad.save()
+                    self.portfolio.ostatok -= self.cash
+                    # без автоматического подсчета меняем today_cash руками
+                    if self.portfolio.manual:
+                        self.portfolio.today_cash -= self.cash
+            else:
+                if not self.add_custom_currеncy_cash(withdraw=True):
+                    return 'no money on portfolio'
         if self.action in ['tp', 'br']:
             # Запись о начислении дивидендов/купонов и т.д.
             # или о частичном погашении облигаций
-            self.portfolio.ostatok += self.cash - self.ndfl
-            # без автоматического подсчета меняем today_cash руками
-            if self.portfolio.manual:
-                self.portfolio.today_cash += self.cash - self.ndfl
-        # снятие денег при оплате комисси брокеру за обслуживание счета
+            if self.currency == 'SUR':
+                self.portfolio.ostatok += self.cash - self.ndfl
+                # без автоматического подсчета меняем today_cash руками
+                if self.portfolio.manual:
+                    self.portfolio.today_cash += self.cash - self.ndfl
+            else:
+                self.add_custom_currеncy_cash()
+
+        # снятие денег при оплате комиссии брокеру за обслуживание счета
         # или при уплате налога на доход, когда он не был уплачен ранее
         if self.action in ['bc', 'tax']:
-            self.portfolio.ostatok -= self.cash
-            # без автоматического подсчета меняем today_cash руками
-            if self.portfolio.manual:
-                self.portfolio.today_cash -= self.cash
+            if self.currency == 'SUR':
+                if self.portfolio.ostatok >= self.cash:
+                    self.portfolio.ostatok -= self.cash
+                    # без автоматического подсчета меняем today_cash руками
+                    if self.portfolio.manual:
+                        self.portfolio.today_cash -= self.cash
+                else:
+                    return 'no money on portfolio'
+            else:
+                if not self.add_custom_currеncy_cash(withdraw=True):
+                    return 'no money on portfolio'
         super(PortfolioInvestHistory, self).save(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'
@@ -246,39 +323,50 @@ class PortfolioInvestHistory(models.Model):
     def delete(self, *args, **kwargs):
         # удаление записи о снятии денежных средств
         if self.action == 'pv':
-            # if self.portfolio.owner.vklad.ostatok >= self.cash:
-            self.portfolio.ostatok += self.cash
-            # без автоматического подсчета меняем today_cash руками
-            if self.portfolio.manual:
-                self.portfolio.today_cash += self.cash
-              #  self.portfolio.owner.vklad.ostatok -= self.cash
-            # else:
-             #   return 'no money on vklad'
+            if self.currency == 'SUR':
+                # if self.portfolio.owner.vklad.ostatok >= self.cash:
+                self.portfolio.ostatok += self.cash
+                # без автоматического подсчета меняем today_cash руками
+                if self.portfolio.manual:
+                    self.portfolio.today_cash += self.cash
+            else:
+                self.add_custom_currеncy_cash()
         # удаление записи о внесении денежных средств
         elif self.action == 'vp':
-            if self.portfolio.ostatok >= self.cash:
-                self.portfolio.ostatok -= self.cash
-                # без автоматического подсчета меняем today_cash руками
-                if self.portfolio.manual:
-                    self.portfolio.today_cash -= self.cash
-              #  self.portfolio.owner.vklad.ostatok += self.cash
+            if self.currency == 'SUR':
+                if self.portfolio.ostatok >= self.cash:
+                    self.portfolio.ostatok -= self.cash
+                    # без автоматического подсчета меняем today_cash руками
+                    if self.portfolio.manual:
+                        self.portfolio.today_cash -= self.cash
+                #  self.portfolio.owner.vklad.ostatok += self.cash
+                else:
+                    return 'no money on portfolio'
             else:
-                return 'no money on portfolio'
+                if not self.add_custom_currеncy_cash(withdraw=True):
+                    return 'no money on portfolio'
         # удаление записи о получении дохода или частичном погашении облигаций
         elif self.action in ['tp', 'br']:
-            if self.portfolio.ostatok >= self.cash:
-                self.portfolio.ostatok -= self.cash + self.ndfl
-                # без автоматического подсчета меняем today_cash руками
-                if self.portfolio.manual:
-                    self.portfolio.today_cash -= self.cash + self.ndfl
+            if self.currency == 'SUR':
+                if self.portfolio.ostatok >= self.cash:
+                    self.portfolio.ostatok -= self.cash + self.ndfl
+                    # без автоматического подсчета меняем today_cash руками
+                    if self.portfolio.manual:
+                        self.portfolio.today_cash -= self.cash + self.ndfl
+                else:
+                    return 'no money on portfolio'
             else:
-                return 'no money on portfolio'
+                if not self.add_custom_currеncy_cash(withdraw=True):
+                    return 'no money on portfolio'
         # удаление записи об уплате комиссии брокера, налога на доход
         if self.action in ['bc', 'tax']:
-            self.portfolio.ostatok += self.cash
-            # без автоматического подсчета меняем today_cash руками
-            if self.portfolio.manual:
-                self.portfolio.today_cash += self.cash
+            if self.currency == 'SUR':
+                self.portfolio.ostatok += self.cash
+                # без автоматического подсчета меняем today_cash руками
+                if self.portfolio.manual:
+                    self.portfolio.today_cash += self.cash
+            else:
+                self.add_custom_currеncy_cash()
         super(PortfolioInvestHistory, self).delete(*args, **kwargs)
         self.portfolio.refresh_portfolio()
         return 'ok'

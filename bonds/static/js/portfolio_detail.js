@@ -31,6 +31,10 @@ $(document).on('click', '#add_invest', function (e) {
     cash = $('#id_cash').val();
     ndfl = $('#id_ndfl').val();
     security = $('#id_security').val();
+    currency = $('#id_currency').val();
+    if (currency == 'SUR') {
+        currency = 'РУБ'
+    }
     if (ndfl == '') { ndfl = 0 };
     action = $('#id_action').val();
     if (action == 'tp') {
@@ -51,6 +55,7 @@ $(document).on('click', '#add_invest', function (e) {
             ndfl: ndfl,
             date: $('#id_date').val(),
             action: $('#id_action').val(),
+            currency: $('#id_currency').val(),
             security: security
         },
         function (data) {
@@ -58,7 +63,7 @@ $(document).on('click', '#add_invest', function (e) {
                 id = data['id'];
                 var out = '<div class="row align-items-center">';
                 out += '<div class="col-9"><div class="row"><div class="col-md-4">';
-                out += date + '</div><div class="col-md-4">' + cash;
+                out += date + '</div><div class="col-md-4">' + cash + ` ${currency}`;
                 if (action == 'Доход') {
                     out += '</br>(НДФЛ: ' + ndfl + ')';
                 };
