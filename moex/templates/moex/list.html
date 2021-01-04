@@ -46,7 +46,7 @@
 <h3 class="mt-3 mb-3">По вашему запросу в нашей базе ничего не найдено.</h3>
 {% endif %}
 {% if 'query' in request.GET %}
-<h3 id="moex_h3" class="mt-3 mb-3">Ценные бумаги <a href="http://moex.com">moex.com</a>:</h3>
+<h3 id="moex_h3" class="mt-3 mb-3">Ценные бумаги из других источников:</h3>
 {% endif %}
 {% if moex_dict %}
 <button type="button" class="btn btn-secondary col-12 mb-2" id="buttonMoexList" data-toggle="collapse" data-target="#collapseMoexList" aria-expanded="false" aria-controls="collapseMoexList">
