@@ -199,7 +199,7 @@ var app = new Vue({
             <part_one v-bind:profits="income_certificate_data.profits"></part_one>
             <div v-if="income_certificate_data.part_five_one.length > 0">
                 <h3 class="mt-5">Раздел 5.1</h3>
-                <small>Примечание: Местонахождение организации, уставной капитал, долю участия необходимо найти самостоятельно.</small>
+                <small>Примечание: Местонахождение организации необходимо найти самостоятельно. Уставной капитал, доля участия участия подлежат проверке.</small>
                 <part_five_dot_one class="mt-3" v-bind:dat="income_certificate_data.part_five_one"></part_five_dot_one>
             </div>
             <div v-if="income_certificate_data.part_five_two.length > 0">

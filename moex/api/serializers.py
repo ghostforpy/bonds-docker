@@ -36,7 +36,8 @@ class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
                   "last_update",
                   "faceunit",
                   "main_board_faceunit"
-                  'url']
+                  'url',
+                  'issuesize']
 
 
 class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):

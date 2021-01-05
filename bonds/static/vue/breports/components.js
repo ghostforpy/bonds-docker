@@ -16,10 +16,11 @@ Vue.component('today-cash', {
     props: ['today_cash'],
     computed: {
         computed_today_cash: function () {
-            return parseFloat(this.today_cash).toFixed(2);
+            return parseFloat(this.today_cash)
+                .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 2 });
         }
     },
-    template: '<p>Общая стоимость портфеля на сегодняшний день: {{computed_today_cash}} РУБ</p>'
+    template: '<p>Общая стоимость портфеля на сегодняшний день: {{computed_today_cash}}</p>'
 })
 
 Vue.component('total-invests', {
@@ -36,10 +37,11 @@ Vue.component('total-invests', {
                     return sign * parseFloat(item.cash_in_rub);
                 }
             );
-            return i.reduce((a, b) => a + b).toFixed(2)
+            return i.reduce((a, b) => a + b)
+                .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
         },
     },
-    template: '<p> Всего инвестиций: {{computed_total_invests}} РУБ</p>'
+    template: '<p> Всего инвестиций: {{computed_total_invests}}</p>'
 })
 
 Vue.component('invests', {
@@ -48,15 +50,15 @@ Vue.component('invests', {
         computed_invests: function () {
             return this.invests.map(function (number) {
                 let el = number;
-                el.cash = parseFloat(el.cash).toFixed(2);
+                el.cash = parseFloat(el.cash)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: el.currency, maximumFractionDigits: 10 });
                 if (el.action) {
                     el.action = 'Пополнение'
                 } else {
                     el.action = 'Снятие'
                 };
-                if (el.currency == 'RUB') {
-                    el.currency = 'РУБ'
-                }
+                el.cash_in_rub_display = parseFloat(el.cash)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 10 });
                 return el
             })
         }
@@ -65,8 +67,8 @@ Vue.component('invests', {
                     <p>Инвестиции:</p>
                     <ul>
                         <li v-for="item in computed_invests">
-                            {{item.action}} {{item.date}} на {{item.cash}} {{item.currency}}
-                            <span v-if="(item.currency != 'РУБ')">({{item.cash_in_rub}} РУБ)</span>
+                            {{item.action}} {{item.date}} на {{item.cash}}
+                            <span v-if="(item.currency != 'RUB')">({{item.cash_in_rub_display}})</span>
                         </li>
                     </ul>
                 </div>`
@@ -77,19 +79,18 @@ Vue.component('securities', {
     computed: {
         computed_securities: function () {
             return this.securities.map(function (security) {
-                let el = security;
-                security.count = security.count.replace(/0*$/, "").replace(/\.*$/, "");
-                security.total = security.total.replace(/0*$/, "").replace(/\.*$/, "");
-                security.security.today_price = security.security.today_price
-                    .replace(/0*$/, "")
-                    .replace(/\.*$/, "");
-                security.price_in_rub = security.price_in_rub
-                    .replace(/0*$/, "")
-                    .replace(/\.*$/, "");
-                security.total_in_rub = security.total_in_rub
-                    .replace(/0*$/, "")
-                    .replace(/\.*$/, "");
-                return el
+                let security_currency = security.security.faceunit.replace('РУБ', 'RUB');
+                security.count = parseFloat(security.count)
+                    .toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+                security.total = parseFloat(security.total)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: security_currency, maximumFractionDigits: 2 });
+                security.security.today_price = parseFloat(security.security.today_price)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: security_currency, maximumFractionDigits: 2 });
+                security.price_in_rub = parseFloat(security.price_in_rub)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 2 });
+                security.total_in_rub = parseFloat(security.total_in_rub)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 2 });
+                return security
             })
         }
     },
@@ -99,9 +100,9 @@ Vue.component('securities', {
                         <li v-for="item in computed_securities">
                             {{item.security.shortname}}({{item.security.secid}})
                             в количестве {{item.count}} штук
-                            на общую сумму {{item.total}} {{item.security.faceunit}}
+                            на общую сумму {{item.total}}
                             <span v-if="(item.security.faceunit != 'РУБ')">
-                                (по {{item.price_in_rub}} РУБ на общую сумму {{item.total_in_rub}} РУБ)
+                                (по {{item.price_in_rub}} на общую сумму {{item.total_in_rub}})
                             </span>
                         </li>
                     </ul>
@@ -134,10 +135,13 @@ Vue.component('part_five_dot_one', {
     },
     template: `<div>
                 <div class="row">
-                    <div class="col-3 d-none d-md-block">
+                    <div class="col-2 d-none d-md-block">
                         <strong>Наименование и организационно-правовая форма организации</strong>
                     </div>
-                    <div class="col-3 d-none d-md-block">
+                    <div class="col-2 d-none d-md-block">
+                        <strong>Уставной капитал</strong>
+                    </div>
+                    <div class="col-2 d-none d-md-block">
                         <strong>Доля участия</strong>
                     </div>
                     <div class="col-6 d-none d-md-block">
@@ -164,27 +168,30 @@ Vue.component('part_five_dot_one_row', {
     beforeMount: function () {
         var el = this.one_row;
         el.count = el.count.replace(/0*$/, "").replace(/\.*$/, "");
-        el.security.facevalue = el.security.facevalue
-            .replace(/0*$/, "")
-            .replace(/\.*$/, "");
+        let security_faceunit = el.security.faceunit.replace('РУБ', 'RUB');
+        let security_facevalue = el.security.facevalue;
+        el.security.facevalue = parseFloat(el.security.facevalue)
+            .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
+        el.security.share_capital = (parseFloat(security_facevalue) * parseFloat(el.security.issuesize))
+            .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
         this.last_participation_basis = el.participation_basis.pop();
-        this.total = (parseFloat(el.count) * parseFloat(el.security.facevalue))
-            .toFixed(7)
-            .replace(/0*$/, "")
-            .replace(/\.*$/, "");
+        this.total = (parseFloat(el.count) * parseFloat(security_facevalue))
+            .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
     },
     template: `
                 <div class="row">
-                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                        <div class=" col-12 col-md-2 mb-1 mt-1">
                             {{one_row.security.emitent}}
                         </div>
-                        <div class=" col-12 col-md-3 mb-1 mt-1">
+                        <div class=" col-12 col-md-2 mb-1 mt-1">
+                        Уставной капитал: {{one_row.security.share_capital}}
+                        </div>
+                        <div class=" col-12 col-md-2 mb-1 mt-1">
                         Количество: {{one_row.count}} шт.,
                         </br>
-                        Номинальная стоимость: {{one_row.security.facevalue}} 
-                        {{one_row.security.faceunit}}
+                        Номинальная стоимость: {{one_row.security.facevalue}}
                         </br>
-                        Итого: {{total}} {{one_row.security.faceunit}}
+                        Итого: {{total}}
                         </div>
                         <div class=" col-12 col-md-6 mb-1 mt-1">
                             <span v-for="i in one_row.participation_basis">
@@ -248,8 +255,10 @@ Vue.component('part_five_dot_two_row', {
     },
     beforeMount: function () {
         var el = this.one_row;
-        el.count = el.count.replace(/0*$/, "").replace(/\.*$/, "");
-        this.total_cost = el.security.facevalue * el.count;
+        this.total_cost = (parseFloat(el.security.facevalue) * parseFloat(el.count))
+            .toLocaleString('ru-RU', { maximumFractionDigits: 10 });
+        el.count = parseFloat(el.count)
+            .toLocaleString('ru-RU', { maximumFractionDigits: 10 });
     },
     template: `<div class="row">
                         <div class=" col-12 col-md-3 mb-1 mt-1">
@@ -262,7 +271,7 @@ Vue.component('part_five_dot_two_row', {
                             <span class="d-md-none">Номинальная величина обязательства(руб.): </span>{{total_cost}}
                         </div>
                         <div class=" col-12 col-md-1 mb-1 mt-1">
-                            <span class="d-md-none">Общее количество: </span>{{one_row.count}}
+                            <span class="d-md-none">Общее количество: </span>{{one_row.count}} шт.
                         </div>
                         <div class=" col-12 col-md-3 mb-1 mt-1">
                             <span class="d-md-none">Общая стоимость(руб.): </span>{{total_cost}}
@@ -299,23 +308,25 @@ Vue.component('part_one', {
         if (el.profit_div_coupon != null) {
             this.profit_div_coupon = el.profit_div_coupon
                 .map(function (item) {
-                    item.value = item.value.replace(/0*$/, "").replace(/\.*$/, "");
-                    item.currency = item.currency.replace("RUB", "РУБ");
+                    item.value = parseFloat(item.value)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: item.currency, maximumFractionDigits: 10 });
                     return item
                 });
             this.profit_div_coupon_operations = el.profit_div_coupon_operations
                 .map(function (item) {
-                    item.cash = item.cash.replace(/0*$/, "").replace(/\.*$/, "");
-                    item.currency = item.currency.replace("RUB", "РУБ");
-                    item.tax = item.tax.replace(/0*$/, "").replace(/\.*$/, "");
+                    item.cash = parseFloat(item.cash)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: item.currency, maximumFractionDigits: 10 });
+
+                    item.tax_display = parseFloat(item.tax)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: item.currency, maximumFractionDigits: 10 });
                     return item
                 });
         };
         if (el.profit_repo != null) {
             this.profit_repo = el.profit_repo
                 .map(function (item) {
-                    item.value = item.value.replace(/0*$/, "").replace(/\.*$/, "");
-                    item.currency = item.currency.replace("RUB", "РУБ");
+                    item.value = parseFloat(item.value)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: item.currency, maximumFractionDigits: 10 });
                     return item
                 });
         };
@@ -323,12 +334,14 @@ Vue.component('part_one', {
             this.sells_exists = true;
             this.sells = el.sells
                 .map(function (item) {
-                    item.total_profit = item.total_profit.replace(/0*$/, "").replace(/\.*$/, "");
-                    item.total_tax_base_without_commissions = item
-                        .total_tax_base_without_commissions.replace(/0*$/, "").replace(/\.*$/, "");
-                    item.total_tax_base = item
-                        .total_tax_base.replace(/0*$/, "").replace(/\.*$/, "");
-                    item.security.faceunit = item.security.faceunit.replace("RUB", "РУБ");
+                    let security_faceunit = item.security.faceunit.replace("РУБ", "RUB");
+                    item.total_profit = parseFloat(item.total_profit)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
+                    item.total_tax_base_without_commissions = parseFloat(item
+                        .total_tax_base_without_commissions)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
+                    item.total_tax_base = parseFloat(item.total_tax_base)
+                        .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
                     return item
                 });
             this.last_sell = this.sells.pop();
@@ -336,29 +349,34 @@ Vue.component('part_one', {
 
     },
     template: `
-        <div>
-            <ul v-if="profit_div_coupon != null">
-            <b-button
-            v-b-toggle.profit_div_coupon_operations
-            variant="info"
-            size="sm"
-            v-on:click="rotate_method">
-                <b-icon
-                icon="chevron-double-down"
-                :rotate="rotate"
-                ></b-icon>
-            </b-button>
-            Доход, полученный от купонов и дивидендов:
-                <li v-for="i in profit_div_coupon">{{i.value}} {{i.currency}}</li>
-            </ul>
+        <div class="container">
+            <div class="row" v-if="profit_div_coupon != null">
+                <div class="col-1">
+                    <b-button
+                    v-b-toggle.profit_div_coupon_operations
+                    variant="info"
+                    size="sm"
+                    v-on:click="rotate_method">
+                        <b-icon
+                        icon="chevron-double-down"
+                        :rotate="rotate"
+                        ></b-icon>
+                    </b-button>
+                </div>
+                <div class="col">
+                    Доход, полученный от купонов и дивидендов:
+                    <p class="ml-2" v-for="i in profit_div_coupon">{{i.value}}</p>
+                </div>
+            </div>
             <b-collapse
             v-if="profit_div_coupon != null"
             id="profit_div_coupon_operations"
             class="mt-2">
                 <div v-for="(i,ind) in profit_div_coupon_operations">
-                    <div class="row" v-bind:class="{ 'bg-light': (ind % 2) }">
-                        {{i.date}} {{i.action}} по {{i.security.name}}({{i.security.isin}}) в размере
-                        {{i.cash}} {{i.currency}}<span v-if="(i.tax > 0)">(Налог: {{i.tax}})</span>
+                    <div class="row mb-2" v-bind:class="{ 'bg-light': (ind % 2) }">
+                        <span class="col-12">{{i.date}} </br>{{i.action}} по {{i.security.name}}({{i.security.isin}})
+                        </br>в размере {{i.cash}}</span>
+                        <span v-if="(i.tax > 0)" class="col-12">(Налог: {{i.tax_display}})</span>
                     </div>
                 </div>
             </b-collapse>
@@ -366,21 +384,24 @@ Vue.component('part_one', {
                 <li v-for="i in profit_repo">{{i.value}} {{i.currency}}</li>
             </ul>
             <div v-if="sells_exists" class="mt-3">
-                <strong>Финансовый результат, полученный с продажи ценных бумаг:</strong>
-                <div class="row">
-                    <div class="col-3">
-                        Наименование
-                    </div>
-                    <div class="col-2">
-                        Доход с продажи
-                    </div>
-                    <div class="col-2">
-                        Налоговая база
-                    </div>
-                    <div class="col-4">
-                        Налоговая база с учетом комиссий
+                <strong class="mb-2">Финансовый результат, полученный с продажи ценных бумаг:</strong>
+                <div class="d-none d-md-block">
+                    <div class="row">
+                        <div class="col-3">
+                            Наименование
+                        </div>
+                        <div class="col-2">
+                            Доход с продажи
+                        </div>
+                        <div class="col-2">
+                            Налоговая база
+                        </div>
+                        <div class="col-4">
+                            Налоговая база с учетом комиссий
+                        </div>
                     </div>
                 </div>
+                
                 <div class="dropdown-divider"></div>
                 <div v-for="(i, index) in sells">
                     <part_one_simple_row :one_row="i" :index="index"></part_one_simple_row>
@@ -402,14 +423,17 @@ Vue.component('part_one_simple_row', {
     },
     beforeMount: function () {
         this.index_number = 'collapse-' + this.index.toString();
+        var security_faceunit = this.one_row.security.faceunit.replace("РУБ", "RUB");
         this.one_row.sells = this.one_row.sells
             .map(function (item) {
                 item.count = item.count.replace(/0*$/, "").replace(/\.*$/, "");
-                item.price = item.price.replace(/0*$/, "").replace(/\.*$/, "");
+                item.price = parseFloat(item.price)
+                    .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
                 item.sells = item.sells
                     .map(function (i) {
                         i.count = i.count.replace(/0*$/, "").replace(/\.*$/, "");
-                        i.price = i.price.replace(/0*$/, "").replace(/\.*$/, "");
+                        i.price = parseFloat(i.price)
+                            .toLocaleString('ru-RU', { style: 'currency', currency: security_faceunit, maximumFractionDigits: 10 });
                         return i
                     })
                 return item
@@ -427,7 +451,7 @@ Vue.component('part_one_simple_row', {
     template: `
         <div>
             <div class="row">
-                <div class="col-3">
+                <div class="col-12 col-md-3">
                     <b-button v-b-toggle="index_number" variant="info" size="sm" v-on:click="rotate_method">
                         <b-icon
                         icon="chevron-double-down"
@@ -436,25 +460,25 @@ Vue.component('part_one_simple_row', {
                     </b-button>
                     {{one_row.security.name}} ({{one_row.security.secid}}):
                 </div>
-                <div class="col-2">
-                    {{one_row.total_profit}} {{one_row.security.faceunit}}
+                <div class="d-inline-flex col-12 col-md-2">
+                    <span class="d-block d-md-none mr-1">Доход с продажи: </span><span>{{one_row.total_profit}} {{one_row.security.faceunit}}</span>
                 </div>
-                <div class="col-2">
-                    {{one_row.total_tax_base_without_commissions}} {{one_row.security.faceunit}}
+                <div class="d-inline-flex col-12 col-md-2">
+                    <span class="d-block d-md-none mr-1">Налоговая база: </span><span>{{one_row.total_tax_base_without_commissions}} {{one_row.security.faceunit}}</span>
                 </div>
-                <div class="col-4">
-                    {{one_row.total_tax_base}} {{one_row.security.faceunit}}
+                <div class="d-inline-flex col-12 col-md-4">
+                    <span class="d-block d-md-none mr-1">Налоговая база с учетом комиссий: </span><span>{{one_row.total_tax_base}} {{one_row.security.faceunit}}</span>
                 </div>
             </div>
             <b-collapse v-bind:id="index_number" class="mt-2">
                 <div class="" v-for="(x, ind) in one_row.sells">
-                  <div class="row mt-2" v-bind:class="{ 'bg-light': (ind % 2) }">
+                  <div class="row mt-2" v-bind:class="{ 'bg-light': !(ind % 2) }">
                     <div class="col-6">
-                        {{x.date}} {{x.action}} {{x.count}} шт. по {{x.price}} {{one_row.security.faceunit}}
+                        {{x.date}} {{x.action}} {{x.count}} шт. по {{x.price}}
                     </div>
                     <div class="col-6">
                     <p v-for="y in x.sells">
-                        {{y.date}} {{y.action}} {{y.count}} шт. по {{y.price}} {{one_row.security.faceunit}}
+                        {{y.date}} {{y.action}} {{y.count}} шт. по {{y.price}}
                     </p>
                     </div>
                   </div>
