@@ -142,6 +142,10 @@ class SecuritySimpleSerializer(serializers.Serializer):
         max_digits=17,
         decimal_places=7
     )
+    issuesize = serializers.DecimalField(
+        max_digits=25,
+        decimal_places=7
+    )
     faceunit = serializers.CharField(source='get_main_board_faceunit_display')
     security_type = serializers.CharField(
         source='get_security_type_display')

@@ -221,7 +221,8 @@ def parce_section_2(sheet, currency, mode):
             temp.append(Decimal(row[4].replace(',', '.')))
             temp.append(Decimal(row[5].replace(',', '.')))
             try:
-                security_isin = securities[row[6].split('/')[0]]
+                security_name = row[6].split('/')[0].replace('План; ', '')
+                security_isin = securities[security_name]
                 temp.append(security_isin)
                 count = Decimal(row[6].split('/')[1].split()[0])
                 temp.append(count)
