@@ -92,6 +92,7 @@ def prepare_new_security_by_secid_on_moex(secid):
         regnumber = get_value(description, "REGNUMBER")
         isin = get_value(description, "ISIN")
         facevalue = get_value(description, "FACEVALUE", 0)
+        issuesize = get_value(description, "ISSUESIZE", 0)
         initialfacevalue = get_value(description, "INITIALFACEVALUE", 0)
         matdate = get_value(description, "MATDATE")
         coupondate = get_value(description, "COUPONDATE")
@@ -128,6 +129,7 @@ def prepare_new_security_by_secid_on_moex(secid):
                            couponvalue=couponvalue,
                            accint=accint,
                            faceunit=faceunit,
+                           issuesize=issuesize,
                            main_board_faceunit=main_board_faceunit,
                            oldest_date=datetime.now().date(),
                            today_price=today_price,

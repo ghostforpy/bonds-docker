@@ -49,6 +49,9 @@
         {% if security.facevalue %}
           <p>Номинальная стоимость: {{ security.facevalue }}</p>
         {% endif %}
+        {% if security.issuesize %}
+          <p>Объём выпуска: {{ security.issuesize }}</p>
+        {% endif %}
         {% if security.main_board_faceunit and security.security_type != 'currency' %}
           <p>Валюта номинала: {{ security.get_main_board_faceunit_display }}</p>
         {% endif %}

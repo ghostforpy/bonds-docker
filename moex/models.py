@@ -58,6 +58,9 @@ class Security(models.Model):
     # Номинальная стоимость
     facevalue = models.DecimalField(max_digits=17, decimal_places=7,
                                     blank=True, default=0)
+    # объем выпуска
+    issuesize = models.DecimalField(max_digits=25, decimal_places=7,
+                                    blank=True, default=0)
     # Первоначальная номинальная стоимость
     initialfacevalue = models.DecimalField(max_digits=17, decimal_places=7,
                                            blank=True, default=0)
@@ -247,8 +250,11 @@ class Security(models.Model):
                         try:
                             description = moex_specification(self.secid)[0]
                             facevalue = description['FACEVALUE']
+                            issuesize = description['ISSUESIZE']
                             if facevalue != self.facevalue:
                                 self.facevalue = facevalue
+                            if issuesize != self.issuesize:
+                                self.issuesize = issuesize
                         except Exception as e:
                             pass
                     self.change_price_percent = (

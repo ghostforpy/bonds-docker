@@ -176,6 +176,7 @@ class MicexISSClient:
                                                                "COUPONVALUE",
                                                                "COUPONDATE",
                                                                "FACEUNIT",
+                                                               "ISSUESIZE",
                                                                ]}
         boards = result['boards']
         try:
