@@ -134,7 +134,6 @@ class MicexISSClient:
 
         jres = json.load(res)
         jres = jres['securities']['data']
-        print(jres)
         result = {i[1]: {'id_moex': i[0],
                          'regnumber': i[3],
                          'shortname': i[2],
@@ -151,7 +150,6 @@ class MicexISSClient:
                              'TQIR'
         ]
         }
-        print(result)
         return result
 
     def specification(self, query):
