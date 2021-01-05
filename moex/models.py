@@ -243,6 +243,14 @@ class Security(models.Model):
                         max(days) <= self.last_update:
                     return 'no new data', self.today_price, self.last_update
                 else:
+                    if self.security_type != 'bond':
+                        try:
+                            description = moex_specification(self.secid)[0]
+                            facevalue = description['FACEVALUE']
+                            if facevalue != self.facevalue:
+                                self.facevalue = facevalue
+                        except Exception as e:
+                            pass
                     self.change_price_percent = (
                         Decimal(today_price) - self.today_price) / \
                         self.today_price * 100
