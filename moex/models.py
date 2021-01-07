@@ -205,6 +205,7 @@ class Security(models.Model):
                 return 'ok', self.today_price, date
             return 'already update', self.today_price, self.last_update
         elif self.source == 'moex':
+            description = None
             if force or self.last_update < now().date():
                 try:
                     result = moex_history(self.parce_url)
@@ -246,17 +247,23 @@ class Security(models.Model):
                         max(days) <= self.last_update:
                     return 'no new data', self.today_price, self.last_update
                 else:
-                    if self.security_type != 'bond':
-                        try:
+                    try:
+                        if description is None:
                             description = moex_specification(self.secid)[0]
-                            facevalue = description['FACEVALUE']
-                            issuesize = description['ISSUESIZE']
-                            if facevalue != self.facevalue:
-                                self.facevalue = facevalue
-                            if issuesize != self.issuesize:
-                                self.issuesize = issuesize
-                        except Exception as e:
-                            pass
+                        facevalue = description['FACEVALUE']
+                        issuesize = description['ISSUESIZE']
+                        board = description['primary_boardid']
+                        if facevalue != self.facevalue:
+                            self.facevalue = facevalue
+                        if issuesize != self.issuesize:
+                            self.issuesize = issuesize
+                        if board != self.board:
+                            self.parce_url = self.parce_url.replace(
+                                self.board, board
+                            )
+                            self.board = board
+                    except Exception as e:
+                        pass
                     self.change_price_percent = (
                         Decimal(today_price) - self.today_price) / \
                         self.today_price * 100
