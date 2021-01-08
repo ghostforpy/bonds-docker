@@ -1,6 +1,12 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base_with_vue.html" %}
+{% load static %}
 
-	<h3>Как пользоваться сервисом mybonds.space</h3>
-	
+{% block content %}
+  <div id="app">
+    
+  </div>
 {% endblock content %}
+
+{% block page_vue_scripts %}
+    <script src="{% static 'vue/faq/main.js' %}"></script>
+{% endblock page_vue_scripts %}

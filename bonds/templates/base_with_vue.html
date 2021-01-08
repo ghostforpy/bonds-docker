@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_css %}
+  <!-- Load required BootstrapVue CSS -->
+  <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+  <!-- Load polyfills to support older browsers -->
+<script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver" crossorigin="anonymous"></script>
+  
+  <!-- Load Vue followed by BootstrapVue -->
+  {% if mode == 'production' %}
+      <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    {% else %}
+      <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  {% endif %}
+  <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+  <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
+{% endblock page_css %}
+
+{% block content %}
+  <div id="app">
+    
+  </div>
+{% endblock content %}
+
+{% block domready %}
+{% endblock domready %}
+
+{% block page_javascript %}
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    {% block page_vue_scripts%}
+    {% endblock page_vue_scripts%}
+{% endblock page_javascript %}
