@@ -351,7 +351,7 @@ Vue.component('part_one', {
     template: `
         <div class="container">
             <div class="row" v-if="profit_div_coupon != null">
-                <div class="col-1">
+                <div class="col-12">
                     <b-button
                     v-b-toggle.profit_div_coupon_operations
                     variant="info"
@@ -362,8 +362,6 @@ Vue.component('part_one', {
                         :rotate="rotate"
                         ></b-icon>
                     </b-button>
-                </div>
-                <div class="col">
                     Доход, полученный от купонов и дивидендов:
                     <p class="ml-2" v-for="i in profit_div_coupon">{{i.value}}</p>
                 </div>
@@ -461,13 +459,13 @@ Vue.component('part_one_simple_row', {
                     {{one_row.security.name}} ({{one_row.security.secid}}):
                 </div>
                 <div class="d-inline-flex col-12 col-md-2">
-                    <span class="d-block d-md-none mr-1">Доход с продажи: </span><span>{{one_row.total_profit}} {{one_row.security.faceunit}}</span>
+                    <span class="d-block d-md-none mr-1">Доход с продажи: </span><span>{{one_row.total_profit}}</span>
                 </div>
                 <div class="d-inline-flex col-12 col-md-2">
-                    <span class="d-block d-md-none mr-1">Налоговая база: </span><span>{{one_row.total_tax_base_without_commissions}} {{one_row.security.faceunit}}</span>
+                    <span class="d-block d-md-none mr-1">Налоговая база: </span><span>{{one_row.total_tax_base_without_commissions}}</span>
                 </div>
                 <div class="d-inline-flex col-12 col-md-4">
-                    <span class="d-block d-md-none mr-1">Налоговая база с учетом комиссий: </span><span>{{one_row.total_tax_base}} {{one_row.security.faceunit}}</span>
+                    <span class="d-block d-md-none mr-1">Налоговая база с учетом комиссий: </span><span>{{one_row.total_tax_base}}</span>
                 </div>
             </div>
             <b-collapse v-bind:id="index_number" class="mt-2">
