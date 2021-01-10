@@ -115,7 +115,9 @@ Vue.component('errors', {
                     <p>Ошибка</p>
                     <ul>
                         <li v-for="error in errors">
-                            {{error}}
+                            <div v-html="error">
+                              
+                            </div>
                         </li>
                     </ul>   
                 </div>`

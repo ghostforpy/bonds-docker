@@ -1,4 +1,71 @@
+function prepare_before_post(em) {
+    if (em.file) {
+        em.year_profit_visible = false;
+        em.income_certificate_visible = false;
+        em.spiner_visible = true;
+        em.errors_visible = false;
+        if (em.file.size > 2621440) {
+            em.errors = [
+                `Превышен максимальный размер файла.</br>Ваш файл ${em.file.size} B.</br>
+                        Максимальный размер файла - 2621440 B (2.5 MB).`
+            ];
+            em.errors_visible = true;
+            em.spiner_visible = false;
+            em.file = null;
+            return false
+        };
+    };
+    return true
+};
+function post_formData(em, formData, mode) {
+    if (mode == 'calc_year_profit') {
+        var url = 'breports/year-profit/';
+    } else if (mode == 'income_certificate') {
+        var url = 'breports/income-certificate/';
+    };
+    HTTP.post(
+        url,
+        formData
+    ).then(function (resp) {
+        em.spiner_visible = false;
+        // console.log('SUCCESS!!');
+        if (mode == 'calc_year_profit') {
+            em.year_profit_data = resp.data;
+            em.year_profit_visible = true;
+        } else if (mode == 'income_certificate') {
+            em.income_certificate_data = resp.data;
+            em.income_certificate_visible = true;
+        };
 
+        //console.log(resp);
+    })
+        .catch(function (error) {
+            em.spiner_visible = false;
+            em.errors_visible = true;
+            //  console.log('FAILURE!!');
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                //console.log(error.response.data);
+                if (error.response.status === 500) {
+                    em.errors = ['Server error'];
+                } else {
+                    em.errors = error.response.data;
+                }
+                //console.log(error.response.status);
+                //console.log(error.response.headers);
+            } else if (error.request) {
+                // The request was made but no response was received
+                // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                // http.ClientRequest in node.js
+                //console.log(error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                //console.log('Error', error.message);
+            }
+            //console.log(error.config);
+        });
+};
 var app = new Vue({
     el: '#app',
     data: {
@@ -37,100 +104,20 @@ var app = new Vue({
             }
         },
         calc_year_profit: function () {
-            var em = this;
-            if (this.file) {
-                em.year_profit_visible = false;
-                em.income_certificate_visible = false;
-                em.spiner_visible = true;
-                em.errors_visible = false;
+            if (prepare_before_post(this)) {
                 let formData = new FormData();
                 formData.append('filename', this.file);
-                HTTP.post(
-                    'breports/year-profit/',
-                    formData
-                ).then(function (resp) {
-                    em.spiner_visible = false;
-                    console.log('SUCCESS!!');
-                    em.year_profit_data = resp.data;
-                    em.year_profit_visible = true;
-                    //console.log(resp);
-                })
-                    .catch(function (error) {
-                        em.spiner_visible = false;
-                        em.errors_visible = true;
-                        console.log('FAILURE!!');
-                        if (error.response) {
-                            // The request was made and the server responded with a status code
-                            // that falls out of the range of 2xx
-                            //console.log(error.response.data);
-                            if (error.response.status === 500) {
-                                em.errors = ['Server error'];
-                            } else {
-                                em.errors = error.response.data;
-                            }
-                            //console.log(error.response.status);
-                            //console.log(error.response.headers);
-                        } else if (error.request) {
-                            // The request was made but no response was received
-                            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                            // http.ClientRequest in node.js
-                            //console.log(error.request);
-                        } else {
-                            // Something happened in setting up the request that triggered an Error
-                            //console.log('Error', error.message);
-                        }
-                        //console.log(error.config);
-                    });
-            }
+                post_formData(this, formData, this.selected);
+            };
         },
         income_certificate: function () {
-            var em = this;
-            if (this.file) {
-                em.year_profit_visible = false;
-                em.income_certificate_visible = false;
-                em.spiner_visible = true;
-                em.errors_visible = false;
+            if (prepare_before_post(this)) {
                 let formData = new FormData();
                 formData.append('filename', this.file);
                 formData.append('since_date', this.income_sertificate_datepicker_since_date);
                 formData.append('to_date', this.income_sertificate_datepicker_to_date);
-                HTTP.post(
-                    'breports/income-certificate/',
-                    formData
-                ).then(function (resp) {
-                    em.spiner_visible = false;
-                    console.log('SUCCESS!!');
-                    em.income_certificate_data = resp.data;
-                    em.income_certificate_visible = true;
-                    console.log(resp);
-                })
-                    .catch(function (error) {
-                        em.spiner_visible = false;
-                        em.errors_visible = true;
-                        console.log('FAILURE!!');
-                        if (error.response) {
-                            // The request was made and the server responded with a status code
-                            // that falls out of the range of 2xx
-                            //console.log(error.response.data);
-                            if (error.response.status === 500) {
-                                em.errors = ['Server error'];
-                            } else {
-                                em.errors = error.response.data;
-                            }
-                            //console.log(error.response.status);
-                            //console.log(error.response.headers);
-                        } else if (error.request) {
-                            // The request was made but no response was received
-                            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-                            // http.ClientRequest in node.js
-                            //console.log(error.request);
-                        } else {
-                            // Something happened in setting up the request that triggered an Error
-                            //console.log('Error', error.message);
-                        }
-                        //console.log(error.config);
-                    });
-            }
+                post_formData(this, formData, this.selected);
+            };
         },
         func3: function () {
 
