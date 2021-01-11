@@ -126,37 +126,50 @@ var app = new Vue({
     template: `
     <div id="app">
         <p>{{ message }}</p>
-        <b-form-file
-        v-model="file"
-        :state="Boolean(file)"
-        browseText="Обзор"
-        placeholder="Выберите или перетащите файл..."
-        drop-placeholder="Перетащите файл..."
-        accept=".xls, .xlsx"
-        ></b-form-file>
-        <b-form-select
-        size="sm"
-        class="mt-3 col-12 col-md-6"
-        v-model="selected"
-        :options="options"></b-form-select>
-        <div class="w-100"></div>
-        <b-form-datepicker
-        v-if="selected == 'income_certificate'"
-        class="mt-3 col-12 col-md-6"
-        size="sm"
-        id="income-sertificate-datepicker-since"
-        label-no-date-selected="Выберите дату начала"
-        v-model="income_sertificate_datepicker_since_date"></b-form-datepicker>
-        <b-form-datepicker
-        v-if="selected == 'income_certificate'"
-        class="mt-3 col-12 col-md-6"
-        :max="yesterday()"
-        size="sm"
-        id="income-sertificate-datepicker-to"
-        label-no-date-selected="Выберите дату окончания"
-        v-model="income_sertificate_datepicker_to_date"></b-form-datepicker>
-        <div class="w-100"></div>
-        <b-button class="mt-3" v-on:click="send">Отправить</b-button>
+        <div class="row">
+            <b-form-file
+            v-model="file"
+            :state="Boolean(file)"
+            browseText="Обзор"
+            placeholder="Выберите или перетащите файл..."
+            drop-placeholder="Перетащите файл..."
+            accept=".xls, .xlsx"
+            ></b-form-file>
+            <b-form-select
+            size="sm"
+            class="mt-3 col-12 col-md-6"
+            v-model="selected"
+            :options="options"></b-form-select>
+        </div>
+        <div v-if="selected == 'income_certificate'" class="mt-3 row">
+            <div class="col-11 col-md-5 pl-0">
+                <b-form-datepicker
+                size="sm"
+                id="income-sertificate-datepicker-since"
+                label-no-date-selected="Выберите дату начала"
+                v-model="income_sertificate_datepicker_since_date"></b-form-datepicker>
+                <b-form-datepicker
+                class="mt-3"
+                :max="yesterday()"
+                size="sm"
+                id="income-sertificate-datepicker-to"
+                label-no-date-selected="Выберите дату окончания"
+                v-model="income_sertificate_datepicker_to_date"></b-form-datepicker>
+            </div>
+            <div class="col-1 d-flex justify-content-center align-items-center col-md-1">
+                <b-icon
+                icon="question-circle-fill"
+                id="popover-target-question-circle-fill"
+                ></b-icon>
+                <b-popover target="popover-target-question-circle-fill" triggers="hover" placement="bottomleft">
+                    <template #title>Примечание</template>
+                    Даты начала и окончания влияют только на данные первого раздела справки о доходах.
+                    В данных пятого раздела справки будут отображены все ценные бумаги,
+                    остатки по которым на дату окончания брокерского отчета не равны 0.
+                </b-popover>
+            </div>
+        </div>
+        <b-button class="mt-3 row" v-on:click="send">Отправить</b-button>
         <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
         <div v-if="spiner_visible" class="d-flex justify-content-center mt-3">
             <b-spinner label="Loading..."></b-spinner>
