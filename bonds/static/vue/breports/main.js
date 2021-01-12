@@ -125,8 +125,8 @@ var app = new Vue({
     },
     template: `
     <div id="app">
-        <p>{{ message }}</p>
-        <div class="row">
+        <div class="row mx-3">{{ message }}</div>
+        <div class="row mx-3 mt-3">
             <b-form-file
             v-model="file"
             :state="Boolean(file)"
@@ -141,7 +141,7 @@ var app = new Vue({
             v-model="selected"
             :options="options"></b-form-select>
         </div>
-        <div v-if="selected == 'income_certificate'" class="mt-3 row">
+        <div v-if="selected == 'income_certificate'" class="mt-3 mx-3 row">
             <div class="col-11 col-md-5 pl-0">
                 <b-form-datepicker
                 size="sm"
@@ -169,7 +169,7 @@ var app = new Vue({
                 </b-popover>
             </div>
         </div>
-        <b-button class="mt-3 row" v-on:click="send">Отправить</b-button>
+        <b-button class="mt-3 ml-3" v-on:click="send">Отправить</b-button>
         <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
         <div v-if="spiner_visible" class="d-flex justify-content-center mt-3">
             <b-spinner label="Loading..."></b-spinner>
