@@ -204,6 +204,7 @@ var app = new Vue({
             </div>
             <div v-if="income_certificate_data.part_five_two.length > 0">
                 <h3 class="mt-5">Раздел 5.2</h3>
+                <small>Примечание: Номинальная величина обязательства указана на текущую дату и не учитывает возможную амортизацию с даты окончания анализа отчета.</small>
                 <part_five_dot_two
                 class="mt-3"
                 v-bind:dat="income_certificate_data.part_five_two"></part_five_dot_two>

@@ -230,13 +230,13 @@ Vue.component('part_five_dot_two', {
                         <strong>Лицо, выпустившее ценную бумагу</strong>
                     </div>
                     <div class="col-3 d-none d-md-block">
-                        <strong>Номинальная величина обязательства</br>(руб.)</strong>
+                        <strong>Номинальная величина обязательства</strong>
                     </div>
                     <div class="col-1 d-none d-md-block">
                         <strong>Общее количество</strong>
                     </div>
                     <div class="col-3 d-none d-md-block">
-                        <strong>Общая стоимость</br>(руб.)</strong>
+                        <strong>Общая стоимость</strong>
                     </div>
                 </div>
                 <div class="dropdown-divider d-none d-md-block"></div>
@@ -252,13 +252,17 @@ Vue.component('part_five_dot_two_row', {
     props: ['one_row'],
     data: function () {
         return {
-            total_cost: null
+            total_cost: null,
+            facevalue: null
         }
     },
     beforeMount: function () {
         var el = this.one_row;
+        let security_currency = el.security.faceunit.replace('РУБ', 'RUB');
+        this.facevalue = parseFloat(el.security.facevalue)
+            .toLocaleString('ru-RU', { style: 'currency', currency: security_currency, maximumFractionDigits: 10 });
         this.total_cost = (parseFloat(el.security.facevalue) * parseFloat(el.count))
-            .toLocaleString('ru-RU', { maximumFractionDigits: 10 });
+            .toLocaleString('ru-RU', { style: 'currency', currency: security_currency, mmaximumFractionDigits: 10 });
         el.count = parseFloat(el.count)
             .toLocaleString('ru-RU', { maximumFractionDigits: 10 });
     },
@@ -270,13 +274,13 @@ Vue.component('part_five_dot_two_row', {
                             {{one_row.security.emitent}}
                         </div>
                         <div class=" col-12 col-md-3 mb-1 mt-1">
-                            <span class="d-md-none">Номинальная величина обязательства(руб.): </span>{{total_cost}}
+                            <span class="d-md-none">Номинальная величина обязательства: </span>{{facevalue}}
                         </div>
                         <div class=" col-12 col-md-1 mb-1 mt-1">
                             <span class="d-md-none">Общее количество: </span>{{one_row.count}} шт.
                         </div>
                         <div class=" col-12 col-md-3 mb-1 mt-1">
-                            <span class="d-md-none">Общая стоимость(руб.): </span>{{total_cost}}
+                            <span class="d-md-none">Общая стоимость: </span>{{total_cost}}
                         </div>
                     </div>`
 })
