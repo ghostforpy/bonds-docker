@@ -1,12 +1,3 @@
-let url = document.location.protocol + '//' + document.location.host
-const HTTP = axios.create({
-    //baseURL: 'http://0.0.0.0:8000/api/',
-    baseURL: url + '/api/',
-    headers: {
-        'X-CSRFToken': csrftoken,
-    }
-})
-
 Vue.component('year-profit', {
     props: ['year_profit'],
     template: '<p>Среднегодовая доходность: {{year_profit}} %</p>'
