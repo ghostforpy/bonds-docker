@@ -19,33 +19,36 @@ class BReportUploadSerializer(serializers.ModelSerializer):
         read_only_fields = ['owner', 'filename', 'created']
 
 
-class SimpleBReportUploadSerializer(serializers.Serializer):
-    filename = serializers.FileField()
+def valid_file_size(value):
+    filename = value
+    if filename.size > 2621440:
+        raise serializers.ValidationError(
+            "size must be less than 2621440 bites (2.5 MB)"
+        )
 
-    def save(self):
+
+def valid_file_type(value):
+    filename = value
+    if filename.name.split('.')[1] not in ['xls', 'xlsx',
+                                           'XLS', 'XLSX']:
+        raise serializers.ValidationError(
+            "file must be xls/xlsx"
+        )
+
+
+class SaveBReportsMixin():
+    def save_fs(self, *args, **kwargs):
         filename = self.validated_data['filename']
         fs = FileSystemStorage(location=APPS_DIR / 'broker_reports')
         saved_file = fs.save(filename.name, filename)
         return '{}/{}'.format(fs.location, saved_file), fs
 
-    def validate(self, data):
-        """
-        Check that file size less than 2621440 bites(2.5 MB).
-        """
-        filename = data['filename']
-        if filename.size > 2621440:
-            raise serializers.ValidationError(
-                "size must be less than 2621440 bites (2.5 MB)"
-            )
-        """
-        Check that file is xls/xlsx.
-        """
-        if filename.name.split('.')[1] not in ['xls', 'xlsx',
-                                               'XLS', 'XLSX']:
-            raise serializers.ValidationError(
-                "file must be xls/xlsx"
-            )
-        return data
+
+class SimpleBReportUploadSerializer(serializers.Serializer,
+                                    SaveBReportsMixin):
+    filename = serializers.FileField(
+        validators=[valid_file_size, valid_file_type]
+    )
 
 
 class IncomeCertificateSerializer(SimpleBReportUploadSerializer):
