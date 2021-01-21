@@ -63,7 +63,7 @@ class BReportFileUploadViewSet(CreateModelMixin,
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        path_to_file, fs = serializer.save()
+        path_to_file, fs = serializer.save_fs()
         data = None
         try:
             br = init_broker_report(
@@ -87,7 +87,7 @@ class BReportFileUploadViewSet(CreateModelMixin,
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        path_to_file, fs = serializer.save()
+        path_to_file, fs = serializer.save_fs()
         to_date = serializer.validated_data['to_date']
         since_date = serializer.validated_data['since_date']
         data = None
