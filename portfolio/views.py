@@ -210,15 +210,10 @@ def delete_portfolio(request, id):
         return redirect(request.META.get('HTTP_REFERER'))
 
     if request.method == 'POST':
-        if portfolio.today_cash == 0 and portfolio.ostatok == 0:
-            messages.success(request, 'Портфель {} успешно удалён.'
-                             .format(portfolio.title))
-            portfolio.delete()
-            return redirect(reverse('portfolio:my_portfolios'))
-        else:
-            messages.error(
-                request, 'Остаток и текущий баланс должны быть равны 0.')
-            return redirect(portfolio.get_absolute_url())
+        messages.success(request, 'Портфель {} успешно удалён.'
+                         .format(portfolio.title))
+        portfolio.delete()
+        return redirect(reverse('portfolio:my_portfolios'))
     else:
         return render(request, 'portfolio/delete.html',
                       {'portfolio': portfolio})
