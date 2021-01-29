@@ -260,7 +260,10 @@ def concat_profit_operations(data):
                         main_row = data[j]
                         tax_row = data[i]
                     temp = main_row[:3]
-                    temp.append('profit')
+                    if 'Выплата купонов' == main_row[3]:
+                        temp.append('profit_coupon')
+                    else:
+                        temp.append('profit_dividend')
                     temp.append(main_row[4])
                     temp.append(tax_row[5])
                     temp.append(main_row[6])
@@ -272,7 +275,10 @@ def concat_profit_operations(data):
         if not k:
             try:
                 temp = data[i][:3]
-                temp.append('profit')
+                if 'Выплата купонов' == data[i][3]:
+                    temp.append('profit_coupon')
+                else:
+                    temp.append('profit_dividend')
                 temp.append(data[i][4])
                 temp.append(Decimal(0))
                 temp.append(data[i][6])
@@ -307,4 +313,6 @@ def get_securities(sheet):
 def get_secutities_dict_ISIN_by_shortname(sheet):
     data = get_securities(sheet)
     result = {row[0]: row[2] for row in data}
+    result['USDRUB_TOM'] = 'USD'
+    result['USDRUB_TOD'] = 'USD'
     return result

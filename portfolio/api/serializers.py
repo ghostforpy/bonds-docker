@@ -4,6 +4,9 @@ from ..models import InvestmentPortfolio, PortfolioInvestHistory
 from bonds.users.api.serializers import UserSerializer
 from moex.api.serializers import SecurityInPortfolioSerializer,\
     TradeHistorySerializerForPortfolioDetail
+from breports.api.serializers import (SaveBReportsMixin,
+                                      valid_file_type,
+                                      valid_file_size)
 
 
 class PortfolioInvestHistorySerializer(serializers.ModelSerializer):
@@ -28,18 +31,35 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for create portfolio.
     """
-    url = serializers.HyperlinkedIdentityField(
+    api_url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
+    url = serializers.HyperlinkedIdentityField(
+        view_name="portfolio:detail", lookup_field='id')
 
     class Meta:
         model = InvestmentPortfolio
-        fields = ['title', 'private', 'strategia', 'manual', 'description', 'url']
-        read_only_fields = ['url']
+        fields = ['title', 'private', 'strategia',
+                  'manual', 'description', 'api_url',
+                  'url']
+        read_only_fields = ['url', 'api_url']
 
     def create(self, validated_data):
         new_object = InvestmentPortfolio(**validated_data)
         new_object.save()
         return new_object
+
+
+class InvestmentPortfolioCreateByBreportSerializer(
+        InvestmentPortfolioCreateSerializer,
+        SaveBReportsMixin):
+    filename = serializers.FileField(
+        validators=[valid_file_size, valid_file_type]
+    )
+
+    class Meta(InvestmentPortfolioCreateSerializer.Meta):
+        fields = InvestmentPortfolioCreateSerializer.Meta.fields + [
+            'filename'
+        ]
 
 
 class ManualInvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):

@@ -14,15 +14,19 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
+from breports.broker_parser.classes import FileNotSupported
+from breports.scripts import init_broker_report
 from ..models import PortfolioInvestHistory, InvestmentPortfolio
 from .serializers import (InvestmentPortfolioDetailSerializer,
                           InvestmentPortfolioListSerializer,
                           InvestmentPortfolioDetailOwnerSerializer,
                           InvestmentPortfolioCreateSerializer,
+                          InvestmentPortfolioCreateByBreportSerializer,
                           ManualInvestmentPortfolioUpdateSerializer,
                           AllowInvestmentPortfolioUpdateSerializer,
                           MyInvestmentPortfolioListSerializer,
                           PortfolioInvestHistoryCreateSerializer)
+from .scripts import create_portfolio_by_broker_report
 
 
 class PageNumberPaginationBy10(PageNumberPagination):
@@ -88,6 +92,8 @@ class PortfolioViewSet(ListModelMixin,
     Include query_params 'owner' for list portfolios by user
     Include url '{id}/follow/ method-post for follow-unfollow portfolios.
     Include url '{id}/like/ method-post for like-unlike portfolios.
+    Include url 'create-by-breport/ method-post for create portfolios
+    by broker reports.
     """
     pagination_class = PageNumberPaginationBy10
 
@@ -109,6 +115,8 @@ class PortfolioViewSet(ListModelMixin,
             return MyInvestmentPortfolioListSerializer
         if self.action == 'create':
             return InvestmentPortfolioCreateSerializer
+        if self.action == 'create_by_breport':
+            return InvestmentPortfolioCreateByBreportSerializer
         if self.action in ['update', 'partial_update']:
             instance = self.get_object()
             if instance.manual:
@@ -131,7 +139,7 @@ class PortfolioViewSet(ListModelMixin,
         """
         if self.action == 'list':
             permission_classes = [AllowAny]
-        elif self.action in ['my_list', 'create']:
+        elif self.action in ['my_list', 'create', 'create_by_breport']:
             permission_classes = [IsAuthenticated]
         elif self.action in ['update', 'partial_update']:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]
@@ -140,6 +148,40 @@ class PortfolioViewSet(ListModelMixin,
         else:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]
         return [permission() for permission in permission_classes]
+
+    @action(methods=['post'], detail=False,
+            url_path='create-by-breport', url_name='create-by-breport')
+    def create_by_breport(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = None
+        if 'filename' in serializer.validated_data:
+            # если файл передан на сервер для создания портфеля
+            # на его основе
+            path_to_file, fs = serializer.save_fs()
+            serializer.validated_data.pop('filename')
+            serializer.validated_data['owner'] = request.user
+            try:
+                new_portfolio = serializer.create(serializer.validated_data)
+                br = init_broker_report(
+                    path_to_file
+                )
+                d = create_portfolio_by_broker_report(new_portfolio,
+                                                      br)
+                # функция парсинга брокерского отчета,
+                # и записи историй покупок, пополнений и др.
+                status = response_status.HTTP_201_CREATED
+                data = InvestmentPortfolioCreateSerializer(
+                    new_portfolio,
+                    context={'request': request}
+                ).data
+            except FileNotSupported:
+                status = response_status.HTTP_400_BAD_REQUEST
+            finally:
+                fs.delete(path_to_file)
+        else:
+            status = response_status.HTTP_400_BAD_REQUEST
+        return Response(data=data, status=status)
 
     @action(methods=['get'], detail=False,
             url_path='my-list', url_name='my-list')
