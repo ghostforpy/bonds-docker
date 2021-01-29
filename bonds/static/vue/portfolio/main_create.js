@@ -22,9 +22,9 @@ function post_formData(em, formData, url) {
   ).then(function (resp) {
     em.spiner_visible = false;
     console.log('SUCCESS!!');
-    console.log(resp);
+    //console.log(resp);
     url = resp.data.url;
-    //go_to_url(url);
+    go_to_url(url);
 
   })
     .catch(function (error) {
