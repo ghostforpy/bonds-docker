@@ -14,8 +14,8 @@ app_name = 'portfolio'
 urlpatterns = [
     path('sentry-debug/', views.trigger_error, name='trigger_error'),
     path('my_portfolios/', views.my_portfolios, name='my_portfolios'),
-    path('create2/', views.portfolio_create, name='create'),
-    path('create/', views.portfolio_create_vue, name='create_vue'),
+    path('create2/', views.portfolio_create, name='create_old'),
+    path('create/', views.portfolio_create_vue, name='create'),
     path('add_invest/<int:id>/', views.portfolio_add_invest,
          name='add_invest'),
     path('del_invest/<int:id>/', views.portfolio_del_invest,
