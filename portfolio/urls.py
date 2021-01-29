@@ -14,7 +14,8 @@ app_name = 'portfolio'
 urlpatterns = [
     path('sentry-debug/', views.trigger_error, name='trigger_error'),
     path('my_portfolios/', views.my_portfolios, name='my_portfolios'),
-    path('create/', views.portfolio_create, name='create'),
+    path('create2/', views.portfolio_create, name='create'),
+    path('create/', views.portfolio_create_vue, name='create_vue'),
     path('add_invest/<int:id>/', views.portfolio_add_invest,
          name='add_invest'),
     path('del_invest/<int:id>/', views.portfolio_del_invest,
@@ -27,6 +28,6 @@ urlpatterns = [
     path('detail/<int:id>/', views.portfolio_detail, name='detail'),
     #path('like/', views.portfolio_like, name='like'),
     path('follow/<int:id>/', views.portfolio_follow, name='follow'),
-#    path("api/", include(router.urls)),
+    #    path("api/", include(router.urls)),
     path('', views.portfolio_list, name='list'),
 ]

@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
@@ -86,7 +87,6 @@ def portfolio_detail(request, id):
 @ login_required
 def portfolio_add_invest(request, id):
     form = PortfolioInvestForm(data=request.POST)
-    print(request.POST)
     if form.is_valid():
         try:
             portfolio = InvestmentPortfolio.objects.get(id=id)
@@ -189,6 +189,15 @@ def portfolio_create(request):
         form = PortfolioCreateForm(data=request.GET)
         return render(request, 'portfolio/create.html',
                       {'form': form})
+
+
+@ login_required
+def portfolio_create_vue(request):
+    mode = os.environ['DJANGO_SETTINGS_MODULE']
+    mode = mode.split('.')[-1]
+    return render(request,
+                  'portfolio/create_vue.html',
+                  {'mode': mode})
 
 
 @ login_required

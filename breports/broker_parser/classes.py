@@ -690,19 +690,42 @@ class BrokerReport:
         result.update(self.profit_operations.keys())
         return result
 
-    def return_all_invests_operations(self):
-        """
-        Возвращает список со всеми ивестиционными операциями.
-        """
+    def simple_dict_to_list(self, attr):
         currencies = self.return_currency_money_movements()
         result = list()
         for i in currencies:
             try:
-                for j in self.invest_operations[i]:
+                for j in getattr(self, attr)[i]:
+                    if not hasattr(j, 'currency'):
+                        setattr(j, 'currency', i)
                     result.append(j)
             except KeyError:
                 continue
         return result
+
+    def return_all_invests_operations(self):
+        """
+        Возвращает список со всеми ивестиционными операциями.
+        """
+        return self.simple_dict_to_list('invest_operations')
+
+    def return_all_profit_operations(self):
+        """
+        Возвращает список со всеми доходными операциями.
+        """
+        return self.simple_dict_to_list('profit_operations')
+
+    def return_list_broker_taxes(self):
+        """
+        Возвращает список со всеми доходными операциями.
+        """
+        return self.simple_dict_to_list('broker_taxes')
+
+    def return_list_amortisations(self):
+        """
+        Возвращает список со всеми амортизациями.
+        """
+        return self.simple_dict_to_list('amortisations')
 
 
 class NoMovements(Exception):
@@ -747,7 +770,8 @@ class Profit(SimpleHashMixin):
         self.currency = currency
 
     def __str__(self):
-        t = [self.date, self.action, self.cash, self.tax, self.isin]
+        t = [self.date, self.action, self.cash,
+             self.currency, self.tax, self.isin]
         return ' '.join([str(i) for i in t])
 
     def __repr__(self):
