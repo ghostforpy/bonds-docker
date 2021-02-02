@@ -40,11 +40,9 @@ def portfolio_detail(request, id):
             Prefetch('owner', to_attr='own'),
         ).get(id=id)
 
-        history = None
         form_refresh = None
         owner_url = None
         owner_name = None
-        #res = True
         securities_result = None
         portfolio_title = portfolio.title
         if portfolio.own == request.user:
@@ -52,9 +50,9 @@ def portfolio_detail(request, id):
                 Prefetch('securities', queryset=qs_no_valute, to_attr='securit'),
                 Prefetch('securities', queryset=qs_valute, to_attr='valute'),
                 Prefetch('trade_securities', queryset=qs_trade, to_attr='trade'),
-                Prefetch('portfolio_invests', queryset=qs_invests, to_attr='invests')
+                Prefetch('portfolio_invests', queryset=qs_invests),
+                Prefetch('portfolio_invests__security')
             ).get(id=id)
-            history = portfolio.invests
             form_refresh = RefreshPortfolio(instance=portfolio)
             securities = portfolio.securit
             securities_result = set(i.security for i in securities)
@@ -75,7 +73,6 @@ def portfolio_detail(request, id):
                        'owner': owner,
                        'securities_result': securities_result,
                        'form_refresh': form_refresh,
-                       'history': history,
                        'owner_url': owner_url,
                        'owner_name': owner_name,
                        'portfolio_title': portfolio_title})

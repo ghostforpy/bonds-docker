@@ -112,8 +112,8 @@
                   <a id="add_invest" class="btn btn-success btn-sm mt-1 mb-2" href="{% url 'portfolio:add_invest' portfolio.id %}">Добавить</a>
                 </div>
               </div>
-              {% if history != None %}
-                {% for i in history %}
+              {% if owner %}
+                {% for i in portfolio.portfolio_invests.all %}
                   <div class="dropdown-divider"></div>
                   <div class="row align-items-center">
                     <div class="col-9">
