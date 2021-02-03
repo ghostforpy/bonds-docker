@@ -1,4 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch
+from django.contrib.auth import get_user_model
 from rest_framework.mixins import (ListModelMixin,
                                    RetrieveModelMixin,
                                    CreateModelMixin,
@@ -16,6 +18,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
 from breports.broker_parser.classes import FileNotSupported
 from breports.scripts import init_broker_report
+from moex.models import SecurityPortfolios, TradeHistory
 from ..models import PortfolioInvestHistory, InvestmentPortfolio
 from .serializers import (InvestmentPortfolioDetailSerializer,
                           InvestmentPortfolioListSerializer,
@@ -80,7 +83,7 @@ class IsOwnerOfPortfolioInvestObject(BasePermission):
 
 
 class PortfolioViewSet(ListModelMixin,
-                       RetrieveModelMixin,
+                       #                      RetrieveModelMixin,
                        UpdateModelMixin,
                        CreateModelMixin,
                        DestroyModelMixin,
@@ -97,8 +100,36 @@ class PortfolioViewSet(ListModelMixin,
     """
     pagination_class = PageNumberPaginationBy10
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def get_serializer(self, *args, **kwargs):
+        """
+        Return the serializer instance that should be used for validating and
+        deserializing input, and for serializing output.
+        """
+        serializer_class = self.get_serializer_class(*args, **kwargs)
+        kwargs['context'] = self.get_serializer_context()
+        return serializer_class(*args, **kwargs)
+
     def get_queryset(self):
-        queryset = InvestmentPortfolio.objects.all()
+        queryset = InvestmentPortfolio.objects.select_related('owner').all()
+        if self.action == 'retrieve':
+            qs_security = SecurityPortfolios.objects.all().prefetch_related(
+                'security')
+            qs_trade = TradeHistory.objects.all().prefetch_related('security')
+            qs_invests = PortfolioInvestHistory.objects.all()
+            qs_users = get_user_model().objects.all()
+            return queryset.prefetch_related(
+                Prefetch('securities', queryset=qs_security),
+                Prefetch('trade_securities', queryset=qs_trade),
+                Prefetch('portfolio_invests', queryset=qs_invests),
+                Prefetch('portfolio_invests__security'),
+                Prefetch('users_follows', queryset=qs_users),
+                Prefetch('users_like', queryset=qs_users)
+            )
         if self.action == 'my_list':
             user = self.request.user
             return queryset.filter(owner=user)
@@ -106,9 +137,9 @@ class PortfolioViewSet(ListModelMixin,
             if 'owner' in self.request.query_params:
                 q = self.request.query_params.get('owner')
                 return queryset.filter(owner__username=q)
-        return InvestmentPortfolio.objects.all()
+        return queryset
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, instance=None, *args, **kwargs):
         if self.action == 'list':
             return InvestmentPortfolioListSerializer
         if self.action == 'my_list':
@@ -118,13 +149,15 @@ class PortfolioViewSet(ListModelMixin,
         if self.action == 'create_by_breport':
             return InvestmentPortfolioCreateByBreportSerializer
         if self.action in ['update', 'partial_update']:
-            instance = self.get_object()
-            if instance.manual:
-                return ManualInvestmentPortfolioUpdateSerializer
-            else:
+            try:
+                if instance.manual:
+                    return ManualInvestmentPortfolioUpdateSerializer
+                else:
+                    return AllowInvestmentPortfolioUpdateSerializer
+            except AttributeError:
                 return AllowInvestmentPortfolioUpdateSerializer
         elif self.action in ['retrieve', 'follow', 'like']:
-            if self.request.user == self.get_object().owner:
+            if self.request.user == instance.owner:
                 return InvestmentPortfolioDetailOwnerSerializer
             else:
                 return InvestmentPortfolioDetailSerializer
