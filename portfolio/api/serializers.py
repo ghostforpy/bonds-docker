@@ -87,6 +87,8 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
     owner_name = serializers.CharField(source="owner")
+    owner_url = serializers.CharField(source="owner.get_absolute_url")
+    is_owner = serializers.BooleanField(default=False)
 
     class Meta:
         model = InvestmentPortfolio
@@ -104,7 +106,9 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
                   'users_like',
                   'total_likes',
                   'users_follows',
-                  'total_followers']
+                  'total_followers',
+                  'is_owner',
+                  'owner_url']
         extra_kwargs = {
             'users_follows': {"view_name": "api:user-detail",
                               'lookup_field': 'username', 'many': 'True'},
@@ -124,6 +128,7 @@ class InvestmentPortfolioDetailOwnerSerializer(serializers.HyperlinkedModelSeria
     securities = SecurityInPortfolioSerializer(many=True, read_only=True)
     trade_securities = TradeHistorySerializerForPortfolioDetail(many=True, read_only=True)
     portfolio_invests = PortfolioInvestHistorySerializer(many=True, read_only=True)
+    is_owner = serializers.BooleanField(default=True)
 
     class Meta:
         model = InvestmentPortfolio

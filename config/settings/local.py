@@ -36,9 +36,9 @@ EMAIL_PORT = 1025
 INSTALLED_APPS = ["whitenoise.runserver_nostatic"] + INSTALLED_APPS  # noqa F405
 
 DEBUG_APP = list()
-DEBUG_APP += ['django-silk']
-DEBUG_APP += ['django-debug-toolbar']
-DEBUG_APP += ['django-queryinspect']
+#DEBUG_APP += ['django-silk']
+#DEBUG_APP += ['django-debug-toolbar']
+#DEBUG_APP += ['django-queryinspect']
 
 # django-silk
 # ------------------------------------------------------------------------------
