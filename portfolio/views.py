@@ -198,6 +198,15 @@ def portfolio_create_vue(request):
 
 
 @ login_required
+def portfolio_detail_vue(request, id):
+    mode = os.environ['DJANGO_SETTINGS_MODULE']
+    mode = mode.split('.')[-1]
+    return render(request,
+                  'portfolio/detail_vue.html',
+                  {'mode': mode})
+
+
+@ login_required
 def delete_portfolio(request, id):
     try:
         portfolio = InvestmentPortfolio.objects.get(
