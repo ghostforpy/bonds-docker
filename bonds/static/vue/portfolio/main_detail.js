@@ -63,6 +63,7 @@ var app = new Vue({
     errors_visible: false,
     portfolio_title: null,
     portfolio_info: null,
+    portfolio_invests: null,
     errors: null,
 
   },
@@ -91,6 +92,7 @@ var app = new Vue({
       if (data.is_owner) {
         em.portfolio_info.ostatok = data.ostatok;
         em.portfolio_info.created = new Date(data.created).toLocaleString('ru-RU');
+        em.portfolio_invests = data.portfolio_invests;
       } else {
         em.portfolio_info.owner_url = data.owner_url;
         em.portfolio_info.owner_name = data.owner_name;
@@ -141,6 +143,11 @@ var app = new Vue({
               class="col-sm-4"
               :portfolio_info="portfolio_info">
               </portfolio-info>
+              <portfolio-invests
+              class="col-sm-8"
+              v-if="portfolio_info.is_owner"
+              :portfolio_invests="portfolio_invests">
+              </portfolio-invests>
             </div>
           </b-tab>
           <b-tab title="Настройки" v-bind:disabled="!portfolio_info.is_owner">
