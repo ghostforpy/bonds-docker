@@ -72,14 +72,28 @@ Vue.component('portfolio-invests', {
   props: ['portfolio_invests'],
   data: function () {
     return {
-      last_row_portfolio_invests: null
+      last_row_portfolio_invests: null,
+      portfolio_invests_list: null
     }
   },
-  computed: {
-    computed_portfolio_invests: function () {
-      this.last_row_portfolio_invests = this.portfolio_invests.pop();
-      return this.portfolio_invests;
+  beforeMount: function () {
+    this.portfolio_invests_list = this.portfolio_invests;
+    this.pop_last_row();
+  },
+  methods: {
+    pop_last_row: function () {
+      this.last_row_portfolio_invests = this.portfolio_invests_list.pop();
+      this.last_row_portfolio_invests.index = this.portfolio_invests_list.length;
+    },
+    removeFromList: function (id) {
+      this.portfolio_invests_list.push(this.last_row_portfolio_invests);
+      this.portfolio_invests_list = this.portfolio_invests_list.filter(
+        function (item, ind) {
+          return (ind !== id)
+        });
+      this.pop_last_row();
     }
+
   },
   template: `
       <div>
@@ -87,13 +101,15 @@ Vue.component('portfolio-invests', {
         История движения денежных средств
         </b-button>
         <b-collapse id="collapseHistoryPortfolio">
-        <div v-for="one_row in computed_portfolio_invests">
+        <div v-for="(one_row,index) in portfolio_invests_list">
           <portfolio-invests-one-row
+          @removeItem="removeFromList(index)"
           :one_row=one_row>
           </portfolio-invests-one-row>
           <div class="dropdown-divider"></div>
         </div>
         <portfolio-invests-one-row
+        @removeItem="removeFromList(last_row_portfolio_invests.index)"
         :one_row=last_row_portfolio_invests>
         </portfolio-invests-one-row>
         </b-collapse>
@@ -125,6 +141,45 @@ Vue.component('portfolio-invests-one-row', {
           });
     }
   },
+  methods: {
+    remove_one_row: function () {
+      let elem = this;
+      HTTP.delete(
+        this.one_row.url_for_delete
+      ).then(function (resp) {
+        //em.spiner_visible = false;
+        console.log('SUCCESS!!');
+        elem.$emit('removeItem');
+      })
+        .catch(function (error) {
+          //em.spiner_visible = false;
+          //em.errors_visible = true;
+          console.log('FAILURE!!');
+          console.log(error);
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.log(error.response.data);
+            if (error.response.status === 500) {
+              //em.errors = ['Server error'];
+            } else {
+              //em.errors = error.response.data;
+            }
+            //console.log(error.response.status);
+            //console.log(error.response.headers);
+          } else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            //console.log(error.request);
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            //console.log('Error', error.message);
+          }
+          //console.log(error.config);
+        });
+    }
+  },
   template: `
       <div class="row align-items-center">
         <div class="col-9">
@@ -146,8 +201,8 @@ Vue.component('portfolio-invests-one-row', {
           <div class="col-3">
             <b-button
             variant="danger"
-            v-bind:href="one_row.url_for_delete"
             size="sm"
+            @click="remove_one_row"
             >Удалить</b-button>
           </div>
       </div>  

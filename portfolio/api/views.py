@@ -65,10 +65,11 @@ class IsOwnerOfPortfolioInvestObject(BasePermission):
     Assumes the model instance has an `owner` attribute.
     """
 
-    def has_permission(self, request, view):
+    def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
         # # Instance must have an attribute named `owner`.
+        '''
         try:
             portfolio_id = request.data['portfolio']
         except KeyError:
@@ -80,6 +81,10 @@ class IsOwnerOfPortfolioInvestObject(BasePermission):
         except ObjectDoesNotExist:
             return False
         return True
+        '''
+        if request.user == obj.portfolio.owner:
+            return True
+        return False
 
 
 class PortfolioViewSet(ListModelMixin,
@@ -257,6 +262,17 @@ class PortfolioInvestHistoryViewSet(CreateModelMixin,
     permission_classes = [IsOwnerOfPortfolioInvestObject]
 
     def get_queryset(self):
-        queryset = PortfolioInvestHistory.objects.all()
-        user = self.request.user
-        return queryset.filter(portfolio__owner=user)
+        qs_security = SecurityPortfolios.objects.all().prefetch_related(
+            'security')
+        queryset = PortfolioInvestHistory.objects.select_related(
+            'portfolio'
+        ).select_related(
+            'portfolio__owner'
+        ).select_related(
+            'security'
+        ).prefetch_related(
+            Prefetch('portfolio__securities', queryset=qs_security)
+        ).filter(
+            portfolio__owner=self.request.user
+        )
+        return queryset
