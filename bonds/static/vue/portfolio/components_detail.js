@@ -61,12 +61,41 @@ Vue.component('portfolio-info', {
         <p>Всего инвестиций: {{computed_invest_cash}}</p>
         <p>Текущий баланс : {{computed_today_cash}}</span></p>
         <p v-if="portfolio_info.is_owner">Остаток: {{computed_ostatok}}</span></p>
+        <portfolio-info-ostatok-currency
+        :ostatok_currency=portfolio_info.ostatok_currency>
+        </portfolio-info-ostatok-currency>
         <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
         <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
         <p v-if="portfolio_info.strategia">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
         <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
       </div>
     `
+})
+Vue.component('portfolio-info-ostatok-currency', {
+  props: ['ostatok_currency'],
+  computed: {
+    computed_ostatok_currency: function () {
+      return this.ostatok_currency.map(
+        function (item) {
+          item.count = parseFloat(item.count)
+            .toLocaleString('ru-RU', { style: 'currency', currency: item.shortname, maximumFractionDigits: 2 });
+          item.total_cost_in_rub = parseFloat(item.total_cost_in_rub)
+            .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 2 });
+          return item
+        }
+      )
+    }
+  },
+  template: `
+  <div class="row">
+    <div class="col-6"><span>Остаток валюты:</span></div>
+    <div class="col-6">
+      <p v-for="i in computed_ostatok_currency">
+        {{i.count}} ({{i.total_cost_in_rub}})
+      </p>
+    </div>
+  </div>
+  `
 })
 Vue.component('portfolio-invests', {
   props: ['portfolio_invests'],

@@ -69,7 +69,6 @@ var app = new Vue({
   },
   beforeMount: function () {
     let portfolio_id = document.location.pathname.split('/')[3];
-    console.log(portfolio_id);
     let url = 'portfolios/' + portfolio_id;
     let em = this;
     HTTP.get(
@@ -93,6 +92,9 @@ var app = new Vue({
         em.portfolio_info.ostatok = data.ostatok;
         em.portfolio_info.created = new Date(data.created).toLocaleString('ru-RU');
         em.portfolio_invests = data.portfolio_invests;
+        em.portfolio_info.ostatok_currency = data.securities.filter(
+          item => item.security_type == 'currency');
+
       } else {
         em.portfolio_info.owner_url = data.owner_url;
         em.portfolio_info.owner_name = data.owner_name;

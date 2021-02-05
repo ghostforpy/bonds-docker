@@ -45,6 +45,10 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
     security_name = serializers.CharField(source='security')
     security_faceunit = serializers.CharField(
         source='security.get_main_board_faceunit_display')
+    security_type = serializers.CharField(
+        source='security.security_type')
+    shortname = serializers.CharField(
+        source='security.shortname')
 
     class Meta:
         model = SecurityPortfolios
