@@ -68,7 +68,10 @@ class ManualInvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = InvestmentPortfolio
-        fields = ['today_cash', 'private']
+        fields = ['today_cash', 'private', 'percent_profit',
+                  'change_percent_profit', 'year_percent_profit',
+                  'change_year_percent_profit'
+                  ]
 
 
 class AllowInvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):

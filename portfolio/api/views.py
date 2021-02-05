@@ -170,6 +170,11 @@ class PortfolioViewSet(ListModelMixin,
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if 'today_cash' in self.request.data:
+            instance.refresh_portfolio()
+
     def get_permissions(self):
         """
         Instantiates and returns the list

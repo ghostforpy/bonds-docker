@@ -89,11 +89,13 @@ var app = new Vue({
 
       em.portfolio_info.is_owner = data.is_owner;
       if (data.is_owner) {
+        em.portfolio_info.id = portfolio_id;
         em.portfolio_info.ostatok = data.ostatok;
         em.portfolio_info.created = new Date(data.created).toLocaleString('ru-RU');
         em.portfolio_invests = data.portfolio_invests;
         em.portfolio_info.ostatok_currency = data.securities.filter(
           item => item.security_type == 'currency');
+        em.portfolio_info.manual = data.manual;
 
       } else {
         em.portfolio_info.owner_url = data.owner_url;
@@ -143,7 +145,7 @@ var app = new Vue({
             <div class="row">
               <portfolio-info
               class="col-sm-4"
-              :portfolio_info="portfolio_info">
+              :portfolio_info_object="portfolio_info">
               </portfolio-info>
               <portfolio-invests
               class="col-sm-8"
