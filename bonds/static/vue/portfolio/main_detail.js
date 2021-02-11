@@ -57,6 +57,7 @@ function post_formData(em, formData, url) {
 
 var app = new Vue({
   el: '#app',
+  store: store,
   data: {
     portfolio_visible: false,
     spiner_visible: true,
