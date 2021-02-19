@@ -344,13 +344,27 @@ Vue.component('add-portfolio-invests', {
         return false
       };
       this.date_invalid = false;
-      if ((this.cash === null) || (this.cash <= 0)) {
+      if ((this.cash === null) || (parseFloat(this.cash) <= 0)) {
+        this.$bvToast.toast('Сумма должна быть больше 0.', {
+          title: `Mybonds.space`,
+          variant: 'danger',
+          solid: true
+        })
         this.cash_invalid = true;
         return false
       }
       this.cash_invalid = false;
       if (this.selected_action === 'tp') {
-        if ((this.ndfl === null) || (this.ndfl < 0) || (this.ndfl >= this.cash)) {
+        if (
+          (this.ndfl === null) ||
+          (parseFloat(this.ndfl) < 0) ||
+          (parseFloat(this.ndfl) >= parseFloat(this.cash))
+        ) {
+          this.$bvToast.toast('НДФЛ должен быть больше 0 и меньше суммы.', {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
           this.ndfl_invalid = true;
           return false
         }
@@ -391,6 +405,10 @@ Vue.component('add-portfolio-invests', {
           new_item.security = resp.data.security ? resp.data.security_name : null;
           new_item.url_for_delete = resp.data.url_for_delete;
           elem.$emit('addToList', new_item);
+          elem.$bvToast.toast('Запись успешно добавлена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
           })
         }
       );
