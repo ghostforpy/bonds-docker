@@ -28,7 +28,8 @@ from .serializers import (InvestmentPortfolioDetailSerializer,
                           ManualInvestmentPortfolioUpdateSerializer,
                           AllowInvestmentPortfolioUpdateSerializer,
                           MyInvestmentPortfolioListSerializer,
-                          PortfolioInvestHistoryCreateSerializer)
+                          PortfolioInvestHistoryCreateSerializer,
+                          UpdatedInvestmentPortfolioSerializer)
 from .scripts import create_portfolio_by_broker_report
 
 
@@ -59,6 +60,21 @@ class FollowLikePermission(BasePermission):
         return obj.request_user_has_permission(request.user)
 
 
+class IsOwnerOfPortfolioObject(BasePermission):
+    """
+    Object-level permission to only allow owners of an object to edit it.
+    Assumes the model instance has an `owner` attribute.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        # # Instance must have an attribute named `owner`.
+        if request.user == obj.owner:
+            return True
+        return False
+
+
 class IsOwnerOfPortfolioInvestObject(BasePermission):
     """
     Object-level permission to only allow owners of an object to edit it.
@@ -69,19 +85,6 @@ class IsOwnerOfPortfolioInvestObject(BasePermission):
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
         # # Instance must have an attribute named `owner`.
-        '''
-        try:
-            portfolio_id = request.data['portfolio']
-        except KeyError:
-            return False
-        try:
-            portfolio = InvestmentPortfolio.objects.get(
-                id=portfolio_id, owner=request.user
-            )
-        except ObjectDoesNotExist:
-            return False
-        return True
-        '''
         if request.user == obj.portfolio.owner:
             return True
         return False
@@ -153,6 +156,8 @@ class PortfolioViewSet(ListModelMixin,
             return InvestmentPortfolioCreateSerializer
         if self.action == 'create_by_breport':
             return InvestmentPortfolioCreateByBreportSerializer
+        if self.action in ['get_updated_portfolio']:
+            return UpdatedInvestmentPortfolioSerializer
         if self.action in ['update', 'partial_update']:
             try:
                 if instance.manual:
@@ -185,9 +190,12 @@ class PortfolioViewSet(ListModelMixin,
         elif self.action in ['my_list', 'create', 'create_by_breport']:
             permission_classes = [IsAuthenticated]
         elif self.action in ['update', 'partial_update']:
-            permission_classes = [IsOwnerOrReadOnlyAuthorized]
+            permission_classes = [IsOwnerOfPortfolioObject]
+            #permission_classes = [IsOwnerOrReadOnlyAuthorized]
         elif self.action in ['follow', 'like']:
             permission_classes = [FollowLikePermission]
+        elif self.action in ['get_updated_portfolio']:
+            permission_classes = [IsOwnerOfPortfolioObject]
         else:
             permission_classes = [IsOwnerOrReadOnlyAuthorized]
         return [permission() for permission in permission_classes]
@@ -230,6 +238,13 @@ class PortfolioViewSet(ListModelMixin,
             url_path='my-list', url_name='my-list')
     def my_list(self, request, *args, **kwargs):
         return self.list(self, request, *args, **kwargs)
+
+    @action(methods=['get'],
+            detail=True,
+            url_path='get-updated-portfolio',
+            url_name='get-updated-portfolio')
+    def get_updated_portfolio(self, request, *args, **kwargs):
+        return self.retrieve(self, request, *args, **kwargs)
 
     @action(methods=['post'], detail=True,
             url_path='follow', url_name='follow')

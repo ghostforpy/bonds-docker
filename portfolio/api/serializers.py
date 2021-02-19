@@ -2,8 +2,8 @@ from rest_framework import serializers
 from django.urls import reverse
 from ..models import InvestmentPortfolio, PortfolioInvestHistory
 from bonds.users.api.serializers import UserSerializer
-from moex.api.serializers import SecurityInPortfolioSerializer,\
-    TradeHistorySerializerForPortfolioDetail
+from moex.api.serializers import (SecurityInPortfolioSerializer,
+                                  TradeHistorySerializerForPortfolioDetail)
 from breports.api.serializers import (SaveBReportsMixin,
                                       valid_file_type,
                                       valid_file_size)
@@ -22,6 +22,14 @@ class PortfolioInvestHistorySerializer(serializers.ModelSerializer):
 
 
 class PortfolioInvestHistoryCreateSerializer(serializers.ModelSerializer):
+    action_display = serializers.CharField(source="get_action_display",
+                                           required=False)
+    security_name = serializers.CharField(source="security.name",
+                                          required=False)
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        view_name='api:portfolio-invest-history-detail'
+    )
+
     class Meta:
         model = PortfolioInvestHistory
         fields = '__all__'
@@ -83,6 +91,26 @@ class AllowInvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
         fields = ['private']
 
 
+class UpdatedInvestmentPortfolioSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updated portfolio by owner.
+    """
+    securities = SecurityInPortfolioSerializer(many=True,
+                                               read_only=True,
+                                               required=False)
+
+    class Meta:
+        model = InvestmentPortfolio
+        fields = ['invest_cash',
+                  'today_cash',
+                  'ostatok',
+                  'percent_profit',
+                  'change_percent_profit',
+                  'year_percent_profit',
+                  'change_year_percent_profit',
+                  'securities']
+
+
 class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for view portfolio other users.
@@ -122,16 +150,20 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
         }
 
 
-class InvestmentPortfolioDetailOwnerSerializer(serializers.HyperlinkedModelSerializer):
+class InvestmentPortfolioDetailOwnerSerializer(
+        serializers.HyperlinkedModelSerializer):
     """
     Serializer for portfolio owner.
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
     securities = SecurityInPortfolioSerializer(many=True, read_only=True)
-    trade_securities = TradeHistorySerializerForPortfolioDetail(many=True, read_only=True)
-    portfolio_invests = PortfolioInvestHistorySerializer(many=True, read_only=True)
+    trade_securities = TradeHistorySerializerForPortfolioDetail(
+        many=True, read_only=True)
+    portfolio_invests = PortfolioInvestHistorySerializer(
+        many=True, read_only=True)
     is_owner = serializers.BooleanField(default=True)
+    id = serializers.IntegerField()
 
     class Meta:
         model = InvestmentPortfolio
@@ -151,7 +183,8 @@ class InvestmentPortfolioDetailOwnerSerializer(serializers.HyperlinkedModelSeria
         }
 
 
-class InvestmentPortfolioListSerializer(serializers.HyperlinkedModelSerializer):
+class InvestmentPortfolioListSerializer(
+        serializers.HyperlinkedModelSerializer):
     """
     Serializer for list portfolios.
     """
