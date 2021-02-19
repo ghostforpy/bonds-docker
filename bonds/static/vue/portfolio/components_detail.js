@@ -299,6 +299,9 @@ Vue.component('add-portfolio-invests', {
       date: null,
       cash: null,
       ndfl: null,
+      date_format_options: {
+        'year': 'numeric', 'month': 'numeric', 'day': 'numeric'
+      },
       selected_security: null,
       selected_currency: 'SUR',
       list_security: [
@@ -422,6 +425,7 @@ Vue.component('add-portfolio-invests', {
           <b-form-datepicker
           ref="date"
           label-no-date-selected="Выберите дату"
+          :date-format-options="date_format_options"
           :max="today()"
           v-bind:class="{ 'is-invalid': date_invalid  }"
           v-model="date" size="sm" class="mt-1 mb-2" required></b-form-datepicker>
