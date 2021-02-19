@@ -199,7 +199,7 @@ Vue.component('portfolio-invests', {
         <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseHistoryPortfolio>
         История движения денежных средств
         </b-button>
-        <b-collapse id="collapseHistoryPortfolio">
+        <b-collapse id="collapseHistoryPortfolio" class="container-in-collapse">
         <add-portfolio-invests
         :ever_trade_securities="ever_trade_securities"
         :portfolio_id=portfolio_id
