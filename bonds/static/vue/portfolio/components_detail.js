@@ -127,7 +127,7 @@ Vue.component('portfolio-info', {
         </portfolio-info-ostatok-currency>
         <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
         <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
-        <p v-if="portfolio_info.strategia !== ''">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
+        <p v-if="portfolio_info.strategia !== '' && portfolio_info.strategia !== 'null'">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
         <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
       </div>
     `
