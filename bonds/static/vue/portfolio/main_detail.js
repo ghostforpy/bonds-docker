@@ -58,83 +58,32 @@ function post_formData(em, formData, url) {
 var app = new Vue({
   el: '#app',
   store: store,
-  data: {
-    portfolio_visible: false,
-    spiner_visible: true,
-    errors_visible: false,
-    portfolio_title: null,
-    portfolio_info: null,
-    portfolio_invests: null,
-    errors: null,
-
-  },
-  beforeMount: function () {
+  beforeMount: async function () {
     let portfolio_id = document.location.pathname.split('/')[3];
-    let url = 'portfolios/' + portfolio_id;
-    let em = this;
-    HTTP.get(
-      url
-    ).then(function (resp) {
-      let data = resp.data;
-      console.log(resp);
-      em.portfolio_title = data.title;
-
-      em.portfolio_info = Object();
-      em.portfolio_info.invest_cash = data.invest_cash;
-      em.portfolio_info.today_cash = data.today_cash;
-      em.portfolio_info.percent_profit = data.percent_profit;
-      em.portfolio_info.change_percent_profit = data.change_percent_profit;
-      em.portfolio_info.year_percent_profit = data.year_percent_profit;
-      em.portfolio_info.change_year_percent_profit = data.change_year_percent_profit;
-      em.portfolio_info.strategia = data.strategia;
-
-      em.portfolio_info.is_owner = data.is_owner;
-      if (data.is_owner) {
-        em.portfolio_info.id = portfolio_id;
-        em.portfolio_info.ostatok = data.ostatok;
-        em.portfolio_info.created = new Date(data.created).toLocaleString('ru-RU');
-        em.portfolio_invests = data.portfolio_invests;
-        em.portfolio_info.ostatok_currency = data.securities.filter(
-          item => item.security_type == 'currency');
-        em.portfolio_info.manual = data.manual;
-
-      } else {
-        em.portfolio_info.owner_url = data.owner_url;
-        em.portfolio_info.owner_name = data.owner_name;
-      };
-      em.spiner_visible = false;
-      em.portfolio_visible = true;
-    })
-      .catch(function (error) {
-        em.spiner_visible = false;
-        em.errors_visible = true;
-        console.log('FAILURE!!', error);
-        if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          console.log(error.response.data);
-          if (error.response.status === 500) {
-            em.errors = ['Server error'];
-          } else {
-            em.errors = error.response.data;
-          }
-          //console.log(error.response.status);
-          //console.log(error.response.headers);
-        } else if (error.request) {
-          // The request was made but no response was received
-          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-          // http.ClientRequest in node.js
-          //console.log(error.request);
-        } else {
-          // Something happened in setting up the request that triggered an Error
-          //console.log('Error', error.message);
-        }
-        //console.log(error.config);
-      });
+    store.dispatch('get_portfolio', portfolio_id);
   },
   methods: {
     create: function () {
-      return
+    }
+  },
+  computed: {
+    portfolio_title: function () {
+      return this.$store.state.portfolio_title;
+    },
+    portfolio_info: function () {
+      return this.$store.state.portfolio_info;
+    },
+    portfolio_visible: function () {
+      return this.$store.state.portfolio_visible;
+    },
+    spiner_visible: function () {
+      return this.$store.state.spiner_visible;
+    },
+    errors_visible: function () {
+      return this.$store.state.errors_visible;
+    },
+    errors: function () {
+      return this.$store.state.errors;
     }
   },
   template: `
@@ -145,13 +94,13 @@ var app = new Vue({
           <b-tab title="Главная" active>
             <div class="row">
               <portfolio-info
-              class="col-sm-4"
-              :portfolio_info_object="portfolio_info">
+                class="col-sm-4"
+                :portfolio_info_object="portfolio_info">
               </portfolio-info>
               <portfolio-invests
-              class="col-sm-8"
-              v-if="portfolio_info.is_owner"
-              :portfolio_invests="portfolio_invests">
+                class="col-sm-8"
+                v-if="portfolio_info.is_owner"
+                >
               </portfolio-invests>
             </div>
           </b-tab>
