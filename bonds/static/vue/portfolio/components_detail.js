@@ -90,13 +90,13 @@ Vue.component('portfolio-info', {
   },
   computed: {
     computed_invest_cash: function () {
-      return return_RUB_locale(this.portfolio_info.invest_cash);
+      return return_RUB_locale(this.$store.state.portfolio_info.invest_cash);
     },
     computed_today_cash: function () {
-      return return_RUB_locale(this.portfolio_info.today_cash);
+      return return_RUB_locale(this.$store.state.portfolio_info.today_cash);
     },
     computed_ostatok: function () {
-      return return_RUB_locale(this.portfolio_info.ostatok);
+      return return_RUB_locale(this.$store.state.portfolio_info.ostatok);
     }
   },
   template: `
@@ -160,33 +160,37 @@ Vue.component('portfolio-info-ostatok-currency', {
   `
 })
 Vue.component('portfolio-invests', {
-  props: ['portfolio_invests'],
+  //props: ['portfolio_invests', 'portfolio_id', 'ever_trade_securities'],
   data: function () {
     return {
-      last_row_portfolio_invests: null,
-      portfolio_invests_list: null
+      //last_row_portfolio_invests: null,
+      //portfolio_invests_list: null,
+      //portfolio_id: null,
+      //ever_trade_securities: null
     }
   },
   beforeMount: function () {
-    this.portfolio_invests_list = this.portfolio_invests;
-    this.pop_last_row();
+
+  },
+  computed: {
+    portfolio_invests_list: function () {
+      return this.$store.state.portfolio_invests;
+    },
+    portfolio_id: function () {
+      return this.$store.state.portfolio_id;
+    },
+    ever_trade_securities: function () {
+      return this.$store.state.ever_trade_securities;
+    }
   },
   methods: {
-    pop_last_row: function () {
-      try {
-        this.last_row_portfolio_invests = this.portfolio_invests_list.pop();
-        this.last_row_portfolio_invests.index = this.portfolio_invests_list.length;
-      } catch (error) {
-      }
-
-    },
     removeFromList: function (id) {
-      this.portfolio_invests_list.push(this.last_row_portfolio_invests);
-      this.portfolio_invests_list = this.portfolio_invests_list.filter(
-        function (item, ind) {
-          return (ind !== id)
-        });
-      this.pop_last_row();
+      this.$store.commit('removeItemFromPortfolioInvests', id);
+      this.$store.dispatch('get_updated_portfolio');
+    },
+    addToList: function (new_item) {
+      this.$store.commit('addItemToPortfolioInvests', new_item);
+      this.$store.dispatch('get_updated_portfolio');
     }
 
   },
