@@ -200,20 +200,19 @@ Vue.component('portfolio-invests', {
         История движения денежных средств
         </b-button>
         <b-collapse id="collapseHistoryPortfolio">
+        <add-portfolio-invests
+        :ever_trade_securities="ever_trade_securities"
+        :portfolio_id=portfolio_id
+        @addToList="addToList">
+        </add-portfolio-invests>
           <div v-if="portfolio_invests_list">
             <div v-for="(one_row,index) in portfolio_invests_list">
+              <div class="dropdown-divider"></div>
               <portfolio-invests-one-row
               @removeItem="removeFromList(index)"
               :one_row=one_row>
               </portfolio-invests-one-row>
-              <div class="dropdown-divider"></div>
             </div>
-          </div>
-          <div v-if="last_row_portfolio_invests">
-            <portfolio-invests-one-row
-            @removeItem="removeFromList(last_row_portfolio_invests.index)"
-            :one_row=last_row_portfolio_invests>
-            </portfolio-invests-one-row>
           </div>
         </b-collapse>
       </div>
@@ -312,6 +311,196 @@ Vue.component('portfolio-invests-one-row', {
     `
 })
 
+Vue.component('add-portfolio-invests', {
+  props: ['ever_trade_securities', 'portfolio_id'],
+  data: function () {
+    return {
+      date: null,
+      cash: null,
+      ndfl: null,
+      selected_security: null,
+      selected_currency: 'SUR',
+      list_security: [
+        { value: null, text: 'Выберите бумагу' }
+      ],
+      list_currency: [
+        { value: 'SUR', text: 'РУБ' },
+        { value: 'USD', text: 'USD' },
+        { value: 'EUR', text: 'EUR' }
+      ],
+      selected_action: 'vp',
+      list_action: [
+        { value: 'tp', text: 'Доход' },
+        { value: 'br', text: 'Частичное погашение облигаций' },
+        { value: 'vp', text: 'Пополнение' },
+        { value: 'pv', text: 'Снятие' },
+        { value: 'tax', text: 'Налог на доход' },
+        { value: 'bc', text: 'Комиссия брокера' }
+      ],
+      date_invalid: false,
+      ndfl_invalid: false,
+      cash_invalid: false
+    }
+  },
+  beforeMount: function () {
+    let ids = new Array();
+    let k = this.ever_trade_securities.filter(function (item) {
+      if (!ids.includes(item.value)) {
+        ids.push(item.value);
+        return true
+      }
+      return false
+    });
+    this.list_security.push(...k);
+  },
+  methods: {
+    today: function () {
+      return new Date()
+    },
+    validate_form: function () {
+      if (this.date === null) {
+        this.date_invalid = true;
+        return false
+      };
+      this.date_invalid = false;
+      if ((this.cash === null) || (this.cash <= 0)) {
+        this.cash_invalid = true;
+        return false
+      }
+      this.cash_invalid = false;
+      if (this.selected_action === 'tp') {
+        if ((this.ndfl === null) || (this.ndfl < 0) || (this.ndfl >= this.cash)) {
+          this.ndfl_invalid = true;
+          return false
+        }
+        this.ndfl_invalid = false;
+      }
 
-
+      return true
+    },
+    addInvest: function () {
+      let elem = this;
+      let formData = new FormData();
+      if (!this.validate_form()) {
+        return
+      }
+      formData.append('portfolio', elem.portfolio_id);
+      formData.append('date', elem.date);
+      formData.append('cash', elem.cash);
+      formData.append('action', elem.selected_action);
+      formData.append('ndfl', elem.selected_action === 'tp' ? elem.ndfl : 0);
+      formData.append('security', elem.selected_security !== null ? elem.selected_security : '');
+      formData.append('currency', elem.selected_currency);
+      HTTP.post(
+        'portfolios-invest-history/',
+        formData
+      ).then(function (resp) {
+        //em.spiner_visible = false;
+        let new_item = new Object();
+        new_item.action = resp.data.action_display;
+        new_item.cash = resp.data.cash;
+        new_item.cash_in_rub = resp.data.cash_in_rub;
+        new_item.currency = resp.data.currency;
+        new_item.date = resp.data.date;
+        new_item.id = resp.data.id;
+        new_item.ndfl = resp.data.ndfl;
+        new_item.security = resp.data.security ? resp.data.security_name : null;
+        new_item.url_for_delete = resp.data.url_for_delete;
+        elem.$emit('addToList', new_item);
+      })
+        .catch(function (error) {
+          //em.spiner_visible = false;
+          //em.errors_visible = true;
+          console.log('FAILURE!!');
+          //console.log(error);
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.log(error.response.data);
+            if (error.response.status === 500) {
+              //em.errors = ['Server error'];
+            } else {
+              //em.errors = error.response.data;
+            }
+            //console.log(error.response.status);
+            //console.log(error.response.headers);
+          } else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            //console.log(error.request);
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            //console.log('Error', error.message);
+          }
+          //console.log(error.config);
+        });
+    }
+  },
+  template: `
+  <div class="row align-items-center">
+    <div class="col-9">
+      <div class="row align-items-center">
+        <div class="col-md-4">
+          <b-form-datepicker
+          ref="date"
+          label-no-date-selected="Выберите дату"
+          :max="today()"
+          v-bind:class="{ 'is-invalid': date_invalid  }"
+          v-model="date" size="sm" class="mt-1 mb-2" required></b-form-datepicker>
+        </div>
+        <div class="col-md-4">
+          <b-form-input
+            class="mt-1 mb-2"
+            placeholder="Введите сумму"
+            v-bind:class="{ 'is-invalid': cash_invalid  }"
+            ref="cash"
+            v-model="cash"
+            type="number"
+            size="sm"
+            required
+          ></b-form-input>
+          <b-form-select size="sm" class="mt-1 mb-2"
+          v-model="selected_currency" :options="list_currency">
+          </b-form-select>
+          <transition name="fade">
+            <b-form-input
+              v-if="selected_action == 'tp'"
+              class="mt-1 mb-2"
+              placeholder="НДФЛ"
+              ref="ndfl"
+              v-model="ndfl"
+              v-bind:class="{ 'is-invalid': ndfl_invalid  }"
+              type="number"
+              size="sm"
+            ></b-form-input>
+          </transition>
+          <transition name="fade">
+            <b-form-select
+            size="sm"
+            v-if="(selected_action == 'tp')||(selected_action == 'br')||(selected_action == 'tax')"
+            v-model="selected_security"
+            :options="list_security"
+            class="mt-1 mb-2"></b-form-select>
+          </transition>
+        </div>
+        <div class="col-md-4">
+          <b-form-select
+          size="sm"
+          v-model="selected_action"
+          :options="list_action"
+          class="mt-1 mb-2"></b-form-select>
+        </div>
+      </div>
+    </div>
+    <div class="col-3">
+      <b-button
+      variant="success"
+      size="sm"
+      @click="addInvest"
+      >Добавить</b-button>
+    </div>
+  </div>
+  `
+})
 
