@@ -121,8 +121,9 @@ Vue.component('portfolio-info', {
         size="sm"
         @click="refreshManualPortfolio">Обновить</b-button>
         <p v-if="!portfolio_info.manual">Текущий баланс : {{computed_today_cash}}</p>
-        <p v-if="portfolio_info.is_owner">Остаток: {{computed_ostatok}}</p>
+        <p v-if="portfolio_info.is_owner && !portfolio_info.manual">Остаток: {{computed_ostatok}}</p>
         <portfolio-info-ostatok-currency
+        v-if="portfolio_info.is_owner && portfolio_info.ostatok_currency.length"
         :ostatok_currency=portfolio_info.ostatok_currency>
         </portfolio-info-ostatok-currency>
         <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
