@@ -121,7 +121,7 @@ const store = new Vuex.Store({
         function_success = function (resp) {
           context.commit('update_portfolio', resp.data);
         },
-        function_catch = function () {
+        function_catch = function (error) {
           console.log('FAILURE!!', error);
         }
       );

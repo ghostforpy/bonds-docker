@@ -51,41 +51,30 @@ Vue.component('portfolio-info', {
     refreshManualPortfolio: function () {
       let formData = new FormData();
       formData.append('today_cash', parseFloat(this.today_cash));
-      let url = 'portfolios/' + this.portfolio_info.id + '/';
       let em = this;
-      HTTP.patch(
-        url,
-        formData
-      ).then(function (resp) {
-        console.log('SUCCESS!!');
-        em.portfolio_info.change_percent_profit = resp.data.change_percent_profit;
-        em.portfolio_info.change_year_percent_profit = resp.data.change_year_percent_profit;
-        em.portfolio_info.percent_profit = resp.data.percent_profit;
-        em.portfolio_info.year_percent_profit = resp.data.year_percent_profit;
-        em.prepare_profits();
-      })
-        .catch(function (error) {
-          console.log('FAILURE!!');
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.log(error.response.data);
-            if (error.response.status === 500) {
-            } else {
-            }
-            //console.log(error.response.status);
-            //console.log(error.response.headers);
-          } else if (error.request) {
-            // The request was made but no response was received
-            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-            // http.ClientRequest in node.js
-            //console.log(error.request);
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            //console.log('Error', error.message);
-          }
-          //console.log(error.config);
-        });
+
+      let config = {
+        method: 'patch',
+        url: 'portfolios/' + em.portfolio_info.id + '/',
+        data: formData
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          console.log('SUCCESS!!');
+          // переписать
+          em.portfolio_info.change_percent_profit = resp.data.change_percent_profit;
+          em.portfolio_info.change_year_percent_profit = resp.data.change_year_percent_profit;
+          em.portfolio_info.percent_profit = resp.data.percent_profit;
+          em.portfolio_info.year_percent_profit = resp.data.year_percent_profit;
+          em.prepare_profits();
+          elem.$bvToast.toast('Портфель обновлён.', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        }
+      );
     }
   },
   computed: {
