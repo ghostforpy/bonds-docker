@@ -246,40 +246,21 @@ Vue.component('portfolio-invests-one-row', {
   methods: {
     remove_one_row: function () {
       let elem = this;
-      HTTP.delete(
-        this.one_row.url_for_delete
-      ).then(function (resp) {
-        //em.spiner_visible = false;
-        console.log('SUCCESS!!');
-        elem.$emit('removeItem');
-      })
-        .catch(function (error) {
-          //em.spiner_visible = false;
-          //em.errors_visible = true;
-          console.log('FAILURE!!');
-          console.log(error);
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.log(error.response.data);
-            if (error.response.status === 500) {
-              //em.errors = ['Server error'];
-            } else {
-              //em.errors = error.response.data;
-            }
-            //console.log(error.response.status);
-            //console.log(error.response.headers);
-          } else if (error.request) {
-            // The request was made but no response was received
-            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-            // http.ClientRequest in node.js
-            //console.log(error.request);
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            //console.log('Error', error.message);
-          }
-          //console.log(error.config);
-        });
+      let config = {
+        method: 'delete',
+        url: elem.one_row.url_for_delete
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          elem.$emit('removeItem');
+          elem.$bvToast.toast('Запись успешно удалена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        }
+      );
     }
   },
   template: `
@@ -391,50 +372,28 @@ Vue.component('add-portfolio-invests', {
       formData.append('ndfl', elem.selected_action === 'tp' ? elem.ndfl : 0);
       formData.append('security', elem.selected_security !== null ? elem.selected_security : '');
       formData.append('currency', elem.selected_currency);
-      HTTP.post(
-        'portfolios-invest-history/',
-        formData
-      ).then(function (resp) {
-        //em.spiner_visible = false;
-        let new_item = new Object();
-        new_item.action = resp.data.action_display;
-        new_item.cash = resp.data.cash;
-        new_item.cash_in_rub = resp.data.cash_in_rub;
-        new_item.currency = resp.data.currency;
-        new_item.date = resp.data.date;
-        new_item.id = resp.data.id;
-        new_item.ndfl = resp.data.ndfl;
-        new_item.security = resp.data.security ? resp.data.security_name : null;
-        new_item.url_for_delete = resp.data.url_for_delete;
-        elem.$emit('addToList', new_item);
-      })
-        .catch(function (error) {
-          //em.spiner_visible = false;
-          //em.errors_visible = true;
-          console.log('FAILURE!!');
-          //console.log(error);
-          if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.log(error.response.data);
-            if (error.response.status === 500) {
-              //em.errors = ['Server error'];
-            } else {
-              //em.errors = error.response.data;
-            }
-            //console.log(error.response.status);
-            //console.log(error.response.headers);
-          } else if (error.request) {
-            // The request was made but no response was received
-            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-            // http.ClientRequest in node.js
-            //console.log(error.request);
-          } else {
-            // Something happened in setting up the request that triggered an Error
-            //console.log('Error', error.message);
-          }
-          //console.log(error.config);
-        });
+      let config = {
+        method: 'post',
+        url: 'portfolios-invest-history/',
+        data: formData
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          let new_item = new Object();
+          new_item.action = resp.data.action_display;
+          new_item.cash = resp.data.cash;
+          new_item.cash_in_rub = resp.data.cash_in_rub;
+          new_item.currency = resp.data.currency;
+          new_item.date = resp.data.date;
+          new_item.id = resp.data.id;
+          new_item.ndfl = resp.data.ndfl;
+          new_item.security = resp.data.security ? resp.data.security_name : null;
+          new_item.url_for_delete = resp.data.url_for_delete;
+          elem.$emit('addToList', new_item);
+          })
+        }
+      );
     }
   },
   template: `
