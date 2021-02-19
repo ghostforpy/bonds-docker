@@ -104,11 +104,11 @@ Vue.component('portfolio-info', {
         <p v-if="!portfolio_info.is_owner">Владелец: <a v-bind:href="portfolio_info.owner_url">{{portfolio_info.owner_name}}</a></p>
         <p>Всего инвестиций: {{computed_invest_cash}}</p>
         <b-form-group
+        v-if="portfolio_info.manual"
         id="input-group-1"
         label="Текущий баланс(₽):"
         label-for="input-1">
           <b-form-input
-            v-if="portfolio_info.manual"
             id="input-1"
             v-model="today_cash"
             type="number"
