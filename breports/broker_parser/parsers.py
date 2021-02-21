@@ -158,7 +158,6 @@ class TinkoffParserXLS:
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = list()
         for i in data:
-            print(i)
             temp = dict()
             temp['deal_number'] = i[0]
             temp['order_number'] = i[1]
