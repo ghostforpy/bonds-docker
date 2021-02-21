@@ -45,6 +45,10 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
     security_name = serializers.CharField(source='security')
     security_faceunit = serializers.CharField(
         source='security.get_main_board_faceunit_display')
+    security_type = serializers.CharField(
+        source='security.security_type')
+    shortname = serializers.CharField(
+        source='security.shortname')
 
     class Meta:
         model = SecurityPortfolios
@@ -68,6 +72,9 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
 
 class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSerializer):
     security_name = serializers.CharField(source='security')
+    security_id = serializers.IntegerField(source='security.id',
+                                           read_only=True)
+    security_url = serializers.CharField(source='security.get_absolute_url')
     security_faceunit = serializers.CharField(
         source='security.get_main_board_faceunit_display')
     id = serializers.IntegerField(read_only=True)

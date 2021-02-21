@@ -26,6 +26,7 @@ urlpatterns = [
          name='delete_portfolio'),
     #path('ranking/', views.portfolio_ranking, name='ranking'),
     path('detail/<int:id>/', views.portfolio_detail, name='detail'),
+    path('detail2/<int:id>/', views.portfolio_detail_vue, name='detail2'),
     #path('like/', views.portfolio_like, name='like'),
     path('follow/<int:id>/', views.portfolio_follow, name='follow'),
     #    path("api/", include(router.urls)),

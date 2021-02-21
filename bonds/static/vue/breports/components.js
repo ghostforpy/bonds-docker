@@ -117,15 +117,6 @@ Vue.component('errors', {
 
 Vue.component('part_five_dot_one', {
     props: ['dat'],
-    data: function () {
-        return {
-            last_row: null
-        }
-    },
-    beforeMount: function () {
-        var el = this.dat;
-        this.last_row = el.pop();
-    },
     template: `<div>
                 <div class="row">
                     <div class="col-2 d-none d-md-block">
@@ -141,12 +132,10 @@ Vue.component('part_five_dot_one', {
                         <strong>Основание участия</strong>
                     </div>
                 </div>
-                <div class="dropdown-divider d-none d-md-block"></div>
                 <div v-for="item in dat">
-                    <part_five_dot_one_row v-bind:one_row="item"></part_five_dot_one_row>
                     <div class="dropdown-divider"></div>
+                    <part_five_dot_one_row v-bind:one_row="item"></part_five_dot_one_row>
                 </div>
-                <part_five_dot_one_row v-bind:one_row="last_row"></part_five_dot_one_row>
             </div>`
 })
 
@@ -203,15 +192,6 @@ Vue.component('part_five_dot_one_row', {
 
 Vue.component('part_five_dot_two', {
     props: ['dat'],
-    data: function () {
-        return {
-            last_row: null
-        }
-    },
-    beforeMount: function () {
-        var el = this.dat;
-        this.last_row = el.pop();
-    },
     template: `<div>
                 <div class="row">
                     <div class="col-3 d-none d-md-block">
@@ -230,12 +210,10 @@ Vue.component('part_five_dot_two', {
                         <strong>Общая стоимость</strong>
                     </div>
                 </div>
-                <div class="dropdown-divider d-none d-md-block"></div>
                 <div v-for="item in dat">
-                    <part_five_dot_two_row v-bind:one_row="item"></part_five_dot_two_row>
                     <div class="dropdown-divider"></div>
+                    <part_five_dot_two_row v-bind:one_row="item"></part_five_dot_two_row>
                 </div>
-                <part_five_dot_two_row v-bind:one_row="last_row"></part_five_dot_two_row>
             </div>`
 })
 
