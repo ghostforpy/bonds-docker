@@ -1,7 +1,6 @@
 from . import tinkoff_xls_scripts
 from datetime import datetime
-from decimal import InvalidOperation
-from decimal import Decimal
+from decimal import InvalidOperation, Decimal
 
 
 class WrongParser(Exception):
@@ -159,6 +158,7 @@ class TinkoffParserXLS:
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = list()
         for i in data:
+            print(i)
             temp = dict()
             temp['deal_number'] = i[0]
             temp['order_number'] = i[1]
@@ -182,7 +182,11 @@ class TinkoffParserXLS:
             temp['setlement_currency'] = i[15]
             temp['broker_commission'] = return_decimal(i[16])
             temp['commission_currency'] = i[17]
-            temp['stock_market_commission'] = return_decimal(i[18])
+            try:
+                temp['stock_market_commission'] = return_decimal(i[18])
+            except InvalidOperation:
+                for k in range(24, 18, -1):
+                    i[k] = i[k-1]
             temp['stock_market_commission_currency'] = i[19]
             temp['clearing_center_commission'] = return_decimal(i[20])
             temp['clearing_center_commission_currency'] = i[21]
