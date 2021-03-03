@@ -76,6 +76,9 @@ var app = new Vue({
     portfolio_visible: function () {
       return this.$store.state.portfolio_visible;
     },
+    is_owner: function () {
+      return this.$store.state.is_owner;
+    },
     spiner_visible: function () {
       return this.$store.state.spiner_visible;
     },
@@ -97,12 +100,22 @@ var app = new Vue({
                 class="col-sm-4"
                 :portfolio_info_object="portfolio_info">
               </portfolio-info>
-              <portfolio-invests
-                class="col-sm-8"
-                v-if="portfolio_info.is_owner"
-                >
-              </portfolio-invests>
+              <div class="col-sm-8">
+                <portfolio-invests
+                  v-if="portfolio_info.is_owner"
+                  >
+                </portfolio-invests>
+                <portfolio-securities
+                  >
+                </portfolio-securities>
+                <portfolio-trade-history
+                  v-if="portfolio_info.is_owner"
+                  >
+                </portfolio-trade-history>
+              </div>
             </div>
+            <form-trade-securities
+            v-if="is_owner"></form-trade-securities>
           </b-tab>
           <b-tab title="Настройки" v-bind:disabled="!portfolio_info.is_owner">
             <p>I'm the second tab</p>

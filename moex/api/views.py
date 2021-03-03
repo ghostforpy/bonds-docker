@@ -2,12 +2,13 @@
 # from django.shortcuts import get_object_or_404
 # from rest_framework.decorators import action
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch
 from rest_framework.mixins import ListModelMixin,\
     RetrieveModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework import status as response_status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated,\
-    AllowAny, BasePermission
+    AllowAny, BasePermission, IsAdminUser
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
@@ -26,7 +27,7 @@ class IsOwnerOfPortfolio(BasePermission):
 
     def has_permission(self, request, view):
         try:
-            portfolio_id = request.data['portfolio']
+            portfolio_id = request.query_params.get('portfolio')
         except KeyError:
             return False
         try:
@@ -73,7 +74,16 @@ class SecurityViewSet(ListModelMixin,
 
 
 class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
-    permission_classes = [IsOwnerOfPortfolio]
+    def get_permissions(self):
+        if self.action in ['portfolio_list', 'destroy', 'create']:
+            permission_classes = [IsOwnerOfPortfolio]
+        if self.action == 'security_list':
+            permission_classes = [IsAuthenticated]
+        if self.action == 'list':
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action == 'destroy':
@@ -82,23 +92,31 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
             return TradeHistoryCreateSerializer
         if self.action == 'list':
             return TradeHistorySerializerForPortfolioDetail
-        if self.action in ['portfolio-list', 'security-list']:
+        if self.action in ['portfolio_list', 'security_list']:
             return TradeHistorySerializer
 
     def get_queryset(self):
         queryset = TradeHistory.objects.all()
         user = self.request.user
         queryset = queryset.filter(owner=user)
-        if self.action == 'portfolio-list':
-            if 'porfolio' in self.request.query_params:
-                q = self.request.query_params.get('porfolio')
-                return queryset.filter(portfolio__id=q)
+        if self.action in ['portfolio_list']:
+            if 'portfolio' in self.request.query_params:
+                q = self.request.query_params.get('portfolio')
+                return queryset.filter(portfolio__id=q).select_related(
+                    'security',
+                    'portfolio',
+                    'owner'
+                )
             else:
                 return queryset.none()
-        if self.action == 'security-list':
+        if self.action == 'security_list':
             if 'security' in self.request.query_params:
                 q = self.request.query_params.get('security')
-                return queryset.filter(security__id=q)
+                return queryset.filter(security__id=q).select_related(
+                    'security',
+                    'portfolio',
+                    'owner'
+                )
             else:
                 return queryset.none()
         return queryset  # action = list
