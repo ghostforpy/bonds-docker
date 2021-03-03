@@ -248,6 +248,13 @@ Vue.component('portfolio-invests-one-row', {
             variant: 'success',
             solid: true
           })
+        },
+        function_catch = function (error) {
+          elem.$bvToast.toast(`Запись не удалена`, {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
         }
       );
     }
