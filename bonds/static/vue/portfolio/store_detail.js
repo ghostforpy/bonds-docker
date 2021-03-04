@@ -82,6 +82,9 @@ const store = new Vuex.Store({
           return (ind !== index)
         });
     },
+    addItemToTradeSecurities(state, new_item) {
+      state.trade_securities.unshift(new_item);
+    },
     simple_update_portfolio(state, data) {
       state.portfolio_info.change_percent_profit = data.change_percent_profit;
       state.portfolio_info.change_year_percent_profit = data.change_year_percent_profit;

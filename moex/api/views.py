@@ -27,7 +27,8 @@ class IsOwnerOfPortfolio(BasePermission):
 
     def has_permission(self, request, view):
         try:
-            portfolio_id = request.query_params.get('portfolio')
+            portfolio_id = request.query_params.get(
+                'portfolio') or request.data['portfolio']
         except KeyError:
             return False
         try:
@@ -38,6 +39,11 @@ class IsOwnerOfPortfolio(BasePermission):
             return False
         return True
 
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
+
+
+class IsOwnerOfObjectForDestroy(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         return obj.owner == request.user
 
@@ -75,11 +81,13 @@ class SecurityViewSet(ListModelMixin,
 
 class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
     def get_permissions(self):
-        if self.action in ['portfolio_list', 'destroy', 'create']:
+        if self.action in ['portfolio_list', 'create']:
             permission_classes = [IsOwnerOfPortfolio]
-        if self.action == 'security_list':
+        elif self.action in ['security_list']:
             permission_classes = [IsAuthenticated]
-        if self.action == 'list':
+        elif self.action in ['destroy']:
+            permission_classes = [IsOwnerOfObjectForDestroy]
+        elif self.action == 'list':
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [IsAuthenticated]
@@ -123,6 +131,7 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        # ckeck object permission
         delete_status = self.perform_destroy(instance)
         if delete_status == 'ok':
             status = response_status.HTTP_204_NO_CONTENT
@@ -137,29 +146,19 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
         data = request.data
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        create_status = self.perform_create(serializer)
-        if create_status == 'ok':
-            headers = self.get_success_headers(
-                serializer.data
-            )
+        new_object = self.perform_create(serializer)
+        if isinstance(new_object, TradeHistory):
             status = response_status.HTTP_201_CREATED
             response = Response(serializer.data,
-                                status=status,
-                                headers=headers)
+                                status=status)
         else:
             status = response_status.HTTP_400_BAD_REQUEST
-            response = Response(data=create_status,
+            response = Response(data=new_object,
                                 status=status)
         return response
 
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
-
-    def get_success_headers(self, data):
-        try:
-            return {'Location': str(data[api_settings.URL_FIELD_NAME])}
-        except (TypeError, KeyError):
-            return {}
 
     @action(methods=['get'], detail=False,
             url_path='portfolio-list', url_name='portfolio-list')

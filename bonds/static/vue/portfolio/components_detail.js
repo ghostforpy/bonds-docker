@@ -746,7 +746,50 @@ Vue.component('form-trade-securities', {
       return new Date()
     },
     handleSubmit() {
-      console.log('ok submit');
+      let elem = this;
+      let formData = new FormData();
+      formData.append('portfolio', elem.$store.state.portfolio_id);
+      formData.append('date', elem.date);
+      formData.append('commission', elem.comission);
+      formData.append('count', elem.count);
+      formData.append('price', elem.price);
+      formData.append('nkd', elem.nkd);
+      formData.append('ndfl', 0);
+      let trade_security_id = elem.$store.state.trade_security.security_url.split('/')[3];
+      formData.append('security', trade_security_id);
+      formData.append('buy', elem.$store.state.trade_security_action == 'buy');
+      let config = {
+        method: 'post',
+        url: 'securities-trade-history/',
+        data: formData
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          elem.$store.commit('addItemToTradeSecurities', resp.data);
+          elem.$store.dispatch('get_updated_portfolio', simple = false);
+          elem.$bvToast.toast('Запись успешно добавлена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        },
+        function_error_response_other = function (error) {
+          const h = elem.$createElement;
+          // Create the message
+          const vNodesMsg = [h('p', `Запись не добавлена`)];
+          if (error.response.status === 400) {
+            var status = error.response.data;
+            vNodesMsg.push(h('p', `${status}`));
+          };
+          elem.$bvToast.toast(vNodesMsg, {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+
       // Hide the modal manually
       this.$nextTick(() => {
         this.$bvModal.hide('modal-buy-security')
@@ -915,7 +958,9 @@ Vue.component('portfolio-trade-history-one-row', {
       return parseFloat(this.one_row.price)
         .toLocaleString('ru-RU', {
           style: 'currency',
-          currency: this.one_row.security_faceunit.replace('РУБ', 'RUB'),
+          currency: this.one_row.security_faceunit
+            .replace('РУБ', 'RUB')
+            .replace('SUR', 'RUB'),
           maximumFractionDigits: 10
         });
     },
@@ -923,7 +968,9 @@ Vue.component('portfolio-trade-history-one-row', {
       return parseFloat(this.one_row.commission)
         .toLocaleString('ru-RU', {
           style: 'currency',
-          currency: this.one_row.security_faceunit.replace('РУБ', 'RUB'),
+          currency: this.one_row.security_faceunit
+            .replace('РУБ', 'RUB')
+            .replace('SUR', 'RUB'),
           maximumFractionDigits: 10
         });
     }

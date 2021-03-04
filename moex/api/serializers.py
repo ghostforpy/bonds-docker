@@ -124,17 +124,24 @@ class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
-class TradeHistoryCreateSerializer(serializers.HyperlinkedModelSerializer):
-    security = serializers.CharField()
-    portfolio = serializers.CharField()
+class TradeHistoryCreateSerializer(serializers.ModelSerializer):
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='api:securities-trade-history-detail')
+    security_url = serializers.CharField(
+        read_only=True, source='security.get_absolute_url')
+    security_faceunit = serializers.CharField(
+        read_only=True, source='security.main_board_faceunit')
+    security_name = serializers.CharField(read_only=True, source='security')
 
     class Meta:
         model = TradeHistory
         exclude = ['owner']
-        extra_kwargs = {
-            'url': {'view_name': 'api:securities-trade-history-detail'},
-        }
 
     def create(self, validated_data):
         new_object = TradeHistory(**validated_data)
-        return new_object.save()
+        create_status = new_object.save()
+        if create_status == 'ok':
+            return new_object
+        else:
+            return create_status
