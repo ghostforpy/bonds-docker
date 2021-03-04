@@ -131,7 +131,6 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # ckeck object permission
         delete_status = self.perform_destroy(instance)
         if delete_status == 'ok':
             status = response_status.HTTP_204_NO_CONTENT
