@@ -79,6 +79,9 @@ var app = new Vue({
     is_owner: function () {
       return this.$store.state.is_owner;
     },
+    is_deny: function () {
+      return this.$store.state.is_deny;
+    },
     spiner_visible: function () {
       return this.$store.state.spiner_visible;
     },
@@ -106,7 +109,7 @@ var app = new Vue({
                   >
                 </portfolio-invests>
                 <portfolio-securities
-                  >
+                v-if="!is_deny">
                 </portfolio-securities>
                 <portfolio-trade-history
                   v-if="portfolio_info.is_owner"

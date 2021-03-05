@@ -93,39 +93,46 @@ Vue.component('portfolio-info', {
     },
     computed_ostatok: function () {
       return return_RUB_locale(this.$store.state.portfolio_info.ostatok);
-    }
+    },
+    is_deny: function () {
+      return this.$store.state.is_deny;
+    },
   },
   template: `
       <div>
         <p v-if="!portfolio_info.is_owner">Владелец: <a v-bind:href="portfolio_info.owner_url">{{portfolio_info.owner_name}}</a></p>
-        <p>Всего инвестиций: {{computed_invest_cash}}</p>
-        <b-form-group
-        v-if="portfolio_info.manual"
-        id="input-group-1"
-        label="Текущий баланс(₽):"
-        label-for="input-1">
-          <b-form-input
-            id="input-1"
-            v-model="today_cash"
-            type="number"
-            size="sm"
-            required
-          ></b-form-input>
-        </b-form-group>
-        <b-button v-if="portfolio_info.manual"
-        variant="info"
-        size="sm"
-        @click="refreshManualPortfolio">Обновить</b-button>
-        <p v-if="!portfolio_info.manual">Текущий баланс : {{computed_today_cash}}</p>
-        <p v-if="portfolio_info.is_owner && !portfolio_info.manual">Остаток: {{computed_ostatok}}</p>
-        <portfolio-info-ostatok-currency
-        v-if="portfolio_info.is_owner && portfolio_info.ostatok_currency.length"
-        :ostatok_currency=portfolio_info.ostatok_currency>
-        </portfolio-info-ostatok-currency>
-        <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
-        <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
-        <p v-if="portfolio_info.strategia !== '' && portfolio_info.strategia !== 'null'">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
-        <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
+        <div 
+        v-if="!is_deny">
+          <p>Всего инвестиций: {{computed_invest_cash}}</p>
+          <b-form-group
+          v-if="portfolio_info.manual"
+          id="input-group-1"
+          label="Текущий баланс(₽):"
+          label-for="input-1">
+            <b-form-input
+              id="input-1"
+              v-model="today_cash"
+              type="number"
+              size="sm"
+              required
+            ></b-form-input>
+          </b-form-group>
+          <b-button v-if="portfolio_info.manual"
+          variant="info"
+          size="sm"
+          @click="refreshManualPortfolio">Обновить</b-button>
+          <p v-if="!portfolio_info.manual">Текущий баланс : {{computed_today_cash}}</p>
+          <p v-if="portfolio_info.is_owner && !portfolio_info.manual">Остаток: {{computed_ostatok}}</p>
+          <portfolio-info-ostatok-currency
+          v-if="portfolio_info.is_owner && portfolio_info.ostatok_currency.length"
+          :ostatok_currency=portfolio_info.ostatok_currency>
+          </portfolio-info-ostatok-currency>
+          <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
+          <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
+          <p v-if="portfolio_info.strategia !== '' && portfolio_info.strategia !== 'null'">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
+          <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
+        </div>
+        <p v-if="is_deny">Портфель приватный, обратитесь к владельцу для предоставления доступа.</p>
       </div>
     `
 })

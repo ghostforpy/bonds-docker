@@ -6,6 +6,7 @@ const store = new Vuex.Store({
     portfolio_title: null,
     portfolio_info: null,
     is_owner: false,
+    is_deny: false,
     //part portfolio invests
     portfolio_invests: null,
 
@@ -27,17 +28,19 @@ const store = new Vuex.Store({
   mutations: {
     init_portfolio(state, data) {
       state.portfolio_title = data.title;
-      state.portfolio_id = data.id;
+      state.is_deny = data.is_deny;
       state.portfolio_info = Object();
-      state.portfolio_info.invest_cash = data.invest_cash;
-      state.portfolio_info.today_cash = data.today_cash;
-      state.portfolio_info.percent_profit = data.percent_profit;
-      state.portfolio_info.change_percent_profit = data.change_percent_profit;
-      state.portfolio_info.year_percent_profit = data.year_percent_profit;
-      state.portfolio_info.change_year_percent_profit = data.change_year_percent_profit;
-      state.portfolio_info.strategia = data.strategia;
+      if (!state.is_deny) {
+        state.portfolio_id = data.id;
+        state.portfolio_info.invest_cash = data.invest_cash;
+        state.portfolio_info.today_cash = data.today_cash;
+        state.portfolio_info.percent_profit = data.percent_profit;
+        state.portfolio_info.change_percent_profit = data.change_percent_profit;
+        state.portfolio_info.year_percent_profit = data.year_percent_profit;
+        state.portfolio_info.change_year_percent_profit = data.change_year_percent_profit;
+        state.portfolio_info.strategia = data.strategia;
+      }
       state.portfolio_info.is_owner = data.is_owner;
-
       state.is_owner = data.is_owner;
       if (data.is_owner) {
         state.portfolio_info.id = state.portfolio_id;
@@ -62,7 +65,7 @@ const store = new Vuex.Store({
             return ever_trade_securities.indexOf(item) === index
           });
       } else {
-        state.portfolio_securities = data.securities;
+        if (!state.is_deny) { state.portfolio_securities = data.securities; }
         state.portfolio_info.owner_url = data.owner_url;
         state.portfolio_info.owner_name = data.owner_name;
       };

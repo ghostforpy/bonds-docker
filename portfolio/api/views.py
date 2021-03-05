@@ -21,6 +21,7 @@ from breports.scripts import init_broker_report
 from moex.models import SecurityPortfolios, TradeHistory
 from ..models import PortfolioInvestHistory, InvestmentPortfolio
 from .serializers import (InvestmentPortfolioDetailSerializer,
+                          InvestmentPortfolioDetailSimpleSerializer,
                           InvestmentPortfolioListSerializer,
                           InvestmentPortfolioDetailOwnerSerializer,
                           InvestmentPortfolioCreateSerializer,
@@ -150,15 +151,15 @@ class PortfolioViewSet(ListModelMixin,
     def get_serializer_class(self, instance=None, *args, **kwargs):
         if self.action == 'list':
             return InvestmentPortfolioListSerializer
-        if self.action == 'my_list':
+        elif self.action == 'my_list':
             return MyInvestmentPortfolioListSerializer
-        if self.action == 'create':
+        elif self.action == 'create':
             return InvestmentPortfolioCreateSerializer
-        if self.action == 'create_by_breport':
+        elif self.action == 'create_by_breport':
             return InvestmentPortfolioCreateByBreportSerializer
-        if self.action in ['get_updated_portfolio']:
+        elif self.action in ['get_updated_portfolio']:
             return UpdatedInvestmentPortfolioSerializer
-        if self.action in ['update', 'partial_update']:
+        elif self.action in ['update', 'partial_update']:
             try:
                 if instance.manual:
                     return ManualInvestmentPortfolioUpdateSerializer
@@ -169,8 +170,10 @@ class PortfolioViewSet(ListModelMixin,
         elif self.action in ['retrieve', 'follow', 'like']:
             if self.request.user == instance.owner:
                 return InvestmentPortfolioDetailOwnerSerializer
-            else:
+            elif instance.request_user_has_permission(self.request.user):
                 return InvestmentPortfolioDetailSerializer
+            else:
+                return InvestmentPortfolioDetailSimpleSerializer
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -197,7 +200,8 @@ class PortfolioViewSet(ListModelMixin,
         elif self.action in ['get_updated_portfolio']:
             permission_classes = [IsOwnerOfPortfolioObject]
         else:
-            permission_classes = [IsOwnerOrReadOnlyAuthorized]
+           # permission_classes = [IsOwnerOrReadOnlyAuthorized]
+            permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
     @action(methods=['post'], detail=False,

@@ -186,6 +186,33 @@ class InvestmentPortfolioDetailOwnerSerializer(
         }
 
 
+class InvestmentPortfolioDetailSimpleSerializer(
+        serializers.HyperlinkedModelSerializer):
+    """
+    Serializer for portfolio for other user without permissions.
+    """
+    url = serializers.HyperlinkedIdentityField(
+        view_name="api:investmentportfolio-detail")
+    owner_name = serializers.CharField(source="owner")
+    owner_url = serializers.CharField(source="owner.get_absolute_url")
+    is_owner = serializers.BooleanField(default=False)
+    is_deny = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = InvestmentPortfolio
+        fields = ['owner',
+                  'owner_name',
+                  'url',
+                  'title',
+                  'is_deny',
+                  'is_owner',
+                  'owner_url']
+        extra_kwargs = {
+            'owner': {"view_name": "api:user-detail",
+                      'lookup_field': 'username'}
+        }
+
+
 class InvestmentPortfolioListSerializer(
         serializers.HyperlinkedModelSerializer):
     """
