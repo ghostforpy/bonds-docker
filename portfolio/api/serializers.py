@@ -118,6 +118,7 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
     owner_name = serializers.CharField(source="owner")
+    securities = SecurityInPortfolioSerializer(many=True, read_only=True)
     owner_url = serializers.CharField(source="owner.get_absolute_url")
     is_owner = serializers.BooleanField(default=False)
 
@@ -129,6 +130,8 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
                   'title',
                   'invest_cash',
                   'today_cash',
+                  'securities',
+                  'strategia',
                   'percent_profit',
                   'change_percent_profit',
                   'year_percent_profit',
