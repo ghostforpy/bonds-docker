@@ -9,7 +9,9 @@ const store = new Vuex.Store({
     is_deny: false,
     //part portfolio invests
     portfolio_invests: null,
-
+    is_liked: null,
+    is_followed: null,
+    follow_url: null,
     ever_trade_securities: null,
     //part securities in portfolio
     portfolio_securities: null,
@@ -65,7 +67,14 @@ const store = new Vuex.Store({
             return ever_trade_securities.indexOf(item) === index
           });
       } else {
-        if (!state.is_deny) { state.portfolio_securities = data.securities; }
+        //секция для остальных пользователей
+        if (!state.is_deny) {
+          // для тех, кто имеет доступ к просмотру
+          state.portfolio_securities = data.securities;
+          state.is_followed = data.is_followed;
+          state.follow_url = data.follow_url;
+          state.is_liked = data.is_liked;
+        }
         state.portfolio_info.owner_url = data.owner_url;
         state.portfolio_info.owner_name = data.owner_name;
       };
@@ -108,6 +117,9 @@ const store = new Vuex.Store({
     },
     set_trade_security_action(state, trade_security_action) {
       state.trade_security_action = trade_security_action
+    },
+    setFollow(state, followed) {
+      state.is_followed = followed
     },
     set_portfolio_visible(state, stat) {
       state.portfolio_visible = stat
@@ -162,6 +174,9 @@ const store = new Vuex.Store({
           console.log('FAILURE!!', error);
         }
       );
+    },
+    toogleFollow(context) {
+      context.commit('setFollow', !context.state.is_followed);
     }
   }
 })

@@ -117,10 +117,14 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
+    follow_url = serializers.HyperlinkedIdentityField(
+        view_name="api:investmentportfolio-follow")
     owner_name = serializers.CharField(source="owner")
     securities = SecurityInPortfolioSerializer(many=True, read_only=True)
     owner_url = serializers.CharField(source="owner.get_absolute_url")
     is_owner = serializers.BooleanField(default=False)
+    is_followed = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = InvestmentPortfolio
@@ -137,12 +141,16 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
                   'year_percent_profit',
                   'change_year_percent_profit',
                   'description',
+                  'follow_url',
                   'users_like',
                   'total_likes',
                   'users_follows',
                   'total_followers',
                   'is_owner',
-                  'owner_url']
+                  'is_followed',
+                  'is_liked',
+                  'owner_url',
+                  'id']
         extra_kwargs = {
             'users_follows': {"view_name": "api:user-detail",
                               'lookup_field': 'username', 'many': 'True'},
@@ -151,6 +159,12 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
             'owner': {"view_name": "api:user-detail",
                       'lookup_field': 'username'}
         }
+
+    def get_is_followed(self, obj):
+        return self.context['request'].user in obj.users_follows.all()
+
+    def get_is_liked(self, obj):
+        return self.context['request'].user in obj.users_like.all()
 
 
 class InvestmentPortfolioDetailOwnerSerializer(

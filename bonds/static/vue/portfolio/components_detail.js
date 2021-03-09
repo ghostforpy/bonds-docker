@@ -1012,3 +1012,58 @@ Vue.component('portfolio-trade-history-one-row', {
       </div>
     `
 })
+
+Vue.component('follow', {
+  data: function () {
+    return {
+    }
+  },
+  beforeMount: function () {
+  },
+  computed: {
+    text: function () {
+      let st = this.$store.state.is_followed;
+      return st ? 'Отписаться' : 'Подписаться'
+    },
+    variant: function () {
+      let st = this.$store.state.is_followed;
+      return st ? 'danger' : 'primary'
+    }
+  },
+  methods: {
+    toogleFollow: function () {
+      let elem = this;
+      let config = {
+        method: 'post',
+        url: this.$store.state.follow_url
+      };
+      request_service(config,
+        function_success = function (resp) {
+          elem.$store.dispatch('toogleFollow');
+          if (resp.status == 200) {
+            elem.$bvToast.toast('Подписка оформлена', {
+              title: `Mybonds.space`,
+              variant: 'success',
+              solid: true
+            })
+          } else if (resp.status == 204) {
+            elem.$bvToast.toast('Подписка удалена', {
+              title: `Mybonds.space`,
+              variant: 'danger',
+              solid: true
+            })
+          }
+        }
+      );
+    }
+  },
+  template: `
+    <b-button
+    size="sm"
+    pill
+    :variant="variant"
+    class="mb-1 mt1"
+    @click="toogleFollow">{{text}}
+    </b-button>
+    `
+})
