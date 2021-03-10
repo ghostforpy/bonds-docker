@@ -30,7 +30,8 @@ from .serializers import (InvestmentPortfolioDetailSerializer,
                           AllowInvestmentPortfolioUpdateSerializer,
                           MyInvestmentPortfolioListSerializer,
                           PortfolioInvestHistoryCreateSerializer,
-                          UpdatedInvestmentPortfolioSerializer)
+                          UpdatedInvestmentPortfolioSerializer,
+                          UpdatedPrivatePortfolioSerializer)
 from .scripts import create_portfolio_by_broker_report
 
 
@@ -157,6 +158,8 @@ class PortfolioViewSet(ListModelMixin,
             return InvestmentPortfolioCreateSerializer
         elif self.action == 'create_by_breport':
             return InvestmentPortfolioCreateByBreportSerializer
+        elif self.action in ['private']:
+            return UpdatedPrivatePortfolioSerializer
         elif self.action in ['get_updated_portfolio']:
             return UpdatedInvestmentPortfolioSerializer
         elif self.action in ['update', 'partial_update']:
@@ -192,13 +195,16 @@ class PortfolioViewSet(ListModelMixin,
             permission_classes = [AllowAny]
         elif self.action in ['my_list', 'create', 'create_by_breport']:
             permission_classes = [IsAuthenticated]
-        elif self.action in ['update', 'partial_update']:
+        elif self.action in [
+            'get_updated_portfolio',
+            'update',
+            'partial_update',
+            'private'
+        ]:
             permission_classes = [IsOwnerOfPortfolioObject]
             #permission_classes = [IsOwnerOrReadOnlyAuthorized]
         elif self.action in ['follow', 'like']:
             permission_classes = [FollowLikePermission]
-        elif self.action in ['get_updated_portfolio']:
-            permission_classes = [IsOwnerOfPortfolioObject]
         else:
            # permission_classes = [IsOwnerOrReadOnlyAuthorized]
             permission_classes = [IsAuthenticated]
@@ -249,6 +255,17 @@ class PortfolioViewSet(ListModelMixin,
             url_name='get-updated-portfolio')
     def get_updated_portfolio(self, request, *args, **kwargs):
         return self.retrieve(self, request, *args, **kwargs)
+
+    @action(methods=['post'], detail=True,
+            url_path='private', url_name='private')
+    def private(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,
+                                         data=request.data,
+                                         partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     @action(methods=['post'], detail=True,
             url_path='follow', url_name='follow')

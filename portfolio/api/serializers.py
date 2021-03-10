@@ -111,6 +111,15 @@ class UpdatedInvestmentPortfolioSerializer(serializers.ModelSerializer):
                   'securities']
 
 
+class UpdatedPrivatePortfolioSerializer(serializers.ModelSerializer):
+    """
+    Serializer for update portfolio private settings by owner.
+    """
+    class Meta:
+        model = InvestmentPortfolio
+        fields = ['private']
+
+
 class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for view portfolio other users.

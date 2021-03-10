@@ -1067,3 +1067,73 @@ Vue.component('follow', {
     </b-button>
     `
 })
+Vue.component('private', {
+  data: function () {
+    return {
+      selected: null,
+      options: [
+        { value: 'da', text: 'Всем запрещено' },
+        { value: 'af', text: 'Разрешено друзьям' },
+        { value: 'al', text: 'Разрешено авторизованным' },
+        { value: 'aa', text: 'Разрешено всем' }
+      ]
+    }
+  },
+  beforeMount: function () {
+    this.selected = this.$store.state.private
+  },
+  computed: {
+  },
+  methods: {
+    applyPrivate: function () {
+      let elem = this;
+      let formData = new FormData();
+      formData.append('private', elem.selected);
+      let config = {
+        method: 'post',
+        url: '/portfolios/' + elem.$store.state.portfolio_id + '/private/',
+        data: formData
+      };
+      request_service(config,
+        function_success = function (resp) {
+          if (resp.status == 200) {
+            elem.$bvToast.toast('Настройки применены.', {
+              title: `Mybonds.space`,
+              variant: 'success',
+              solid: true
+            })
+          }
+          elem.$store.commit('setPrivate', elem.selected);
+        },
+        function_catch = function (error) {
+          elem.$bvToast.toast('Настройки отклонены.', {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+    }
+  },
+  template: `
+    <div class="">
+    <span class="">Приватность:</span>
+      <div class="mt-1 d-flex flex-row">
+        <b-form-select
+        v-model="selected"
+        :options="options"
+        size="sm"
+        class="col-7"></b-form-select>
+        <div class="col-1">
+        </div>
+        <b-button
+        size="sm"
+        pill
+        variant="primary"
+        class="mb-1 mt1"
+        @click="applyPrivate">Применить
+        </b-button>
+      </div>
+    </div>
+    `
+})

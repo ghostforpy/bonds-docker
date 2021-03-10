@@ -124,7 +124,9 @@ var app = new Vue({
             v-if="is_owner"></form-trade-securities>
           </b-tab>
           <b-tab title="Настройки" v-bind:disabled="!portfolio_info.is_owner">
-            <p>I'm the second tab</p>
+            <div v-if="is_owner" class="container">
+              <private></private>
+            </div>
           </b-tab>
         </b-tabs>
       </div>

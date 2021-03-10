@@ -7,6 +7,7 @@ const store = new Vuex.Store({
     portfolio_info: null,
     is_owner: false,
     is_deny: false,
+    private: null,
     //part portfolio invests
     portfolio_invests: null,
     is_liked: null,
@@ -55,6 +56,7 @@ const store = new Vuex.Store({
           item => item.security_type != 'currency');
         state.portfolio_info.manual = data.manual;
         state.trade_securities = data.trade_securities;
+        state.private = data.private;
         let ever_trade_securities = data.trade_securities.map(
           function (item) {
             sec = new Object()
@@ -120,6 +122,9 @@ const store = new Vuex.Store({
     },
     setFollow(state, followed) {
       state.is_followed = followed
+    },
+    setPrivate(state, private) {
+      state.private = private
     },
     set_portfolio_visible(state, stat) {
       state.portfolio_visible = stat
