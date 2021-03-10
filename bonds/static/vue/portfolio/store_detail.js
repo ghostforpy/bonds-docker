@@ -148,7 +148,7 @@ const store = new Vuex.Store({
       request_service(
         config,
         function_success = function (resp) {
-          console.log(resp.data);
+          //console.log(resp.data);
           context.commit('set_spiner_visible', false);
           context.commit('set_portfolio_visible', true);
           context.commit('init_portfolio', resp.data);

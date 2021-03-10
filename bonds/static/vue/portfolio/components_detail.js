@@ -152,9 +152,9 @@ Vue.component('portfolio-info-ostatok-currency', {
     }
   },
   template: `
-  <div class="row">
-    <div class="col-6"><span>Остаток валюты:</span></div>
-    <div class="col-6">
+  <div class="d-flex flex-row">
+    <div class=""><span>Остаток валюты:</span></div>
+    <div class="mx-1">
       <p v-for="i in computed_ostatok_currency">
         {{i.count}} ({{i.total_cost_in_rub}})
       </p>
