@@ -111,15 +111,29 @@ class UpdatedInvestmentPortfolioSerializer(serializers.ModelSerializer):
                   'securities']
 
 
+class UpdatedPrivatePortfolioSerializer(serializers.ModelSerializer):
+    """
+    Serializer for update portfolio private settings by owner.
+    """
+    class Meta:
+        model = InvestmentPortfolio
+        fields = ['private']
+
+
 class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer):
     """
     Serializer for view portfolio other users.
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
+    follow_url = serializers.HyperlinkedIdentityField(
+        view_name="api:investmentportfolio-follow")
     owner_name = serializers.CharField(source="owner")
+    securities = SecurityInPortfolioSerializer(many=True, read_only=True)
     owner_url = serializers.CharField(source="owner.get_absolute_url")
     is_owner = serializers.BooleanField(default=False)
+    is_followed = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = InvestmentPortfolio
@@ -129,17 +143,23 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
                   'title',
                   'invest_cash',
                   'today_cash',
+                  'securities',
+                  'strategia',
                   'percent_profit',
                   'change_percent_profit',
                   'year_percent_profit',
                   'change_year_percent_profit',
                   'description',
+                  'follow_url',
                   'users_like',
                   'total_likes',
                   'users_follows',
                   'total_followers',
                   'is_owner',
-                  'owner_url']
+                  'is_followed',
+                  'is_liked',
+                  'owner_url',
+                  'id']
         extra_kwargs = {
             'users_follows': {"view_name": "api:user-detail",
                               'lookup_field': 'username', 'many': 'True'},
@@ -148,6 +168,12 @@ class InvestmentPortfolioDetailSerializer(serializers.HyperlinkedModelSerializer
             'owner': {"view_name": "api:user-detail",
                       'lookup_field': 'username'}
         }
+
+    def get_is_followed(self, obj):
+        return self.context['request'].user in obj.users_follows.all()
+
+    def get_is_liked(self, obj):
+        return self.context['request'].user in obj.users_like.all()
 
 
 class InvestmentPortfolioDetailOwnerSerializer(
@@ -178,6 +204,33 @@ class InvestmentPortfolioDetailOwnerSerializer(
                               'lookup_field': 'username', 'many': 'True'},
             'users_like': {"view_name": "api:user-detail",
                            'lookup_field': 'username', 'many': 'True'},
+            'owner': {"view_name": "api:user-detail",
+                      'lookup_field': 'username'}
+        }
+
+
+class InvestmentPortfolioDetailSimpleSerializer(
+        serializers.HyperlinkedModelSerializer):
+    """
+    Serializer for portfolio for other user without permissions.
+    """
+    url = serializers.HyperlinkedIdentityField(
+        view_name="api:investmentportfolio-detail")
+    owner_name = serializers.CharField(source="owner")
+    owner_url = serializers.CharField(source="owner.get_absolute_url")
+    is_owner = serializers.BooleanField(default=False)
+    is_deny = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = InvestmentPortfolio
+        fields = ['owner',
+                  'owner_name',
+                  'url',
+                  'title',
+                  'is_deny',
+                  'is_owner',
+                  'owner_url']
+        extra_kwargs = {
             'owner': {"view_name": "api:user-detail",
                       'lookup_field': 'username'}
         }

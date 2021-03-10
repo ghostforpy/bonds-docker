@@ -1,3 +1,10 @@
+function currency_sign(currency) {
+  return currency.replace('RUB', '₽')
+    .replace('SUR', '₽')
+    .replace('РУБ', '₽')
+    .replace('USD', '$')
+    .replace('EUR', '€')
+};
 function return_RUB_locale(elem) {
   return parseFloat(elem)
     .toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 10 });
@@ -86,39 +93,46 @@ Vue.component('portfolio-info', {
     },
     computed_ostatok: function () {
       return return_RUB_locale(this.$store.state.portfolio_info.ostatok);
-    }
+    },
+    is_deny: function () {
+      return this.$store.state.is_deny;
+    },
   },
   template: `
       <div>
         <p v-if="!portfolio_info.is_owner">Владелец: <a v-bind:href="portfolio_info.owner_url">{{portfolio_info.owner_name}}</a></p>
-        <p>Всего инвестиций: {{computed_invest_cash}}</p>
-        <b-form-group
-        v-if="portfolio_info.manual"
-        id="input-group-1"
-        label="Текущий баланс(₽):"
-        label-for="input-1">
-          <b-form-input
-            id="input-1"
-            v-model="today_cash"
-            type="number"
-            size="sm"
-            required
-          ></b-form-input>
-        </b-form-group>
-        <b-button v-if="portfolio_info.manual"
-        variant="info"
-        size="sm"
-        @click="refreshManualPortfolio">Обновить</b-button>
-        <p v-if="!portfolio_info.manual">Текущий баланс : {{computed_today_cash}}</p>
-        <p v-if="portfolio_info.is_owner && !portfolio_info.manual">Остаток: {{computed_ostatok}}</p>
-        <portfolio-info-ostatok-currency
-        v-if="portfolio_info.is_owner && portfolio_info.ostatok_currency.length"
-        :ostatok_currency=portfolio_info.ostatok_currency>
-        </portfolio-info-ostatok-currency>
-        <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
-        <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
-        <p v-if="portfolio_info.strategia !== '' && portfolio_info.strategia !== 'null'">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
-        <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
+        <div 
+        v-if="!is_deny">
+          <p>Всего инвестиций: {{computed_invest_cash}}</p>
+          <b-form-group
+          v-if="portfolio_info.manual"
+          id="input-group-1"
+          label="Текущий баланс(₽):"
+          label-for="input-1">
+            <b-form-input
+              id="input-1"
+              v-model="today_cash"
+              type="number"
+              size="sm"
+              required
+            ></b-form-input>
+          </b-form-group>
+          <b-button v-if="portfolio_info.manual"
+          variant="info"
+          size="sm"
+          @click="refreshManualPortfolio">Обновить</b-button>
+          <p v-if="!portfolio_info.manual">Текущий баланс : {{computed_today_cash}}</p>
+          <p v-if="portfolio_info.is_owner && !portfolio_info.manual">Остаток: {{computed_ostatok}}</p>
+          <portfolio-info-ostatok-currency
+          v-if="portfolio_info.is_owner && portfolio_info.ostatok_currency.length"
+          :ostatok_currency=portfolio_info.ostatok_currency>
+          </portfolio-info-ostatok-currency>
+          <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
+          <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
+          <p v-if="portfolio_info.strategia !== '' && portfolio_info.strategia !== 'null'">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
+          <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
+        </div>
+        <p v-if="is_deny">Портфель приватный, обратитесь к владельцу для предоставления доступа.</p>
       </div>
     `
 })
@@ -175,11 +189,11 @@ Vue.component('portfolio-invests', {
   methods: {
     removeFromList: function (id) {
       this.$store.commit('removeItemFromPortfolioInvests', id);
-      this.$store.dispatch('get_updated_portfolio');
+      this.$store.dispatch('get_updated_portfolio', simple = true);
     },
     addToList: function (new_item) {
       this.$store.commit('addItemToPortfolioInvests', new_item);
-      this.$store.dispatch('get_updated_portfolio');
+      this.$store.dispatch('get_updated_portfolio', simple = true);
     }
 
   },
@@ -246,6 +260,13 @@ Vue.component('portfolio-invests-one-row', {
           elem.$bvToast.toast('Запись успешно удалена', {
             title: `Mybonds.space`,
             variant: 'success',
+            solid: true
+          })
+        },
+        function_catch = function (error) {
+          elem.$bvToast.toast(`Запись не удалена`, {
+            title: `Mybonds.space`,
+            variant: 'danger',
             solid: true
           })
         }
@@ -474,3 +495,645 @@ Vue.component('add-portfolio-invests', {
   `
 })
 
+Vue.component('portfolio-securities', {
+  data: function () {
+    return {
+      is_owner: false
+    }
+  },
+  beforeMount: function () {
+    this.is_owner = this.$store.state.is_owner;
+  },
+  computed: {
+    portfolio_securities_list: function () {
+      return this.$store.state.portfolio_securities;
+    }
+  },
+  methods: {
+  },
+  template: `
+      <div>
+        <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseSecurityInPortfolio>
+        Состав портфеля
+        </b-button>
+        <b-collapse id="collapseSecurityInPortfolio" class="container-in-collapse">
+          <div class="row">
+            <div class="col-md-3 col-12 mt-1 d-none d-md-block">
+              <p>Наименование</p>
+            </div>
+            <div class="col-md-3 col-12 mt-1 d-none d-md-block">
+              <p>Количество</p>
+            </div>
+            <div class="col-md-2 col-12 mt-1 d-none d-md-block">
+              <p>Цена</p>
+            </div>
+            <div class="col-md-2 col-12 mt-1 d-none d-md-block">
+              <p>Итого</p>
+            </div>
+            <div class="col-md-1 col-12 mt-1 d-none d-md-block">
+            </div>
+          </div>
+          <div v-if="portfolio_securities_list">
+            <div v-for="(one_row,index) in portfolio_securities_list">
+              <div class="dropdown-divider"></div>
+              <portfolio-securities-one-row
+              :one_row=one_row
+              :is_owner=is_owner>
+              </portfolio-securities-one-row>
+            </div>
+          </div>
+        </b-collapse>
+      </div>
+    `
+})
+
+Vue.component('portfolio-securities-one-row', {
+  props: ['one_row', 'is_owner'],
+  data: function () {
+    return {
+      class_change_price_percent: null,
+      security_id: null
+    }
+  },
+  computed: {
+    computed_count: function () {
+      return parseFloat(this.one_row.count)
+        .toLocaleString('ru-RU',
+          {
+            maximumFractionDigits: 10
+          });
+    },
+    computed_total_cost_in_rub: function () {
+      return return_RUB_locale(this.one_row.total_cost_in_rub);
+    },
+    computed_change_price_percent: function () {
+      return parseFloat(this.one_row.security_change_price_percent);
+    },
+    computed_security_change_price_percent: function () {
+      return return_percent_locale(this.one_row.security_change_price_percent);
+    },
+    computed_total_cost: function () {
+      return parseFloat(this.one_row.total_cost)
+        .toLocaleString('ru-RU',
+          {
+            style: 'currency',
+            currency: this.one_row.security_faceunit.replace('SUR', 'RUB'),
+            maximumFractionDigits: 2
+          });
+    },
+    computed_price: function () {
+      return parseFloat(this.one_row.today_price)
+        .toLocaleString('ru-RU',
+          {
+            style: 'currency',
+            currency: this.one_row.security_faceunit.replace('SUR', 'RUB'),
+            maximumFractionDigits: 10
+          });
+    }
+  },
+  beforeMount: function () {
+    let security_change_price_percent = this.one_row.security_change_price_percent;
+    if (security_change_price_percent < 0) {
+      this.class_change_price_percent = ['fas', 'text-danger', 'fa-angle-double-down']
+    } else if (security_change_price_percent > 0) {
+      this.class_change_price_percent = ['fas', 'text-success', 'fa-angle-double-up']
+    } else {
+      this.class_change_price_percent = ['text-secondary']
+    };
+    this.security_id = this.one_row.security_url.split('/')[2];
+  },
+  methods: {
+    buy_click: function () {
+      this.$store.commit('set_trade_security', this.one_row);
+      this.$store.commit('set_trade_security_action', 'buy');
+      this.$bvModal.show('modal-buy-security');
+    },
+    sell_click: function () {
+      this.$store.commit('set_trade_security', this.one_row);
+      this.$store.commit('set_trade_security_action', 'sell');
+      this.$bvModal.show('modal-buy-security');
+    }
+  },
+  template: `
+      <div class="row align-items-center">
+        <div class="col-md-3 col-12 mb-1 mt-1">
+          <a class="btn btn-warning btn-sm" v-bind:href="one_row.security_url">{{ one_row.shortname }}</a>
+        </div>
+        <div class="col-md-3 col-12 mb-1 mt-1">
+          <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Цена: </span><span>{{ computed_price }}<br class="d-md-inline d-none"><span class="d-md-none d-inline"> </span>
+            <span v-bind:class="class_change_price_percent">({{computed_security_change_price_percent}})</span>
+          </span>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Итого: </span><span>{{ computed_total_cost }}</span>
+          <span v-if="one_row.security_faceunit != 'SUR'">({{ computed_total_cost_in_rub}})</span>
+        </div>
+        <div v-if="is_owner" class="col-md-1 col-12 mb-1 mt-1">
+          <b-button
+          size="sm"
+          variant="success"
+          class="mb-1 mt1"
+          @click="buy_click">Купить</b-button>
+          <b-button
+          size="sm"
+          variant="danger"
+          class="mb-1 mt1"
+          @click="sell_click">Продать</b-button>
+        </div>
+      </div>  
+    `
+})
+
+Vue.component('form-trade-securities', {
+  data: function () {
+    return {
+      date: null,
+      date_invalid: false,
+      price: 0,
+      price_invalid: false,
+      comission: 0,
+      comission_invalid: false,
+      nkd: 0,
+      nkd_invalid: false,
+      count: 0,
+      count_invalid: false,
+      total_cost: 0
+    }
+  },
+  beforeMount: function () {
+
+  },
+  beforeDestroy: function () {
+
+  },
+  computed: {
+    computed_title: function () {
+      if (this.$store.state.trade_security_action) {
+        let action = this.$store.state.trade_security_action
+          .replace('buy', 'Покупка')
+          .replace('sell', 'Продажа');
+        let shortname = this.$store.state.trade_security.shortname;
+        let security_type = this.$store.state.trade_security.security_type
+          .replace('bond', 'облигаций')
+          .replace('share', 'акций')
+          .replace('ppif', 'паёв')
+        return `${action} ${security_type} "${shortname}"`;
+      }
+    },
+    currency: function () {
+      let trade_security = this.$store.state.trade_security;
+      if (trade_security) {
+        return currency_sign(trade_security.security_faceunit);
+      }
+      return null
+    },
+    security_type: function () {
+      let trade_security = this.$store.state.trade_security;
+      if (trade_security) {
+        return currency_sign(trade_security.security_type);
+      }
+      return null
+    }
+  },
+  methods: {
+    calc_total_cost: function () {
+      let action = this.$store.state.trade_security_action;
+      this.total_cost = parseFloat(this.count) * parseFloat(this.price) - parseFloat(this.comission);
+      if (action == 'sell') {
+        this.total_cost = this.total_cost + parseFloat(this.nkd);
+      } else {
+        this.total_cost = this.total_cost - parseFloat(this.nkd);
+      }
+    },
+    handleOk: function (bvModalEvt) {
+      // Prevent modal from closing
+      bvModalEvt.preventDefault()
+      // Trigger submit handler
+      if (this.validate()) {
+        this.handleSubmit()
+      }
+    },
+    validate: function () {
+      if (this.date == null) {
+        this.date_invalid = true
+        return false
+      } else {
+        this.date_invalid = false
+      };
+      if (parseFloat(this.price) < 0) {
+        this.price_invalid = true
+        return false
+      } else {
+        this.price_invalid = false
+      };
+      if ((parseFloat(this.comission) < 0) || parseFloat(this.comission) >= parseFloat(this.price)) {
+        this.comission_invalid = true
+        return false
+      } else {
+        this.comission_invalid = false
+      };
+      if (parseFloat(this.nkd) < 0) {
+        this.nkd_invalid = true
+        return false
+      } else {
+        this.nkd_invalid = false
+      };
+      if (parseFloat(this.count) < 1) {
+        this.count_invalid = true
+        return false
+      } else {
+        this.count_invalid = false
+      };
+      return true
+    },
+    today: function () {
+      return new Date()
+    },
+    handleSubmit() {
+      let elem = this;
+      let formData = new FormData();
+      formData.append('portfolio', elem.$store.state.portfolio_id);
+      formData.append('date', elem.date);
+      formData.append('commission', elem.comission);
+      formData.append('count', elem.count);
+      formData.append('price', elem.price);
+      formData.append('nkd', elem.nkd);
+      formData.append('ndfl', 0);
+      let trade_security_id = elem.$store.state.trade_security.security_url.split('/')[3];
+      formData.append('security', trade_security_id);
+      formData.append('buy', elem.$store.state.trade_security_action == 'buy');
+      let config = {
+        method: 'post',
+        url: 'securities-trade-history/',
+        data: formData
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          elem.$store.commit('addItemToTradeSecurities', resp.data);
+          elem.$store.dispatch('get_updated_portfolio', simple = false);
+          elem.$bvToast.toast('Запись успешно добавлена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        },
+        function_error_response_other = function (error) {
+          const h = elem.$createElement;
+          // Create the message
+          const vNodesMsg = [h('p', `Запись не добавлена`)];
+          if (error.response.status === 400) {
+            var status = error.response.data;
+            vNodesMsg.push(h('p', `${status}`));
+          };
+          elem.$bvToast.toast(vNodesMsg, {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$bvModal.hide('modal-buy-security')
+      })
+    }
+  },
+  template: `
+      <b-modal
+      id="modal-buy-security"
+      centered
+      v-bind:title="computed_title"
+      @ok="handleOk">
+        <label for="datepicker">Дата:</label>
+        <b-form-datepicker
+        id="datepicker"
+        v-model="date"
+        :max="today()"
+        v-bind:class="{ 'is-invalid': date_invalid  }"
+        class="mb-2"></b-form-datepicker>
+        <label for="price">Цена ({{currency}}):</label>
+        <b-form-input
+        id="price"
+        v-model="price"
+        type="number"
+        min="0"
+        v-bind:class="{ 'is-invalid': price_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label for="comission">Комиссия ({{currency}}):</label>
+        <b-form-input 
+        id="comission" 
+        v-model="comission" 
+        type="number" 
+        min="0" 
+        max="price"
+        v-bind:class="{ 'is-invalid': comission_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label v-if="security_type == 'bond'" for="nkd">НКД ({{currency}}):</label>
+        <b-form-input
+        v-if="security_type == 'bond'"
+        id="nkd"
+        v-model="nkd"
+        type="number"
+        min="0"
+        max="price"
+        v-bind:class="{ 'is-invalid': nkd_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label for="count">Количество (шт.):</label>
+        <b-form-input 
+        id="count" 
+        v-model="count" 
+        type="number" 
+        min="0"
+        v-bind:class="{ 'is-invalid': count_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label for="total_cost">Общая сумма ({{currency}}):</label>
+        <b-form-input id="total_cost" v-model="total_cost" type="number" readonly></b-form-input>
+      </b-modal>
+    `
+})
+
+Vue.component('portfolio-trade-history', {
+  data: function () {
+    return {
+    }
+  },
+  beforeMount: function () {
+  },
+  computed: {
+    portfolio_trade_history_list: function () {
+      return this.$store.state.trade_securities;
+    }
+  },
+  methods: {
+  },
+  template: `
+      <div>
+        <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseTradeSecurityHistory>
+        История торгов
+        </b-button>
+        <b-collapse id="collapseTradeSecurityHistory" class="container-in-collapse">
+          <div class="row">
+            <div class="col-md-2 d-none d-md-block">
+              <p>Наименование</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Количество</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Цена</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Комиссия</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Действие</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Дата</p>
+            </div>
+          </div>
+          <div v-if="portfolio_trade_history_list">
+            <div v-for="(one_row,index) in portfolio_trade_history_list">
+              <div class="dropdown-divider"></div>
+              <portfolio-trade-history-one-row
+              :one_row=one_row
+              :index=index>
+              </portfolio-trade-history-one-row>
+            </div>
+          </div>
+        </b-collapse>
+      </div>
+    `
+})
+
+Vue.component('portfolio-trade-history-one-row', {
+  props: ['one_row', 'index'],
+  data: function () {
+    return {
+    }
+  },
+  methods: {
+    removeItem: function () {
+      let elem = this;
+      let config = {
+        method: 'delete',
+        url: elem.one_row.url_for_delete
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          elem.$store.commit('removeItemFromTradeSecurityHistory', elem.index);
+          elem.$store.dispatch('get_updated_portfolio', simple = false)
+          elem.$bvToast.toast('Запись успешно удалена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        },
+        function_catch = function (error) {
+          const h = elem.$createElement;
+          // Create the message
+          const vNodesMsg = [h('p', `Запись не удалена`)];
+          if (error.response.status === 400) {
+            var status = error.response.data;
+            vNodesMsg.push(h('p', `${status}`));
+          };
+          elem.$bvToast.toast(vNodesMsg, {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+
+    }
+  },
+  computed: {
+    computed_count: function () {
+      return parseFloat(this.one_row.count)
+        .toLocaleString('ru-RU',
+          {
+            maximumFractionDigits: 10
+          });
+    },
+    computed_price: function () {
+      return parseFloat(this.one_row.price)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: this.one_row.security_faceunit
+            .replace('РУБ', 'RUB')
+            .replace('SUR', 'RUB'),
+          maximumFractionDigits: 10
+        });
+    },
+    computed_commission: function () {
+      return parseFloat(this.one_row.commission)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: this.one_row.security_faceunit
+            .replace('РУБ', 'RUB')
+            .replace('SUR', 'RUB'),
+          maximumFractionDigits: 10
+        });
+    }
+  },
+  template: `
+      <div>
+        <div class="row align-items-center mt-2">
+          <div class="col-md-2 col-12 mb-1 mt-1">
+            <a class="btn btn-warning btn-sm" v-bind:href="one_row.security_url">{{ one_row.security_name }}</a>
+          </div>
+          <div class="col-md-2 col-12 mb-1 mt-1">
+            <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
+          </div>
+          <div class="col-md-2 col-12 mb-1 mt-1">
+            <span class="d-md-none">Цена: </span><span>{{ computed_price }}</span>
+          </div>
+          <div class="col-md-2 col-12 mb-1 mt-1">
+            <span class="d-md-none">Комиссия: </span><span>{{ computed_commission }}</span>
+          </div>
+          <div class="col-md-2 col-12 mb-1 mt-1">
+            <span class="d-md-none">Действие: </span><span>{{ one_row.buy ? 'Покупка' : 'Продажа' }}</span>
+          </div>
+          <div class="col-md-2 col-12 mb-1 mt-1">
+            <span class="d-md-none">Дата: </span><span>{{ one_row.date }}</span>
+          </div>
+        </div>
+        <b-button
+        size="sm"
+        variant="danger"
+        class="mb-1 mt1"
+        @click="removeItem">Удалить запись</b-button>
+      </div>
+    `
+})
+
+Vue.component('follow', {
+  data: function () {
+    return {
+    }
+  },
+  beforeMount: function () {
+  },
+  computed: {
+    text: function () {
+      let st = this.$store.state.is_followed;
+      return st ? 'Отписаться' : 'Подписаться'
+    },
+    variant: function () {
+      let st = this.$store.state.is_followed;
+      return st ? 'danger' : 'primary'
+    }
+  },
+  methods: {
+    toogleFollow: function () {
+      let elem = this;
+      let config = {
+        method: 'post',
+        url: this.$store.state.follow_url
+      };
+      request_service(config,
+        function_success = function (resp) {
+          elem.$store.dispatch('toogleFollow');
+          if (resp.status == 200) {
+            elem.$bvToast.toast('Подписка оформлена', {
+              title: `Mybonds.space`,
+              variant: 'success',
+              solid: true
+            })
+          } else if (resp.status == 204) {
+            elem.$bvToast.toast('Подписка удалена', {
+              title: `Mybonds.space`,
+              variant: 'danger',
+              solid: true
+            })
+          }
+        }
+      );
+    }
+  },
+  template: `
+    <b-button
+    size="sm"
+    pill
+    :variant="variant"
+    class="mb-1 mt1"
+    @click="toogleFollow">{{text}}
+    </b-button>
+    `
+})
+Vue.component('private', {
+  data: function () {
+    return {
+      selected: null,
+      options: [
+        { value: 'da', text: 'Всем запрещено' },
+        { value: 'af', text: 'Разрешено друзьям' },
+        { value: 'al', text: 'Разрешено авторизованным' },
+        { value: 'aa', text: 'Разрешено всем' }
+      ]
+    }
+  },
+  beforeMount: function () {
+    this.selected = this.$store.state.private
+  },
+  computed: {
+  },
+  methods: {
+    applyPrivate: function () {
+      let elem = this;
+      let formData = new FormData();
+      formData.append('private', elem.selected);
+      let config = {
+        method: 'post',
+        url: '/portfolios/' + elem.$store.state.portfolio_id + '/private/',
+        data: formData
+      };
+      request_service(config,
+        function_success = function (resp) {
+          if (resp.status == 200) {
+            elem.$bvToast.toast('Настройки применены.', {
+              title: `Mybonds.space`,
+              variant: 'success',
+              solid: true
+            })
+          }
+          elem.$store.commit('setPrivate', elem.selected);
+        },
+        function_catch = function (error) {
+          elem.$bvToast.toast('Настройки отклонены.', {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+    }
+  },
+  template: `
+    <div class="">
+    <span class="">Приватность:</span>
+      <div class="mt-1 d-flex flex-row">
+        <b-form-select
+        v-model="selected"
+        :options="options"
+        size="sm"
+        class="col-7"></b-form-select>
+        <div class="col-1">
+        </div>
+        <b-button
+        size="sm"
+        pill
+        variant="primary"
+        class="mb-1 mt1"
+        @click="applyPrivate">Применить
+        </b-button>
+      </div>
+    </div>
+    `
+})

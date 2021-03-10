@@ -76,6 +76,12 @@ var app = new Vue({
     portfolio_visible: function () {
       return this.$store.state.portfolio_visible;
     },
+    is_owner: function () {
+      return this.$store.state.is_owner;
+    },
+    is_deny: function () {
+      return this.$store.state.is_deny;
+    },
     spiner_visible: function () {
       return this.$store.state.spiner_visible;
     },
@@ -89,7 +95,10 @@ var app = new Vue({
   template: `
     <div id="app">
       <div v-if="portfolio_visible">
-        <h3 class="align-self-center">Портфель: {{portfolio_title}}</h3>
+        <div class="d-flex justify-content-between">
+          <h3 class="align-self-center">Портфель: {{portfolio_title}}</h3>
+          <follow v-if="!is_owner"></follow>
+        </div>
         <b-tabs content-class="mt-3">
           <b-tab title="Главная" active>
             <div class="row">
@@ -97,15 +106,27 @@ var app = new Vue({
                 class="col-sm-4"
                 :portfolio_info_object="portfolio_info">
               </portfolio-info>
-              <portfolio-invests
-                class="col-sm-8"
-                v-if="portfolio_info.is_owner"
-                >
-              </portfolio-invests>
+              <div class="col-sm-8">
+                <portfolio-invests
+                  v-if="portfolio_info.is_owner"
+                  >
+                </portfolio-invests>
+                <portfolio-securities
+                v-if="!is_deny">
+                </portfolio-securities>
+                <portfolio-trade-history
+                  v-if="portfolio_info.is_owner"
+                  >
+                </portfolio-trade-history>
+              </div>
             </div>
+            <form-trade-securities
+            v-if="is_owner"></form-trade-securities>
           </b-tab>
           <b-tab title="Настройки" v-bind:disabled="!portfolio_info.is_owner">
-            <p>I'm the second tab</p>
+            <div v-if="is_owner" class="container">
+              <private></private>
+            </div>
           </b-tab>
         </b-tabs>
       </div>

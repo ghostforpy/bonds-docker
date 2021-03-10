@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 from ..models import Security, SecurityPortfolios, TradeHistory
 
 
@@ -40,15 +41,33 @@ class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
                   'issuesize']
 
 
+class SecurityBuyHyperlink(serializers.HyperlinkedRelatedField):
+    view_name = 'moex:buy'
+    queryset = Security.objects.all()
+
+    def get_url(self, obj, view_name, request, format):
+        url_kwargs = {
+            'id': obj.pk
+        }
+        return reverse(view_name, kwargs=url_kwargs, request=request, format=format)
+
+
 class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
     "serializer for SecurityPortfolios model"
     security_name = serializers.CharField(source='security')
+    security_url = serializers.CharField(source='security.get_absolute_url')
     security_faceunit = serializers.CharField(
-        source='security.get_main_board_faceunit_display')
+        source='security.main_board_faceunit')
     security_type = serializers.CharField(
         source='security.security_type')
     shortname = serializers.CharField(
         source='security.shortname')
+    security_change_price_percent = serializers.DecimalField(
+        source='security.change_price_percent',
+        max_digits=17,
+        decimal_places=10
+    )
+    security_buy_url = serializers.SerializerMethodField()
 
     class Meta:
         model = SecurityPortfolios
@@ -68,6 +87,9 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
             'today_price',
             'total_cost'
         ]
+
+    def get_security_buy_url(self, obj):
+        return reverse('moex:buy', args=[obj.security.id])
 
 
 class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSerializer):
@@ -102,17 +124,24 @@ class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
         }
 
 
-class TradeHistoryCreateSerializer(serializers.HyperlinkedModelSerializer):
-    security = serializers.CharField()
-    portfolio = serializers.CharField()
+class TradeHistoryCreateSerializer(serializers.ModelSerializer):
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='api:securities-trade-history-detail')
+    security_url = serializers.CharField(
+        read_only=True, source='security.get_absolute_url')
+    security_faceunit = serializers.CharField(
+        read_only=True, source='security.main_board_faceunit')
+    security_name = serializers.CharField(read_only=True, source='security')
 
     class Meta:
         model = TradeHistory
         exclude = ['owner']
-        extra_kwargs = {
-            'url': {'view_name': 'api:securities-trade-history-detail'},
-        }
 
     def create(self, validated_data):
         new_object = TradeHistory(**validated_data)
-        return new_object.save()
+        create_status = new_object.save()
+        if create_status == 'ok':
+            return new_object
+        else:
+            return create_status

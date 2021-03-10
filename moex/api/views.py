@@ -2,12 +2,13 @@
 # from django.shortcuts import get_object_or_404
 # from rest_framework.decorators import action
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch
 from rest_framework.mixins import ListModelMixin,\
     RetrieveModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework import status as response_status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated,\
-    AllowAny, BasePermission
+    AllowAny, BasePermission, IsAdminUser
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
@@ -26,7 +27,8 @@ class IsOwnerOfPortfolio(BasePermission):
 
     def has_permission(self, request, view):
         try:
-            portfolio_id = request.data['portfolio']
+            portfolio_id = request.query_params.get(
+                'portfolio') or request.data['portfolio']
         except KeyError:
             return False
         try:
@@ -37,6 +39,11 @@ class IsOwnerOfPortfolio(BasePermission):
             return False
         return True
 
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
+
+
+class IsOwnerOfObjectForDestroy(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         return obj.owner == request.user
 
@@ -73,7 +80,18 @@ class SecurityViewSet(ListModelMixin,
 
 
 class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
-    permission_classes = [IsOwnerOfPortfolio]
+    def get_permissions(self):
+        if self.action in ['portfolio_list', 'create']:
+            permission_classes = [IsOwnerOfPortfolio]
+        elif self.action in ['security_list']:
+            permission_classes = [IsAuthenticated]
+        elif self.action in ['destroy']:
+            permission_classes = [IsOwnerOfObjectForDestroy]
+        elif self.action == 'list':
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action == 'destroy':
@@ -82,23 +100,31 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
             return TradeHistoryCreateSerializer
         if self.action == 'list':
             return TradeHistorySerializerForPortfolioDetail
-        if self.action in ['portfolio-list', 'security-list']:
+        if self.action in ['portfolio_list', 'security_list']:
             return TradeHistorySerializer
 
     def get_queryset(self):
         queryset = TradeHistory.objects.all()
         user = self.request.user
         queryset = queryset.filter(owner=user)
-        if self.action == 'portfolio-list':
-            if 'porfolio' in self.request.query_params:
-                q = self.request.query_params.get('porfolio')
-                return queryset.filter(portfolio__id=q)
+        if self.action in ['portfolio_list']:
+            if 'portfolio' in self.request.query_params:
+                q = self.request.query_params.get('portfolio')
+                return queryset.filter(portfolio__id=q).select_related(
+                    'security',
+                    'portfolio',
+                    'owner'
+                )
             else:
                 return queryset.none()
-        if self.action == 'security-list':
+        if self.action == 'security_list':
             if 'security' in self.request.query_params:
                 q = self.request.query_params.get('security')
-                return queryset.filter(security__id=q)
+                return queryset.filter(security__id=q).select_related(
+                    'security',
+                    'portfolio',
+                    'owner'
+                )
             else:
                 return queryset.none()
         return queryset  # action = list
@@ -119,29 +145,19 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
         data = request.data
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        create_status = self.perform_create(serializer)
-        if create_status == 'ok':
-            headers = self.get_success_headers(
-                serializer.data
-            )
+        new_object = self.perform_create(serializer)
+        if isinstance(new_object, TradeHistory):
             status = response_status.HTTP_201_CREATED
             response = Response(serializer.data,
-                                status=status,
-                                headers=headers)
+                                status=status)
         else:
             status = response_status.HTTP_400_BAD_REQUEST
-            response = Response(data=create_status,
+            response = Response(data=new_object,
                                 status=status)
         return response
 
     def perform_create(self, serializer):
         return serializer.save(owner=self.request.user)
-
-    def get_success_headers(self, data):
-        try:
-            return {'Location': str(data[api_settings.URL_FIELD_NAME])}
-        except (TypeError, KeyError):
-            return {}
 
     @action(methods=['get'], detail=False,
             url_path='portfolio-list', url_name='portfolio-list')
