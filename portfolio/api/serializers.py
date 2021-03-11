@@ -183,6 +183,9 @@ class InvestmentPortfolioDetailOwnerSerializer(
     """
     url = serializers.HyperlinkedIdentityField(
         view_name="api:investmentportfolio-detail")
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        view_name="portfolio:delete_portfolio",
+        lookup_field='id')
     securities = SecurityInPortfolioSerializer(many=True, read_only=True)
     trade_securities = TradeHistorySerializerForPortfolioDetail(
         many=True, read_only=True)

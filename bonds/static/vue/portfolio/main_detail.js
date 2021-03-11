@@ -82,6 +82,9 @@ var app = new Vue({
     is_deny: function () {
       return this.$store.state.is_deny;
     },
+    url_for_delete: function () {
+      return this.$store.state.url_for_delete_portfolio;
+    },
     spiner_visible: function () {
       return this.$store.state.spiner_visible;
     },
@@ -126,6 +129,10 @@ var app = new Vue({
           <b-tab title="Настройки" v-bind:disabled="!portfolio_info.is_owner">
             <div v-if="is_owner" class="container">
               <private></private>
+              <div class="dropdown-divider"></div>
+              <b-button
+              variant="danger"
+              :href="url_for_delete">Удалить портфель</b-button>
             </div>
           </b-tab>
         </b-tabs>

@@ -8,6 +8,7 @@ const store = new Vuex.Store({
     is_owner: false,
     is_deny: false,
     private: null,
+    url_for_delete_portfolio: null,
     //part portfolio invests
     portfolio_invests: null,
     is_liked: null,
@@ -46,6 +47,7 @@ const store = new Vuex.Store({
       state.portfolio_info.is_owner = data.is_owner;
       state.is_owner = data.is_owner;
       if (data.is_owner) {
+        state.url_for_delete_portfolio = data.url_for_delete;
         state.portfolio_info.id = state.portfolio_id;
         state.portfolio_info.ostatok = data.ostatok;
         state.portfolio_info.created = new Date(data.created).toLocaleString('ru-RU');
