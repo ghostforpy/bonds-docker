@@ -17,14 +17,8 @@ Vue.component('portfolio-info', {
   props: ['portfolio_info_object'],
   data: function () {
     return {
-      class_change_percent_profit: null,
-      class_change_year_percent_profit: null,
       today_cash: null,
       portfolio_info: null,
-      computed_percent_profit: null,
-      computed_year_percent_profit: null,
-      computed_change_percent_profit: null,
-      computed_change_year_percent_profit: null
     }
   },
   beforeMount: function () {
@@ -32,28 +26,11 @@ Vue.component('portfolio-info', {
     this.today_cash = this.portfolio_info.today_cash;
     this.prepare_profits();
   },
+  beforeUpdate: function () {
+    this.prepare_profits();
+  },
   methods: {
     prepare_profits() {
-      let change_percent_profit = this.portfolio_info.change_percent_profit;
-      if (change_percent_profit < 0) {
-        this.class_change_percent_profit = ['fas', 'text-danger', 'fa-angle-double-down']
-      } else if (change_percent_profit > 0) {
-        this.class_change_percent_profit = ['fas', 'text-success', 'fa-angle-double-up']
-      } else {
-        this.class_change_percent_profit = ['text-secondary']
-      };
-      let change_year_percent_profit = this.portfolio_info.change_year_percent_profit;
-      if (change_year_percent_profit < 0) {
-        this.class_change_year_percent_profit = ['fas', 'text-danger', 'fa-angle-double-down']
-      } else if (change_year_percent_profit > 0) {
-        this.class_change_year_percent_profit = ['fas', 'text-success', 'fa-angle-double-up']
-      } else {
-        this.class_change_year_percent_profit = ['text-secondary']
-      };
-      this.computed_percent_profit = return_percent_locale(this.portfolio_info.percent_profit);
-      this.computed_year_percent_profit = return_percent_locale(this.portfolio_info.year_percent_profit);
-      this.computed_change_percent_profit = return_percent_locale(this.portfolio_info.change_percent_profit);
-      this.computed_change_year_percent_profit = return_percent_locale(this.portfolio_info.change_year_percent_profit);
     },
     refreshManualPortfolio: function () {
       let formData = new FormData();
@@ -97,6 +74,41 @@ Vue.component('portfolio-info', {
     is_deny: function () {
       return this.$store.state.is_deny;
     },
+    portfolio_ostatok_currency: function () {
+      return this.$store.state.portfolio_info.ostatok_currency
+    },
+    computed_year_percent_profit: function () {
+      return return_percent_locale(this.$store.state.portfolio_info.year_percent_profit);
+    },
+    computed_percent_profit: function () {
+      return return_percent_locale(this.$store.state.portfolio_info.percent_profit);
+    },
+    computed_change_percent_profit: function () {
+      return return_percent_locale(this.$store.state.portfolio_info.change_percent_profit);
+    },
+    computed_change_year_percent_profit: function () {
+      return return_percent_locale(this.$store.state.portfolio_info.change_year_percent_profit);
+    },
+    computed_class_change_percent_profit: function () {
+      let change_percent_profit = this.$store.state.portfolio_info.change_percent_profit;
+      if (change_percent_profit < 0) {
+        return ['fas', 'text-danger', 'fa-angle-double-down']
+      } else if (change_percent_profit > 0) {
+        return ['fas', 'text-success', 'fa-angle-double-up']
+      } else {
+        return ['text-secondary']
+      };
+    },
+    computed_class_change_year_percent_profit: function () {
+      let change_year_percent_profit = this.portfolio_info.change_year_percent_profit;
+      if (change_year_percent_profit < 0) {
+        return ['fas', 'text-danger', 'fa-angle-double-down']
+      } else if (change_year_percent_profit > 0) {
+        return ['fas', 'text-success', 'fa-angle-double-up']
+      } else {
+        return ['text-secondary']
+      };
+    }
   },
   template: `
       <div>
@@ -124,11 +136,11 @@ Vue.component('portfolio-info', {
           <p v-if="!portfolio_info.manual">Текущий баланс : {{computed_today_cash}}</p>
           <p v-if="portfolio_info.is_owner && !portfolio_info.manual">Остаток: {{computed_ostatok}}</p>
           <portfolio-info-ostatok-currency
-          v-if="portfolio_info.is_owner && portfolio_info.ostatok_currency.length"
-          :ostatok_currency=portfolio_info.ostatok_currency>
+          v-if="portfolio_info.is_owner && portfolio_ostatok_currency.length"
+          :ostatok_currency=portfolio_ostatok_currency>
           </portfolio-info-ostatok-currency>
-          <p>Доходность: {{computed_percent_profit}} <span v-bind:class="class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
-          <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
+          <p>Доходность: {{computed_percent_profit}} <span v-bind:class="computed_class_change_percent_profit">({{computed_change_percent_profit}})</span></p>
+          <p>Годовая доходность: {{computed_year_percent_profit}} <span v-bind:class="computed_class_change_year_percent_profit">({{computed_change_year_percent_profit}})</span></p>
           <p v-if="portfolio_info.strategia !== '' && portfolio_info.strategia !== 'null'">Стратегия: <span>{{ portfolio_info.strategia }}</span></p>
           <p v-if="portfolio_info.is_owner">Создан: {{portfolio_info.created}}</p>
         </div>
