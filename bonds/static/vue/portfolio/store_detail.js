@@ -100,15 +100,21 @@ const store = new Vuex.Store({
       state.trade_securities.unshift(new_item);
     },
     simple_update_portfolio(state, data) {
-      state.portfolio_info.change_percent_profit = data.change_percent_profit;
-      state.portfolio_info.change_year_percent_profit = data.change_year_percent_profit;
-      state.portfolio_info.invest_cash = data.invest_cash;
-      state.portfolio_info.ostatok = data.ostatok;
-      state.portfolio_info.percent_profit = data.percent_profit;
-      state.portfolio_info.today_cash = data.today_cash;
-      state.portfolio_info.year_percent_profit = data.year_percent_profit;
-      state.portfolio_info.ostatok_currency = data.securities.filter(
+      let portfolio = Object();
+      portfolio.created = state.portfolio_info.created;
+      portfolio.strategia = state.portfolio_info.strategia;
+      portfolio.change_percent_profit = data.change_percent_profit;
+      portfolio.change_year_percent_profit = data.change_year_percent_profit;
+      portfolio.invest_cash = data.invest_cash;
+      portfolio.ostatok = data.ostatok;
+      portfolio.percent_profit = data.percent_profit;
+      portfolio.today_cash = data.today_cash;
+      portfolio.year_percent_profit = data.year_percent_profit;
+      portfolio.ostatok_currency = data.securities.filter(
         item => item.security_type == 'currency');
+      portfolio.is_owner = state.portfolio_info.is_owner;
+      portfolio.manual = state.portfolio_info.manual;
+      state.portfolio_info = portfolio;
     },
     update_securities_in_portfolio(state, data) {
       state.portfolio_securities = data.securities.filter(
