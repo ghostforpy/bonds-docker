@@ -683,6 +683,13 @@ Vue.component('form-trade-securities', {
         return `${action} ${security_type} "${shortname}"`;
       }
     },
+    computed_action: function () {
+      if (this.$store.state.trade_security_action) {
+        return this.$store.state.trade_security_action
+          .replace('buy', 'оплате')
+          .replace('sell', 'выплате')
+      }
+    },
     currency: function () {
       let trade_security = this.$store.state.trade_security;
       if (trade_security) {
@@ -701,11 +708,11 @@ Vue.component('form-trade-securities', {
   methods: {
     calc_total_cost: function () {
       let action = this.$store.state.trade_security_action;
-      this.total_cost = parseFloat(this.count) * parseFloat(this.price) - parseFloat(this.comission);
+      this.total_cost = parseFloat(this.count) * parseFloat(this.price) + parseFloat(this.nkd);
       if (action == 'sell') {
-        this.total_cost = this.total_cost + parseFloat(this.nkd);
+        this.total_cost = this.total_cost - parseFloat(this.comission);
       } else {
-        this.total_cost = this.total_cost - parseFloat(this.nkd);
+        this.total_cost = this.total_cost + parseFloat(this.comission);
       }
     },
     handleOk: function (bvModalEvt) {
@@ -822,6 +829,7 @@ Vue.component('form-trade-securities', {
         v-model="price"
         type="number"
         min="0"
+        class="mb-2"
         v-bind:class="{ 'is-invalid': price_invalid  }"
         @update="calc_total_cost"></b-form-input>
         <label for="comission">Комиссия ({{currency}}):</label>
@@ -831,6 +839,7 @@ Vue.component('form-trade-securities', {
         type="number" 
         min="0" 
         max="price"
+        class="mb-2"
         v-bind:class="{ 'is-invalid': comission_invalid  }"
         @update="calc_total_cost"></b-form-input>
         <label v-if="security_type == 'bond'" for="nkd">НКД ({{currency}}):</label>
@@ -841,6 +850,7 @@ Vue.component('form-trade-securities', {
         type="number"
         min="0"
         max="price"
+        class="mb-2"
         v-bind:class="{ 'is-invalid': nkd_invalid  }"
         @update="calc_total_cost"></b-form-input>
         <label for="count">Количество (шт.):</label>
@@ -849,9 +859,10 @@ Vue.component('form-trade-securities', {
         v-model="count" 
         type="number" 
         min="0"
+        class="mb-2"
         v-bind:class="{ 'is-invalid': count_invalid  }"
         @update="calc_total_cost"></b-form-input>
-        <label for="total_cost">Общая сумма ({{currency}}):</label>
+        <label for="total_cost">Общая сумма к {{computed_action}} ({{currency}}):</label>
         <b-form-input id="total_cost" v-model="total_cost" type="number" readonly></b-form-input>
       </b-modal>
     `
