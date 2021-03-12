@@ -98,9 +98,9 @@ var app = new Vue({
   template: `
     <div id="app">
       <div v-if="portfolio_visible">
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between align-items-center">
           <h3 class="align-self-center">Портфель: {{portfolio_title}}</h3>
-          <follow v-if="!is_owner"></follow>
+          <follow v-if="!is_owner && !is_deny"></follow>
         </div>
         <b-tabs content-class="mt-3">
           <b-tab title="Главная" active>
