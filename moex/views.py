@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -48,6 +49,15 @@ def security_detail(request, id):
                        security_in_user_portfolios})
     except ObjectDoesNotExist:
         return redirect(request.META.get('HTTP_REFERER'))
+
+
+@ login_required
+def security_detail_vue(request, id):
+    mode = os.environ['DJANGO_SETTINGS_MODULE']
+    mode = mode.split('.')[-1]
+    return render(request,
+                  'moex/detail_vue.html',
+                  {'mode': mode})
 
 
 def security_list(request):

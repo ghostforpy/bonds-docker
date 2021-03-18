@@ -13,6 +13,7 @@ urlpatterns = [
          views.delete_history,
          name='delete_history'),
     path('detail/<int:id>/', views.security_detail, name='detail'),
+    path('detail2/<int:id>/', views.security_detail_vue, name='detail_vue'),
     path('detail-new/<secid>/', views.new_security_detail, name='new_detail'),
     path('buy-new/<secid>/', views.new_security_buy, name='new_buy'),
     path('add-new/<secid>/', views.add_new_security_for_staff,
