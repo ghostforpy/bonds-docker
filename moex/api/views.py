@@ -3,6 +3,7 @@
 # from rest_framework.decorators import action
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch
+from django.contrib.auth import get_user_model
 from rest_framework.mixins import ListModelMixin,\
     RetrieveModelMixin, DestroyModelMixin, CreateModelMixin
 from rest_framework import status as response_status
@@ -15,7 +16,7 @@ from rest_framework.decorators import action
 from .serializers import SecurityRetrivieSerializer,\
     SecurityListSerializer, TradeHistorySerializer, \
     TradeHistoryCreateSerializer, TradeHistorySerializerForPortfolioDetail
-from ..models import Security, TradeHistory
+from ..models import Security, TradeHistory, SecurityPortfolios
 from portfolio.models import InvestmentPortfolio
 
 
@@ -57,14 +58,32 @@ class SecurityViewSet(ListModelMixin,
                       GenericViewSet):
     """
     Viewset for list and retrivie security model.
+    Include url '{id}/follow/ method-post for follow-unfollow securities.
     """
-    queryset = Security.objects.all()
+    # queryset = Security.objects.all()
     pagination_class = PageNumberPaginationBy5
+
+    def get_queryset(self):
+        queryset = Security.objects.all()
+        user = self.request.user
+        qs_users = get_user_model().objects.all()
+
+        return queryset.prefetch_related(
+            Prefetch('trades',
+                     queryset=TradeHistory.objects.filter(owner=user)
+                     ),
+            Prefetch('portfolios',
+                     queryset=SecurityPortfolios.objects.filter(owner=user)
+                     ),
+            Prefetch('users_follows', queryset=qs_users)
+        )
 
     def get_serializer_class(self):
         if self.action == 'list':
             return SecurityListSerializer
         elif self.action == 'retrieve':
+            return SecurityRetrivieSerializer
+        else:
             return SecurityRetrivieSerializer
 
     def get_permissions(self):
@@ -77,6 +96,20 @@ class SecurityViewSet(ListModelMixin,
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+    @action(methods=['post'], detail=True,
+            url_path='follow', url_name='follow')
+    def follow(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+        if request.user in instance.users_follows.all():
+            instance.users_follows.remove(request.user)
+            status = response_status.HTTP_204_NO_CONTENT
+        else:
+            instance.users_follows.add(request.user)
+            status = response_status.HTTP_200_OK
+        instance.save()
+        return Response(status=status)
 
 
 class TradeHistoryViewSet(ListModelMixin, GenericViewSet):

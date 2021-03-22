@@ -9,7 +9,7 @@ if settings.DEBUG:
 else:
     router = SimpleRouter()
 
-router.register('securities', SecurityViewSet)
+router.register('securities', SecurityViewSet, basename='securities')
 router.register('securities-trade-history',
                 TradeHistoryViewSet,
                 basename='securities-trade-history')

@@ -8,9 +8,10 @@ const store = new Vuex.Store({
     is_liked: null,
     is_followed: null,
     follow_url: null,
-    ever_trade_securities: null,
+    //trades
+    ever_trade_security: null,
     //part securities in portfolio
-
+    security_in_portfolios: null,
     //other
     security_visible: false,
     spiner_visible: true,
@@ -21,6 +22,36 @@ const store = new Vuex.Store({
   mutations: {
     init_security(state, data) {
       console.log(data);
+
+      state.security_title = data.shortname;
+      state.security_id = data.id;
+      state.follow_url = data.follow_url;
+      state.security_info = {
+        shortname: data.shortname,
+        fullname: data.fullname,
+        security_type: data.security_type,
+        secid: data.secid,
+        isin: data.isin,
+        regnumber: data.regnumber,
+        today_price: data.today_price,
+        change_price_percent: data.change_price_percent,
+        main_board_faceunit: data.main_board_faceunit.replace('РУБ', 'RUB').replace('SUR', 'RUB'),
+        issuesize: data.issuesize,
+        matdate: data.matdate,
+        last_update: data.last_update,
+        facevalue: data.facevalue,
+        initialfacevalue: data.initialfacevalue,
+        url: data.url,
+        emitent: data.emitent,
+        couponvalue: data.couponvalue,
+        couponpercent: data.couponpercent,
+        couponfrequency: data.couponfrequency,
+        coupondate: data.coupondate,
+        accint: data.accint
+      };
+      state.ever_trade_security = data.trades;
+      state.security_in_portfolios = data.portfolios;
+
     },
     setFollow(state, followed) {
       state.is_followed = followed

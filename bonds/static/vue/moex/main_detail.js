@@ -10,6 +10,9 @@ var app = new Vue({
     }
   },
   computed: {
+    security_title: function () {
+      return this.$store.state.security_title;
+    },
     security_visible: function () {
       return this.$store.state.security_visible;
     },
@@ -26,7 +29,18 @@ var app = new Vue({
   template: `
     <div id="app">
       <div v-if="security_visible">
-        
+        <div class="d-flex justify-content-between align-items-center">
+          <h3 class="align-self-center">{{security_title}}</h3>
+          <follow></follow>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <security-info></security-info>
+          </div>
+          <div class="col-md-8">
+
+          </div>
+        </div>
       </div>
       <errors class="mt-3" v-if="errors_visible" v-bind:errors="errors"></errors>
       <div v-if="spiner_visible" class="d-flex justify-content-center mt-3">
