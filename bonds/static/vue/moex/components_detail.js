@@ -169,4 +169,124 @@ Vue.component('security-info', {
         <p v-if="security.description">Описание: {{ security.description }}</p>
       </div>
     `
-})
+});
+
+Vue.component('security-in-portfolios', {
+  data: function () {
+    return {
+    }
+  },
+  beforeMount: function () {
+  },
+  computed: {
+    computed_security_in_portfolio: function () {
+      return this.$store.state.security_in_portfolios;
+    },
+  },
+  methods: {
+  },
+  template: `
+      <div>
+      <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapsePortfolios>
+      Ваши портфели
+        </b-button>
+        <b-collapse id="collapsePortfolios" class="container-in-collapse">
+          <div class="row">
+            <div class="col-md-3 d-none d-md-block">
+              <p>Портфель</p>
+            </div>
+            <div class="col-md-3 d-none d-md-block">
+              <p>Количество</p>
+            </div>
+            <div class="col-md-4 d-none d-md-block">
+              <p>Сумма</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+            </div>
+          </div>
+          <div v-for="(one_row,index) in computed_security_in_portfolio">
+            <div class="dropdown-divider"></div>
+            <portfolio-item-one-row
+            :one_row=one_row>
+            </portfolio-item-one-row>
+          </div>
+        </b-collapse>
+      </div>
+    `
+});
+Vue.component('portfolio-item-one-row', {
+  props: ['one_row'],
+  data: function () {
+    return {
+      currency: null
+    }
+  },
+  beforeMount: function () {
+    this.currency = this.$store.state.security_info.main_board_faceunit;
+  },
+  computed: {
+    computed_count: function () {
+      return parseFloat(this.one_row.count)
+        .toLocaleString('ru-RU', { maximumFractionDigits: 10 });
+    },
+    computed_cost: function () {
+      return parseFloat(this.one_row.total_cost)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: this.currency,
+          maximumFractionDigits: 2
+        });
+    },
+    computed_cost_in_rub: function () {
+      return parseFloat(this.one_row.total_cost_in_rub)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: 'RUB',
+          maximumFractionDigits: 2
+        });
+    }
+
+  },
+  methods: {
+    buy_click: function () {
+      /*
+      this.$store.commit('set_trade_security', this.one_row);
+      this.$store.commit('set_trade_security_action', 'buy');
+      this.$bvModal.show('modal-buy-security');
+      */
+    },
+    sell_click: function () {
+      /*
+      this.$store.commit('set_trade_security', this.one_row);
+      this.$store.commit('set_trade_security_action', 'sell');
+      this.$bvModal.show('modal-buy-security');
+      */
+    }
+  },
+  template: `
+      <div class="row">
+        <div class="col-12 col-md-3 mb-1 mt-1">
+          <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" :href="one_row.portfolio_url">{{ one_row.portfolio_name}}</a>
+        </div>
+        <div class="col-12 col-md-3 mb-1 mt-1">
+          <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
+        </div>
+        <div class="col-12 col-md-4 mb-1 mt-1">
+          <span class="d-md-none">Сумма: </span><span>{{ computed_cost }}</span>
+          <span v-if="currency != 'RUB'">({{ computed_cost_in_rub }})</span>
+        </div>
+        <div class="col-12 col-md-2 mb-1 mt-1">
+          <b-button
+          size="sm"
+          variant="success"
+          class="mb-1 mt1"
+          @click="buy_click">Купить</b-button>
+          <b-button
+          size="sm"
+          variant="danger"
+          class="mb-1 mt1"
+          @click="sell_click">Продать</b-button>          
+        </div>
+      </div>
+    `
+});

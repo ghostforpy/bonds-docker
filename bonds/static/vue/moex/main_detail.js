@@ -13,6 +13,9 @@ var app = new Vue({
     security_title: function () {
       return this.$store.state.security_title;
     },
+    security_in_portfolios: function () {
+      return this.$store.state.security_in_portfolios.length;
+    },
     security_visible: function () {
       return this.$store.state.security_visible;
     },
@@ -38,7 +41,7 @@ var app = new Vue({
             <security-info></security-info>
           </div>
           <div class="col-md-8">
-
+            <security-in-portfolios v-if="security_in_portfolios"></security-in-portfolios>
           </div>
         </div>
       </div>
