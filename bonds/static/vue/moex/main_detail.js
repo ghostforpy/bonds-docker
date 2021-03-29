@@ -36,6 +36,7 @@ var app = new Vue({
           <h3 class="align-self-center">{{security_title}}</h3>
           <follow></follow>
         </div>
+        <form-trade-securities></form-trade-securities>
         <div class="row">
           <div class="col-md-4">
             <security-info></security-info>

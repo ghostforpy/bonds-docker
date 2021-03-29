@@ -8,10 +8,15 @@ const store = new Vuex.Store({
     is_liked: null,
     is_followed: null,
     follow_url: null,
+    //modal trades
+    trade_security_action: null,
+    set_trade_security_action: null,
+    trade_portfolio_id: null,
     //trades
     ever_trade_security: null,
     //part securities in portfolio
     security_in_portfolios: null,
+    portfolios: [],
     //other
     security_visible: false,
     spiner_visible: true,
@@ -51,7 +56,15 @@ const store = new Vuex.Store({
       };
       state.ever_trade_security = data.trades;
       state.security_in_portfolios = data.portfolios;
-
+      for (let t in data.all_portfolios) {
+        state.portfolios.push({ value: t, text: data.all_portfolios[t] })
+      }
+    },
+    set_trade_security_action(state, trade_security_action) {
+      state.trade_security_action = trade_security_action
+    },
+    set_trade_portfolio_id(state, trade_portfolio_id) {
+      state.trade_portfolio_id = trade_portfolio_id
     },
     setFollow(state, followed) {
       state.is_followed = followed
@@ -78,7 +91,6 @@ const store = new Vuex.Store({
       request_service(
         config,
         function_success = function (resp) {
-          //console.log(resp.data);
           context.commit('set_spiner_visible', false);
           context.commit('set_security_visible', true);
           context.commit('init_security', resp.data);

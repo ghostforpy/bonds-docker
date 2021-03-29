@@ -8,7 +8,7 @@ class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
         model = TradeHistory
         exclude = ['url']
         extra_kwargs = {
-            'security': {'view_name': 'api:security-detail'},
+            'security': {'view_name': 'api:securities-detail'},
             'portfolio': {'view_name': 'api:investmentportfolio-detail'},
             'owner': {"view_name": "api:user-detail",
                       'lookup_field': 'username'}
@@ -41,6 +41,7 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
     trades = TradeHistorySerializerForSecurityDetail(many=True)
     portfolios = SecurityInPortfolioSerializerForSecurityDetail(many=True)
     is_followed = serializers.SerializerMethodField()
+    all_portfolios = serializers.SerializerMethodField()
     follow_url = serializers.HyperlinkedIdentityField(
         view_name="api:securities-follow")
 
@@ -56,6 +57,11 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
 
     def get_is_followed(self, obj):
         return self.context['request'].user in obj.users_follows.all()
+
+    def get_all_portfolios(self, obj):
+        user_portfolios = self.context['request'].user.portfolios.filter(
+            manual=False).defer("id", "title")
+        return {i.id: i.title for i in user_portfolios}
 
 
 class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
@@ -118,7 +124,7 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
             'portfolio'
         ]
         extra_kwargs = {
-            'security': {"view_name": "api:security-detail"}
+            'security': {"view_name": "api:securities-detail"}
         }
         read_only_fields = [
             'security_name',
@@ -149,7 +155,7 @@ class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSeria
         model = TradeHistory
         exclude = ['url', 'portfolio', 'owner']
         extra_kwargs = {
-            'security': {'view_name': 'api:security-detail'},
+            'security': {'view_name': 'api:securities-detail'},
         }
 
 

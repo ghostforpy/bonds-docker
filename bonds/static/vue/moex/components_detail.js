@@ -249,18 +249,14 @@ Vue.component('portfolio-item-one-row', {
   },
   methods: {
     buy_click: function () {
-      /*
-      this.$store.commit('set_trade_security', this.one_row);
+      this.$store.commit('set_trade_portfolio_id', this.one_row.portfolio);
       this.$store.commit('set_trade_security_action', 'buy');
       this.$bvModal.show('modal-buy-security');
-      */
     },
     sell_click: function () {
-      /*
-      this.$store.commit('set_trade_security', this.one_row);
+      this.$store.commit('set_trade_portfolio_id', this.one_row.portfolio);
       this.$store.commit('set_trade_security_action', 'sell');
       this.$bvModal.show('modal-buy-security');
-      */
     }
   },
   template: `
@@ -285,8 +281,248 @@ Vue.component('portfolio-item-one-row', {
           size="sm"
           variant="danger"
           class="mb-1 mt1"
-          @click="sell_click">Продать</b-button>          
+          @click="sell_click">Продать</b-button>
         </div>
       </div>
     `
 });
+function currency_sign(currency) {
+  return currency.replace('RUB', '₽')
+    .replace('SUR', '₽')
+    .replace('РУБ', '₽')
+    .replace('USD', '$')
+    .replace('EUR', '€')
+};
+Vue.component('form-trade-securities', {
+  data: function () {
+    return {
+      date: null,
+      date_invalid: false,
+      price: 0,
+      price_invalid: false,
+      comission: 0,
+      comission_invalid: false,
+      nkd: 0,
+      nkd_invalid: false,
+      count: 0,
+      count_invalid: false,
+      total_cost: 0,
+      //selected: null,
+      //options: null
+    }
+  },
+  beforeMount: function () {
+
+  },
+  beforeDestroy: function () {
+
+  },
+  computed: {
+    computed_title: function () {
+      if (this.$store.state.trade_security_action) {
+        let action = this.$store.state.trade_security_action
+          .replace('buy', 'Покупка')
+          .replace('sell', 'Продажа');
+        let shortname = this.$store.state.security_info.shortname;
+        let security_type = this.$store.state.security_info.security_type
+          .replace('bond', 'облигаций')
+          .replace('share', 'акций')
+          .replace('ppif', 'паёв')
+        return `${action} ${security_type} "${shortname}"`;
+      }
+    },
+    computed_action: function () {
+      if (this.$store.state.trade_security_action) {
+        return this.$store.state.trade_security_action
+          .replace('buy', 'оплате')
+          .replace('sell', 'выплате')
+      }
+    },
+    currency: function () {
+      let trade_security = this.$store.state.security_info;
+      if (trade_security) {
+        return currency_sign(trade_security.main_board_faceunit);
+      }
+      return null
+    },
+    security_type: function () {
+      let trade_security = this.$store.state.security_info;
+      if (trade_security) {
+        return trade_security.security_type;
+      }
+      return null
+    }
+  },
+  methods: {
+    calc_total_cost: function () {
+      let action = this.$store.state.trade_security_action;
+      this.total_cost = parseFloat(this.count) * parseFloat(this.price) + parseFloat(this.nkd);
+      if (action == 'sell') {
+        this.total_cost = this.total_cost - parseFloat(this.comission);
+      } else {
+        this.total_cost = this.total_cost + parseFloat(this.comission);
+      }
+    },
+    handleOk: function (bvModalEvt) {
+      // Prevent modal from closing
+      bvModalEvt.preventDefault()
+      // Trigger submit handler
+      if (this.validate()) {
+        this.handleSubmit()
+      }
+    },
+    validate: function () {
+      if (this.date == null) {
+        this.date_invalid = true
+        return false
+      } else {
+        this.date_invalid = false
+      };
+      if (parseFloat(this.price) < 0) {
+        this.price_invalid = true
+        return false
+      } else {
+        this.price_invalid = false
+      };
+      if ((parseFloat(this.comission) < 0) || parseFloat(this.comission) >= parseFloat(this.price)) {
+        this.comission_invalid = true
+        return false
+      } else {
+        this.comission_invalid = false
+      };
+      if (parseFloat(this.nkd) < 0) {
+        this.nkd_invalid = true
+        return false
+      } else {
+        this.nkd_invalid = false
+      };
+      if (parseFloat(this.count) < 1) {
+        this.count_invalid = true
+        return false
+      } else {
+        this.count_invalid = false
+      };
+      return true
+    },
+    today: function () {
+      return new Date()
+    },
+    options: function () {
+      return this.$store.state.portfolios;
+    },
+    handleSubmit() {
+      let elem = this;
+      let formData = new FormData();
+
+      formData.append('portfolio', elem.$store.state.trade_portfolio_id);
+
+      formData.append('date', elem.date);
+      formData.append('commission', elem.comission);
+      formData.append('count', elem.count);
+      formData.append('price', elem.price);
+      formData.append('nkd', elem.nkd);
+      formData.append('ndfl', 0);
+      let trade_security_id = elem.$store.state.security_id;
+      formData.append('security', trade_security_id);
+      formData.append('buy', elem.$store.state.trade_security_action == 'buy');
+      let config = {
+        method: 'post',
+        url: 'securities-trade-history/',
+        data: formData
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          elem.$store.dispatch('get_security', security_id = elem.$store.state.security_id);
+          elem.$bvToast.toast('Запись успешно добавлена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        },
+        function_error_response_other = function (error) {
+          const h = elem.$createElement;
+          // Create the message
+          const vNodesMsg = [h('p', `Запись не добавлена`)];
+          if (error.response.status === 400) {
+            var status = error.response.data;
+            vNodesMsg.push(h('p', `${status}`));
+          };
+          elem.$bvToast.toast(vNodesMsg, {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$bvModal.hide('modal-buy-security')
+      })
+    }
+  },
+  template: `
+      <b-modal
+      id="modal-buy-security"
+      centered
+      v-bind:title="computed_title"
+      @ok="handleOk">
+        <label for="datepicker">Дата:</label>
+        <b-form-datepicker
+        id="datepicker"
+        v-model="date"
+        :max="today()"
+        v-bind:class="{ 'is-invalid': date_invalid  }"
+        class="mb-2"></b-form-datepicker>
+        <label for="portfolio">Портфель:</label>
+
+        <b-form-select id="portfolio"
+        class="mb-2"
+        v-model="$store.state.trade_portfolio_id"
+        :options="$store.state.portfolios"></b-form-select>
+        
+        <label for="price">Цена ({{currency}}):</label>
+        <b-form-input
+        id="price"
+        v-model="price"
+        type="number"
+        min="0"
+        class="mb-2"
+        v-bind:class="{ 'is-invalid': price_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label for="comission">Комиссия ({{currency}}):</label>
+        <b-form-input 
+        id="comission" 
+        v-model="comission" 
+        type="number" 
+        min="0" 
+        max="price"
+        class="mb-2"
+        v-bind:class="{ 'is-invalid': comission_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label v-if="security_type == 'bond'" for="nkd">НКД ({{currency}}):</label>
+        <b-form-input
+        v-if="security_type == 'bond'"
+        id="nkd"
+        v-model="nkd"
+        type="number"
+        min="0"
+        max="price"
+        class="mb-2"
+        v-bind:class="{ 'is-invalid': nkd_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label for="count">Количество (шт.):</label>
+        <b-form-input 
+        id="count" 
+        v-model="count" 
+        type="number" 
+        min="0"
+        class="mb-2"
+        v-bind:class="{ 'is-invalid': count_invalid  }"
+        @update="calc_total_cost"></b-form-input>
+        <label for="total_cost">Общая сумма к {{computed_action}} ({{currency}}):</label>
+        <b-form-input id="total_cost" v-model="total_cost" type="number" readonly></b-form-input>
+      </b-modal>
+    `
+})
