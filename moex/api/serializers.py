@@ -24,6 +24,9 @@ class PortfolioNameUrlMixin(serializers.ModelSerializer):
 
 
 class TradeHistorySerializerForSecurityDetail(PortfolioNameUrlMixin):
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        view_name="api:securities-trade-history-detail")
+
     class Meta:
         model = TradeHistory
         exclude = ['security', 'owner']

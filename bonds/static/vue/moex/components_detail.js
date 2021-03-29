@@ -530,3 +530,152 @@ Vue.component('form-trade-securities', {
       </b-modal>
     `
 })
+
+Vue.component('security-trades', {
+  data: function () {
+    return {
+    }
+  },
+  beforeMount: function () {
+  },
+  computed: {
+    computed_security_trades: function () {
+      return this.$store.state.security_trades;
+    },
+  },
+  methods: {
+  },
+  template: `
+      <div>
+      <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseTrades>
+      История торгов
+        </b-button>
+        <b-collapse id="collapseTrades" class="container-in-collapse">
+          <div class="row">
+            <div class="col-md-2 d-none d-md-block">
+              <p>Портфель</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Количество</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Цена</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Действие</p>
+            </div>
+            <div class="col-md-2 d-none d-md-block">
+              <p>Дата</p>
+            </div>
+          </div>
+          <div v-for="(one_row,index) in computed_security_trades">
+            <div class="dropdown-divider"></div>
+            <security-trades-one-row
+            :one_row=one_row>
+            </security-trades-one-row>
+          </div>
+        </b-collapse>
+      </div>
+    `
+});
+Vue.component('security-trades-one-row', {
+  props: ['one_row'],
+  data: function () {
+    return {
+      currency: null
+    }
+  },
+  beforeMount: function () {
+    this.currency = this.$store.state.security_info.main_board_faceunit;
+  },
+  computed: {
+    computed_count: function () {
+      return parseFloat(this.one_row.count)
+        .toLocaleString('ru-RU', { maximumFractionDigits: 10 });
+    },
+    computed_action: function () {
+      return this.one_row.buy ? 'Покупка' : 'Продажа'
+    },
+    computed_price: function () {
+      return parseFloat(this.one_row.price)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: this.currency,
+          maximumFractionDigits: 2
+        });
+    },
+    computed_commission: function () {
+      return parseFloat(this.one_row.commission)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: this.currency,
+          maximumFractionDigits: 2
+        });
+    }
+
+  },
+  methods: {
+    delete_item: function () {
+      //this.$store.commit('set_trade_portfolio_id', this.one_row.portfolio);
+      //this.$store.commit('set_trade_security_action', 'sell');
+      //this.$bvModal.show('modal-buy-security');
+      let elem = this;
+      let config = {
+        method: 'delete',
+        url: this.one_row.url_for_delete,
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          console.log(resp);
+          elem.$store.dispatch('get_security', security_id = elem.$store.state.security_id);
+          elem.$bvToast.toast('Запись успешно удалена', {
+            title: `Mybonds.space`,
+            variant: 'success',
+            solid: true
+          })
+        },
+        function_error_response_other = function (error) {
+          const h = elem.$createElement;
+          // Create the message
+          const vNodesMsg = [h('p', `Запись не удалена`)];
+          if (error.response.status === 400) {
+            var status = error.response.data;
+            vNodesMsg.push(h('p', `${status}`));
+          };
+          elem.$bvToast.toast(vNodesMsg, {
+            title: `Mybonds.space`,
+            variant: 'danger',
+            solid: true
+          })
+        }
+      );
+    }
+  },
+  template: `
+      <div class="row">
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" :href="one_row.portfolio_url">{{ one_row.portfolio_name}}</a>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Цена: </span><span>{{ computed_price }}</span>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Действие: </span><span>{{computed_action}}</span>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+          <span class="d-md-none">Дата: </span><span>{{ one_row.date }}</span>
+        </div>
+        <div class="col-md-2 col-12 mb-1 mt-1">
+        <b-button
+        size="sm"
+        variant="danger"
+        class="mb-1 mt1"
+        @click="delete_item">Удалить запись</b-button>
+        </div>
+      </div>
+    `
+});

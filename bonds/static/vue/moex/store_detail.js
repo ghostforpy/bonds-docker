@@ -13,7 +13,7 @@ const store = new Vuex.Store({
     set_trade_security_action: null,
     trade_portfolio_id: null,
     //trades
-    ever_trade_security: null,
+    security_trades: null,
     //part securities in portfolio
     security_in_portfolios: null,
     portfolios: [],
@@ -54,7 +54,7 @@ const store = new Vuex.Store({
         coupondate: data.coupondate,
         accint: data.accint
       };
-      state.ever_trade_security = data.trades;
+      state.security_trades = data.trades;
       state.security_in_portfolios = data.portfolios;
       for (let t in data.all_portfolios) {
         state.portfolios.push({ value: t, text: data.all_portfolios[t] })
