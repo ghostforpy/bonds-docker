@@ -192,14 +192,16 @@ Vue.component('security-in-portfolios', {
         </b-button>
         <b-collapse id="collapsePortfolios" class="container-in-collapse">
           <div class="row">
-            <div class="col-md-3 d-none d-md-block">
-              <p>Портфель</p>
-            </div>
-            <div class="col-md-3 d-none d-md-block">
-              <p>Количество</p>
-            </div>
-            <div class="col-md-4 d-none d-md-block">
-              <p>Сумма</p>
+            <div class="col-9 col-md-10 row">
+              <div class="col-md-3 d-none d-md-block">
+                <p>Портфель</p>
+              </div>
+              <div class="col-md-3 d-none d-md-block">
+                <p>Количество</p>
+              </div>
+              <div class="col-2 col-md-4 d-none d-md-block">
+                <p>Сумма</p>
+              </div>
             </div>
             <div class="col-md-2 d-none d-md-block">
             </div>
@@ -261,17 +263,19 @@ Vue.component('portfolio-item-one-row', {
   },
   template: `
       <div class="row">
-        <div class="col-12 col-md-3 mb-1 mt-1">
-          <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" :href="one_row.portfolio_url">{{ one_row.portfolio_name}}</a>
+        <div class="col-9 col-md-10 row">
+          <div class="col-12 col-md-3 mb-1 mt-1">
+            <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" :href="one_row.portfolio_url">{{ one_row.portfolio_name}}</a>
+          </div>
+          <div class="col-12 col-md-3 mb-1 mt-1">
+            <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
+          </div>
+          <div class="col-12 col-md-4 mb-1 mt-1">
+            <span class="d-md-none">Сумма: </span><span>{{ computed_cost }}</span>
+            <span v-if="currency != 'RUB'">({{ computed_cost_in_rub }})</span>
+          </div>
         </div>
-        <div class="col-12 col-md-3 mb-1 mt-1">
-          <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
-        </div>
-        <div class="col-12 col-md-4 mb-1 mt-1">
-          <span class="d-md-none">Сумма: </span><span>{{ computed_cost }}</span>
-          <span v-if="currency != 'RUB'">({{ computed_cost_in_rub }})</span>
-        </div>
-        <div class="col-12 col-md-2 mb-1 mt-1">
+        <div class="col-2 col-md-2 mb-1 mt-1">
           <b-button
           size="sm"
           variant="success"
