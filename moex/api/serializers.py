@@ -3,9 +3,50 @@ from rest_framework.reverse import reverse
 from ..models import Security, SecurityPortfolios, TradeHistory
 
 
+class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = TradeHistory
+        exclude = ['url']
+        extra_kwargs = {
+            'security': {'view_name': 'api:securities-detail'},
+            'portfolio': {'view_name': 'api:investmentportfolio-detail'},
+            'owner': {"view_name": "api:user-detail",
+                      'lookup_field': 'username'}
+        }
+
+
+class PortfolioNameUrlMixin(serializers.ModelSerializer):
+    portfolio_url = serializers.SerializerMethodField()
+    portfolio_name = serializers.CharField(source='portfolio')
+
+    def get_portfolio_url(self, obj):
+        return obj.portfolio.get_absolute_url()
+
+
+class TradeHistorySerializerForSecurityDetail(PortfolioNameUrlMixin):
+    url_for_delete = serializers.HyperlinkedIdentityField(
+        view_name="api:securities-trade-history-detail")
+
+    class Meta:
+        model = TradeHistory
+        exclude = ['security', 'owner']
+
+
+class SecurityInPortfolioSerializerForSecurityDetail(PortfolioNameUrlMixin):
+    class Meta:
+        model = SecurityPortfolios
+        exclude = ['security', 'today_price', 'owner']
+
+
 class SecurityRetrivieSerializer(serializers.ModelSerializer):
     """ Serializer for retrivie one security"""
     faceunit = serializers.CharField(source='get_faceunit_display')
+    trades = TradeHistorySerializerForSecurityDetail(many=True)
+    portfolios = SecurityInPortfolioSerializerForSecurityDetail(many=True)
+    is_followed = serializers.SerializerMethodField()
+    all_portfolios = serializers.SerializerMethodField()
+    follow_url = serializers.HyperlinkedIdentityField(
+        view_name="api:securities-follow")
 
     class Meta:
         model = Security
@@ -14,7 +55,16 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
                    'engine',
                    'market',
                    'oldest_date',
-                   'monitor']
+                   'monitor',
+                   'source']
+
+    def get_is_followed(self, obj):
+        return self.context['request'].user in obj.users_follows.all()
+
+    def get_all_portfolios(self, obj):
+        user_portfolios = self.context['request'].user.portfolios.filter(
+            manual=False).defer("id", "title")
+        return {i.id: i.title for i in user_portfolios}
 
 
 class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
@@ -77,7 +127,7 @@ class SecurityInPortfolioSerializer(serializers.HyperlinkedModelSerializer):
             'portfolio'
         ]
         extra_kwargs = {
-            'security': {"view_name": "api:security-detail"}
+            'security': {"view_name": "api:securities-detail"}
         }
         read_only_fields = [
             'security_name',
@@ -108,19 +158,7 @@ class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSeria
         model = TradeHistory
         exclude = ['url', 'portfolio', 'owner']
         extra_kwargs = {
-            'security': {'view_name': 'api:security-detail'},
-        }
-
-
-class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = TradeHistory
-        exclude = ['url']
-        extra_kwargs = {
-            'security': {'view_name': 'api:security-detail'},
-            'portfolio': {'view_name': 'api:investmentportfolio-detail'},
-            'owner': {"view_name": "api:user-detail",
-                      'lookup_field': 'username'}
+            'security': {'view_name': 'api:securities-detail'},
         }
 
 
