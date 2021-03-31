@@ -355,12 +355,19 @@ Vue.component('form-trade-securities', {
         return trade_security.security_type;
       }
       return null
+    },
+    computed_date: function () {
+      return this.$store.state.trade_date
+    },
+    computed_price: function () {
+      return this.$store.state.price
     }
   },
   methods: {
     calc_total_cost: function () {
       let action = this.$store.state.trade_security_action;
-      this.total_cost = parseFloat(this.count) * parseFloat(this.price) + parseFloat(this.nkd);
+      this.total_cost = parseFloat(this.nkd) +
+        parseFloat(this.count) * parseFloat(this.$store.state.trade_security_price);
       if (action == 'sell') {
         this.total_cost = this.total_cost - parseFloat(this.comission);
       } else {
@@ -376,19 +383,20 @@ Vue.component('form-trade-securities', {
       }
     },
     validate: function () {
-      if (this.date == null) {
+      if (this.$store.state.trade_security_date == null) {
         this.date_invalid = true
         return false
       } else {
         this.date_invalid = false
       };
-      if (parseFloat(this.price) < 0) {
+      if (parseFloat(this.$store.state.trade_security_price) < 0) {
         this.price_invalid = true
         return false
       } else {
         this.price_invalid = false
       };
-      if ((parseFloat(this.comission) < 0) || parseFloat(this.comission) >= parseFloat(this.price)) {
+      if ((parseFloat(this.comission) < 0) ||
+        parseFloat(this.comission) >= parseFloat(this.$store.state.trade_security_price)) {
         this.comission_invalid = true
         return false
       } else {
@@ -417,13 +425,11 @@ Vue.component('form-trade-securities', {
     handleSubmit() {
       let elem = this;
       let formData = new FormData();
-
       formData.append('portfolio', elem.$store.state.trade_portfolio_id);
-
-      formData.append('date', elem.date);
+      formData.append('date', elem.$store.state.trade_security_date);
       formData.append('commission', elem.comission);
       formData.append('count', elem.count);
-      formData.append('price', elem.price);
+      formData.append('price', elem.$store.state.trade_security_price);
       formData.append('nkd', elem.nkd);
       formData.append('ndfl', 0);
       let trade_security_id = elem.$store.state.security_id;
@@ -475,7 +481,7 @@ Vue.component('form-trade-securities', {
         <label for="datepicker">Дата:</label>
         <b-form-datepicker
         id="datepicker"
-        v-model="date"
+        v-model="$store.state.trade_security_date"
         :max="today()"
         v-bind:class="{ 'is-invalid': date_invalid  }"
         class="mb-2"></b-form-datepicker>
@@ -489,7 +495,7 @@ Vue.component('form-trade-securities', {
         <label for="price">Цена ({{currency}}):</label>
         <b-form-input
         id="price"
-        v-model="price"
+        v-model="$store.state.trade_security_price"
         type="number"
         min="0"
         class="mb-2"
@@ -616,9 +622,6 @@ Vue.component('security-trades-one-row', {
   },
   methods: {
     delete_item: function () {
-      //this.$store.commit('set_trade_portfolio_id', this.one_row.portfolio);
-      //this.$store.commit('set_trade_security_action', 'sell');
-      //this.$bvModal.show('modal-buy-security');
       let elem = this;
       let config = {
         method: 'delete',
@@ -655,7 +658,8 @@ Vue.component('security-trades-one-row', {
   template: `
       <div class="row">
         <div class="col-md-2 col-12 mb-1 mt-1">
-          <span class="d-md-none">Портфель: </span><a class="btn btn-warning btn-sm" :href="one_row.portfolio_url">{{ one_row.portfolio_name}}</a>
+          <span class="d-md-none">Портфель: </span>
+          <a class="btn btn-warning btn-sm" :href="one_row.portfolio_url">{{ one_row.portfolio_name}}</a>
         </div>
         <div class="col-md-2 col-12 mb-1 mt-1">
           <span class="d-md-none">Количество: </span><span>{{ computed_count }} шт.</span>
@@ -678,4 +682,113 @@ Vue.component('security-trades-one-row', {
         </div>
       </div>
     `
+});
+Vue.component('security-history', {
+  computed: {
+    computed_history: function () {
+      return this.$store.state.security_history;
+    }
+  },
+  template: `
+      <div>
+        <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseSecurityHistory>
+        История цен
+        </b-button>
+        <b-collapse id="collapseSecurityHistory" class="container-in-collapse">
+          <div class="row">
+            <div class="col-8 row">
+              <div class="col-lg-4 .offset-lg-1 d-none d-md-block">
+                <p>Дата</p>
+              </div>
+              <div class="col-lg-4 d-none d-md-block">
+                <p>Цена</p>
+              </div>
+            </div>
+            <div class="col-2 d-none d-md-block">
+            </div>
+          </div>
+          <div v-if="computed_history.length > 0">
+            <div v-for="(one_row,index) in computed_history">
+              <div class="dropdown-divider"></div>
+              <security-history-one-row
+              :one_row=one_row
+              :index=index>
+              </security-history-one-row>
+            </div>
+          </div>
+          <div v-else class="col d-flex justify-content-center">
+            <div class="spinner-border text-secondary" role="status">
+              <span class="sr-only">Loading...</span>
+            </div>
+          </div>
+          
+        </b-collapse>
+      </div>
+  `
+});
+Vue.component('security-history-one-row', {
+  props: ['one_row', 'index'],
+  data: function () {
+    return {
+      currency: null
+    }
+  },
+  methods: {
+    buy_click: function () {
+      this.$store.commit('set_trade_security_action', 'buy');
+      this.$store.commit('set_trade_security_date', this.one_row.date);
+      this.$store.commit('set_trade_security_price', this.one_row.price);
+      this.$bvModal.show('modal-buy-security');
+    },
+    sell_click: function () {
+      this.$store.commit('set_trade_security_action', 'sell');
+      this.$store.commit('set_trade_security_date', this.one_row.date);
+      this.$store.commit('set_trade_security_price', this.one_row.price);
+      this.$bvModal.show('modal-buy-security');
+    }
+  },
+  computed: {
+    computed_price: function () {
+      return parseFloat(this.one_row.price)
+        .toLocaleString('ru-RU', {
+          style: 'currency',
+          currency: this.currency,
+          maximumFractionDigits: 2
+        });
+    },
+    computed_date: function () {
+      return this.one_row.date
+        .toLocaleString('ru-RU', { year: 'numeric', month: 'numeric', day: 'numeric' });
+    }
+  },
+  beforeMount: function () {
+    this.currency = this.$store.state.security_info.main_board_faceunit;
+  },
+  template: `
+      <div class="row">
+        <div class="row col-8">
+          <div class="col-lg-4 .offset-lg-1 col-12 mt-1 mb-1">
+            <span class="d-md-none">Дата: </span>
+            <span>{{computed_date}}</span>
+          </div>
+          <div class="col-lg-4 col-12 mb-1 mt-1">
+            <span class="d-md-none">Цена: </span>
+            <span>{{computed_price}}</span>
+          </div>
+        </div>
+        
+        <div class="col-4 mb-1 mt-1">
+          <b-button
+          size="sm"
+          variant="success"
+          class="mb-1 mt-1"
+          @click="buy_click">Купить</b-button>
+          <b-button
+          size="sm"
+          variant="danger"
+          class="mb-1 mt-1"
+          @click="sell_click">Продать</b-button>
+        </div>
+      </div>
+  `
 });

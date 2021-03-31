@@ -8,10 +8,12 @@ const store = new Vuex.Store({
     is_liked: null,
     is_followed: null,
     follow_url: null,
+    security_history: [],
     //modal trades
     trade_security_action: null,
-    set_trade_security_action: null,
     trade_portfolio_id: null,
+    trade_date: null,
+    trade_price: 0,
     //trades
     security_trades: null,
     //part securities in portfolio
@@ -60,8 +62,27 @@ const store = new Vuex.Store({
         state.portfolios.push({ value: t, text: data.all_portfolios[t] })
       }
     },
+    set_security_history(state, history) {
+      for (let t in history) {
+        state.security_history.push(
+          {
+            price: parseFloat(history[t]),
+            date: new Date(
+              parseFloat(t.split('.')[2]),
+              parseFloat(t.split('.')[1]) - 1,
+              parseFloat(t.split('.')[0]))
+          }
+        )
+      }
+    },
     set_trade_security_action(state, trade_security_action) {
       state.trade_security_action = trade_security_action
+    },
+    set_trade_security_date(state, date) {
+      state.trade_security_date = date
+    },
+    set_trade_security_price(state, price) {
+      state.trade_security_price = price
     },
     set_trade_portfolio_id(state, trade_portfolio_id) {
       state.trade_portfolio_id = trade_portfolio_id
@@ -102,6 +123,24 @@ const store = new Vuex.Store({
         function_error_response_500 = () => context.commit('set_errors', ['Server error']),
         function_error_response_404 = (error) => context.commit('set_errors', error.response.data),
         function_error_response_other = (error) => context.commit('set_errors', error.response.data)
+      );
+    },
+    get_security_history(context, security_id) {
+      let config = {
+        method: 'get',
+        url: 'securities/' + security_id + '/history/'
+      };
+      request_service(
+        config,
+        function_success = function (resp) {
+          //context.commit('set_spiner_visible', false);
+          //context.commit('set_security_visible', true);
+          context.commit('set_security_history', resp.data);
+        },
+        function_catch = function () {
+          //context.commit('set_spiner_visible', false);
+          //context.commit('set_errors_visible', true);
+        }
       );
     },
     toogleFollow(context) {

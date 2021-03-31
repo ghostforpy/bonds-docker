@@ -4,6 +4,7 @@ var app = new Vue({
   beforeMount: async function () {
     let security_id = document.location.pathname.split('/')[3];
     store.dispatch('get_security', security_id);
+    store.dispatch('get_security_history', security_id);
   },
   methods: {
     create: function () {
@@ -45,6 +46,7 @@ var app = new Vue({
             <security-info></security-info>
           </div>
           <div class="col-md-8">
+            <security-history></security-history>
             <security-in-portfolios v-if="security_in_portfolios"></security-in-portfolios>
             <security-trades v-if="security_trades"></security-trades>
           </div>
