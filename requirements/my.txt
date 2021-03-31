@@ -1,5 +1,5 @@
 djangorestframework==3.11.0
-lxml==4.6.2
+lxml==4.6.3
 #django-bootstrap-email
 xlrd==1.2.0
 #yfinance==0.1.55
