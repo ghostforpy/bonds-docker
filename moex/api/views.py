@@ -14,9 +14,12 @@ from rest_framework.permissions import IsAuthenticated,\
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import action
-from .serializers import SecurityRetrivieSerializer,\
-    SecurityListSerializer, TradeHistorySerializer, \
-    TradeHistoryCreateSerializer, TradeHistorySerializerForPortfolioDetail
+from .serializers import (SecurityRetrivieSerializer,
+                          SecurityListSerializer,
+                          TradeHistorySerializer,
+                          TradeHistoryCreateSerializer,
+                          TradeHistorySerializerForPortfolioDetail,
+                          SecurityHistory)
 from ..models import Security, TradeHistory, SecurityPortfolios
 from ..utils import get_security_in_db_history_from_moex
 from portfolio.models import InvestmentPortfolio
@@ -55,6 +58,16 @@ class PageNumberPaginationBy5(PageNumberPagination):
     page_size = 5
 
 
+class PageNumberPaginationBy50(PageNumberPagination):
+    page_size = 50
+
+
+class History:
+    def __init__(self, date, price):
+        self.date = date
+        self.price = price
+
+
 class SecurityViewSet(ListModelMixin,
                       RetrieveModelMixin,
                       GenericViewSet):
@@ -86,6 +99,8 @@ class SecurityViewSet(ListModelMixin,
             return SecurityListSerializer
         elif self.action == 'retrieve':
             return SecurityRetrivieSerializer
+        elif self.action == 'history':
+            return SecurityHistory
         else:
             return SecurityRetrivieSerializer
 
@@ -124,6 +139,17 @@ class SecurityViewSet(ListModelMixin,
         result_history = get_security_in_db_history_from_moex(instance,
                                                               date_since,
                                                               date_until)
+        result_history = [
+            History(i, result_history[i]) for i in result_history
+        ]
+        self.pagination_class = PageNumberPaginationBy50
+        page = self.paginate_queryset(result_history)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result_history, many=True)
+        return Response(serializer.data)
         return Response(status=response_status.HTTP_200_OK,
                         data=result_history)
 

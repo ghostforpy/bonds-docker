@@ -3,6 +3,11 @@ from rest_framework.reverse import reverse
 from ..models import Security, SecurityPortfolios, TradeHistory
 
 
+class SecurityHistory(serializers.Serializer):
+    date = serializers.DateField()
+    price = serializers.FloatField()
+
+
 class TradeHistorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = TradeHistory
@@ -70,7 +75,7 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
 class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
     """ Serializer for list securities """
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:security-detail")
+        view_name="api:securities-detail")
     faceunit = serializers.CharField(source='get_faceunit_display')
     main_board_faceunit = serializers.CharField(
         source='get_main_board_faceunit_display')
@@ -86,7 +91,7 @@ class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
                   "today_price",
                   "last_update",
                   "faceunit",
-                  "main_board_faceunit"
+                  "main_board_faceunit",
                   'url',
                   'issuesize']
 
