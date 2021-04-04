@@ -684,9 +684,24 @@ Vue.component('security-trades-one-row', {
     `
 });
 Vue.component('security-history', {
+  data: function () {
+    return {
+      busy: false
+    }
+  },
   computed: {
     computed_history: function () {
       return this.$store.state.security_history;
+    }
+  },
+  methods: {
+    loadMore: function () {
+      if (this.$store.state.next_url_security_history != null) {
+        this.busy = true;
+        this.$store.dispatch('get_security_history',
+          this.$store.state.security_id);
+        this.busy = false;
+      }
     }
   },
   template: `
@@ -694,7 +709,8 @@ Vue.component('security-history', {
         <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseSecurityHistory>
         История цен
         </b-button>
-        <b-collapse id="collapseSecurityHistory" class="container-in-collapse">
+        <b-collapse id="collapseSecurityHistory" class="container-in-collapse"
+        v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
           <div class="row">
             <div class="col-8 row">
               <div class="col-lg-4 .offset-lg-1 d-none d-md-block">

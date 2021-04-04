@@ -9,6 +9,7 @@ const store = new Vuex.Store({
     is_followed: null,
     follow_url: null,
     security_history: [],
+    next_url_security_history: 'first',
     //modal trades
     trade_security_action: null,
     trade_portfolio_id: null,
@@ -28,8 +29,6 @@ const store = new Vuex.Store({
   },
   mutations: {
     init_security(state, data) {
-      console.log(data);
-
       state.security_title = data.shortname;
       state.security_id = data.id;
       state.follow_url = data.follow_url;
@@ -63,17 +62,20 @@ const store = new Vuex.Store({
       }
     },
     set_security_history(state, history) {
-      for (let t in history) {
+      history.map(function (item) {
         state.security_history.push(
           {
-            price: parseFloat(history[t]),
+            price: parseFloat(item.price),
             date: new Date(
-              parseFloat(t.split('.')[2]),
-              parseFloat(t.split('.')[1]) - 1,
-              parseFloat(t.split('.')[0]))
+              parseFloat(item.date.split('.')[2]),
+              parseFloat(item.date.split('.')[1]) - 1,
+              parseFloat(item.date.split('.')[0]))
           }
         )
-      }
+      })
+    },
+    set_next_url_security_history(state, url) {
+      state.next_url_security_history = url
     },
     set_trade_security_action(state, trade_security_action) {
       state.trade_security_action = trade_security_action
@@ -126,18 +128,30 @@ const store = new Vuex.Store({
       );
     },
     get_security_history(context, security_id) {
-      let config = {
-        method: 'get',
-        url: 'securities/' + security_id + '/history/'
-      };
+      if (context.state.next_url_security_history == 'first') {
+        var config = {
+          method: 'get',
+          url: 'securities/' + security_id + '/history/'
+        };
+      } else if (context.state.next_url_security_history != null) {
+        var config = {
+          method: 'get',
+          url: context.state.next_url_security_history
+        };
+      } else {
+        return
+      }
+
       request_service(
         config,
         function_success = function (resp) {
           //context.commit('set_spiner_visible', false);
           //context.commit('set_security_visible', true);
-          context.commit('set_security_history', resp.data);
+          context.commit('set_security_history', resp.data.results);
+          context.commit('set_next_url_security_history', resp.data.next);
         },
-        function_catch = function () {
+        function_catch = function (error) {
+          console.log(error)
           //context.commit('set_spiner_visible', false);
           //context.commit('set_errors_visible', true);
         }

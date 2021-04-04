@@ -4,7 +4,7 @@ var app = new Vue({
   beforeMount: async function () {
     let security_id = document.location.pathname.split('/')[3];
     store.dispatch('get_security', security_id);
-    store.dispatch('get_security_history', security_id);
+    //store.dispatch('get_security_history', security_id);
   },
   methods: {
     create: function () {
