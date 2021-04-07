@@ -10,6 +10,7 @@ const store = new Vuex.Store({
     follow_url: null,
     security_history: [],
     next_url_security_history: 'first',
+    busy: true,
     //modal trades
     trade_security_action: null,
     trade_portfolio_id: null,
@@ -62,6 +63,7 @@ const store = new Vuex.Store({
       }
     },
     set_security_history(state, history) {
+      console.log(history);
       history.map(function (item) {
         state.security_history.push(
           {
@@ -76,6 +78,9 @@ const store = new Vuex.Store({
     },
     set_next_url_security_history(state, url) {
       state.next_url_security_history = url
+    },
+    set_busy(state, busy) {
+      state.busy = busy
     },
     set_trade_security_action(state, trade_security_action) {
       state.trade_security_action = trade_security_action
@@ -156,6 +161,15 @@ const store = new Vuex.Store({
           //context.commit('set_errors_visible', true);
         }
       );
+    },
+    set_trade_security_action(context, trade_security_action) {
+      context.commit('set_trade_security_action', trade_security_action)
+    },
+    set_trade_security_date(context, trade_security_date) {
+      context.commit('set_trade_security_date', trade_security_date)
+    },
+    set_trade_security_price(context, trade_security_price) {
+      context.commit('set_trade_security_price', trade_security_price)
     },
     toogleFollow(context) {
       context.commit('setFollow', !context.state.is_followed);
