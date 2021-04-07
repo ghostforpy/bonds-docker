@@ -14,7 +14,7 @@ const store = new Vuex.Store({
     //modal trades
     trade_security_action: null,
     trade_portfolio_id: null,
-    trade_date: null,
+    trade_security_date: null,
     trade_price: 0,
     //trades
     security_trades: null,

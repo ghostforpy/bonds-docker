@@ -332,7 +332,7 @@ Vue.component('form-trade-securities', {
     var elem = this;
     this.$root.$on('bv::modal::show', (bvEvent, modalId) => {
       //console.log('Modal is about to be shown', bvEvent, modalId);
-      elem.date = elem.$store.state.trade_security_date;
+      elem.date = elem.$store.state.trade_security_date.toJSON().split('T')[0];
       elem.price = elem.$store.state.trade_security_price;
       elem.calc_total_cost();
     })
@@ -412,7 +412,7 @@ Vue.component('form-trade-securities', {
         this.price_invalid = false
       };
       if ((parseFloat(this.comission) < 0) ||
-        parseFloat(this.comission) >= parseFloat(this.price)) {
+        parseFloat(this.comission) >= parseFloat(this.total_cost)) {
         this.comission_invalid = true
         return false
       } else {
