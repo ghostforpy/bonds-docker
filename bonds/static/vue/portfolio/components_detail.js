@@ -748,7 +748,7 @@ Vue.component('form-trade-securities', {
       } else {
         this.price_invalid = false
       };
-      if ((parseFloat(this.comission) < 0) || parseFloat(this.comission) >= parseFloat(this.price)) {
+      if ((parseFloat(this.comission) < 0) || parseFloat(this.comission) >= parseFloat(this.total_cost)) {
         this.comission_invalid = true
         return false
       } else {
