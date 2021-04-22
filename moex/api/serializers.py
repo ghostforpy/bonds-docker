@@ -74,15 +74,12 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
 
 class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
     """ Serializer for list securities """
-    url = serializers.HyperlinkedIdentityField(
-        view_name="api:securities-detail")
+    url = serializers.CharField(source='get_absolute_url')
     faceunit = serializers.CharField(source='get_faceunit_display')
-    main_board_faceunit = serializers.CharField(
-        source='get_main_board_faceunit_display')
 
     class Meta:
         model = Security
-        fields = ["id",
+        fields = ["pk",
                   "name",
                   "security_type",
                   "secid",
@@ -93,7 +90,26 @@ class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
                   "faceunit",
                   "main_board_faceunit",
                   'url',
-                  'issuesize']
+                  'issuesize',
+                  'change_price_percent']
+
+
+class NewSecurityListSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    shortname = serializers.CharField()
+    security_type = serializers.CharField()
+    secid = serializers.CharField()
+    isin = serializers.CharField()
+    emitent = serializers.CharField()
+    uuid = serializers.UUIDField()
+    api_url = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
+
+    def get_api_url(self, obj):
+        return reverse('api:securities-get-new', args=[obj.uuid])
+
+    def get_url(self, obj):
+        return reverse('moex:new_detail_vue', args=[obj.uuid])
 
 
 class SecurityBuyHyperlink(serializers.HyperlinkedRelatedField):

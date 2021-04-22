@@ -269,6 +269,97 @@ def security_search_in_moex(query):
     return res
 
 
+def get_new_security_type(security_type):
+    if re.search(r'bond', security_type):
+        return 'bond'
+    elif re.search(r'etf_ppif', security_type):
+        return 'etf_ppif'
+    elif re.search(r'ppif', security_type):
+        return 'ppif'
+    elif re.search(r'share', security_type):
+        return 'share'
+    elif re.search(r'futures', security_type):
+        return 'futures'
+    elif re.search(r'index', security_type):
+        return 'index'
+
+
+class NewSearchSecurity:
+    def __init__(self,
+                 secid,
+                 isin,
+                 shortname,
+                 name,
+                 emitent,
+                 source,
+                 security_type,
+                 uuid: uuid.UUID = None,
+                 query: str = None,
+                 **kwargs):
+        self.secid = secid
+        self.isin = isin
+        self.shortname = shortname
+        self.name = name
+        self.emitent = emitent
+        self.source = source
+        self.security_type = security_type
+        self.uuid = uuid
+        self.query = query
+
+
+def search_new_securities_api(query):
+    if not caches['default'].get('moex_search_api_' + query):
+        result_moex = moex_search(query)
+        securities = Security.objects.all()
+        secids = [i.secid for i in securities]
+        if result_moex:
+            # delete securities if exist in base
+            temp = {
+                i: result_moex[i] for i in result_moex if re.search(
+                    r'bond|etf_ppif|ppif|share|futures|index',
+                    result_moex[i]['type']
+                )
+            }
+            temp = {i: temp[i] for i in temp if i not in secids}
+            result = [
+                NewSearchSecurity(
+                    secid=i,
+                    isin=temp[i]['isin'],
+                    shortname=temp[i]['shortname'],
+                    name=temp[i]['name'],
+                    emitent=temp[i]['emitent'],
+                    source='moex',
+                    security_type=get_new_security_type(temp[i]['type']),
+                    uuid=uuid.uuid4(),
+                    query=query
+                ) for i in temp
+            ]
+        else:
+            result = list()
+        result_yfinance = search_in_yfinance(query)
+        if result_yfinance:
+            if query not in secids:
+                result.append(
+                    NewSearchSecurity(
+                        secid=query.upper(),
+                        isin=result_yfinance['isin'],
+                        shortname=result_yfinance['shortname'],
+                        source='yfinance',
+                        name=result_yfinance['name'],
+                        emitent=result_yfinance['emitent'],
+                        security_type='share',
+                        uuid=uuid.uuid4(),
+                        query=query
+                    )
+                )
+        if result:
+            caches['default'].add('moex_search_api_' + query,
+                                  result, timeout=24 * 60 * 60)
+    else:
+        result = caches['default'].get('moex_search_api_' + query)
+    return result
+
+
 def get_new_security_history_from_moex(secid):
     if caches['default'].get('moex_secid_' + secid):
         newitem = caches['default'].get('moex_secid_' + secid)

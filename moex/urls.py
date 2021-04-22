@@ -25,5 +25,6 @@ urlpatterns = [
     path('sp/<int:id_p>/<int:id_s>/', views.sp, name='sp'),
     path('security_history/<int:id>/',
          views.get_security_history, name='get_security_history'),
-    path('', views.security_list, name='list'),
+    path('old-list/', views.security_list, name='list-old'),
+    path('', views.security_list_vue, name='list'),
 ]

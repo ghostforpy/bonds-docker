@@ -60,6 +60,16 @@ def security_detail_vue(request, id):
                   {'mode': mode})
 
 
+
+@ login_required
+def security_list_vue(request):
+    mode = os.environ['DJANGO_SETTINGS_MODULE']
+    mode = mode.split('.')[-1]
+    return render(request,
+                  'moex/list_vue.html',
+                  {'mode': mode})
+
+
 def security_list(request):
     form = SearchForm()
     query = None

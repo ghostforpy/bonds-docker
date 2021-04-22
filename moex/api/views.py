@@ -3,6 +3,7 @@
 # from rest_framework.decorators import action
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.db.models import Prefetch
 from django.contrib.auth import get_user_model
 from rest_framework.mixins import ListModelMixin,\
@@ -19,9 +20,12 @@ from .serializers import (SecurityRetrivieSerializer,
                           TradeHistorySerializer,
                           TradeHistoryCreateSerializer,
                           TradeHistorySerializerForPortfolioDetail,
-                          SecurityHistory)
+                          SecurityHistory,
+                          NewSecurityListSerializer)
 from ..models import Security, TradeHistory, SecurityPortfolios
-from ..utils import get_security_in_db_history_from_moex
+from ..utils import (get_security_in_db_history_from_moex,
+                     search_new_securities_api,
+                     add_search_securities_to_cache)
 from portfolio.models import InvestmentPortfolio
 
 
@@ -54,8 +58,8 @@ class IsOwnerOfObjectForDestroy(IsAuthenticated):
         return obj.owner == request.user
 
 
-class PageNumberPaginationBy5(PageNumberPagination):
-    page_size = 5
+class PageNumberPaginationBy15(PageNumberPagination):
+    page_size = 15
 
 
 class PageNumberPaginationBy50(PageNumberPagination):
@@ -74,14 +78,26 @@ class SecurityViewSet(ListModelMixin,
     """
     Viewset for list and retrivie security model.
     Include url '{id}/follow/ method-post for follow-unfollow securities.
+    Include url 'search-new/?search=query' for search new securities.
     """
     # queryset = Security.objects.all()
-    pagination_class = PageNumberPaginationBy5
+    pagination_class = PageNumberPaginationBy15
 
     def get_queryset(self):
-        queryset = Security.objects.all()
-        if self.action in ['list', 'history']:
+        query = self.request.query_params.get('search') or ''
+        queryset = Security.objects.all().order_by('-last_update', '-id')
+        if self.action in ['history', 'search-new']:
             return queryset
+        if self.action in ['list']:
+            return queryset.filter(
+                Q(name__icontains=query) |
+                Q(code__icontains=query) |
+                Q(fullname__icontains=query) |
+                Q(regnumber__icontains=query) |
+                Q(secid__icontains=query) |
+                Q(isin__icontains=query) |
+                Q(emitent__icontains=query)
+            )
         user = self.request.user
         qs_users = get_user_model().objects.all()
         return queryset.prefetch_related(
@@ -101,6 +117,8 @@ class SecurityViewSet(ListModelMixin,
             return SecurityRetrivieSerializer
         elif self.action == 'history':
             return SecurityHistory
+        elif self.action == 'search_new':
+            return NewSecurityListSerializer
         else:
             return SecurityRetrivieSerializer
 
@@ -128,6 +146,17 @@ class SecurityViewSet(ListModelMixin,
             status = response_status.HTTP_200_OK
         instance.save()
         return Response(status=status)
+
+
+    @action(methods=['get'], detail=False,
+            url_path='search-new', url_name='search-new')
+    def search_new(self, request, *args, **kwargs):
+        query = self.request.query_params.get('search')
+        result = search_new_securities_api(query)
+        add_search_securities_to_cache(result)
+        # print(result)
+        serializer = self.get_serializer(result, many=True)
+        return Response(serializer.data)
 
     @action(methods=['get'], detail=True,
             url_path='history', url_name='history')

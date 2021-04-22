@@ -110,7 +110,7 @@ Vue.component('security-info', {
         .replace('share', 'Акция')
         .replace('bond', 'Облигация')
         .replace('pif_rshb', 'ОПИФ РСХБ')
-        .replace('ppif', 'БПИФ')
+        .replace(/^ppif$/, 'БПИФ')
         .replace('futures', 'Фьючерс')
         .replace('index', 'Индекс')
         .replace('etf_ppif', 'ETF')

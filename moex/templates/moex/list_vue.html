@@ -1,0 +1,17 @@
+{% extends "base_with_vue.html" %}
+{% load static %}
+
+{% block content %}
+  <div id="app">
+    
+  </div>
+{% endblock content %}
+
+{% block page_vue_scripts %}
+    <!-- <script src="https://unpkg.com/vuex@3.6.2"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/vuex@3.6.2/dist/vuex.min.js"></script>
+    <script src="{% static 'vue/HTTP.js' %}"></script>
+    <script src="{% static 'vue/errors.js' %}"></script>
+    <script src="{% static 'vue/moex/components_list.js' %}"></script>
+    <script src="{% static 'vue/moex/main_list.js' %}"></script>
+{% endblock page_vue_scripts %}
