@@ -87,6 +87,8 @@ def prepare_new_security_by_secid_on_moex(secid):
             security_type = 'futures'
         elif re.search(r'index', description["TYPE"]):
             security_type = 'index'
+        elif re.search(r'depositary_receipt', description["TYPE"]):
+            security_type = 'depositary_receipt'
         else:
             pass
         regnumber = get_value(description, "REGNUMBER")
@@ -250,7 +252,7 @@ def security_search_in_moex(query):
             # delete securities if exist in base
             res = {
                 i: result[i] for i in result if re.search(
-                    r'bond|etf_ppif|ppif|share|futures|index',
+                    r'bond|etf_ppif|ppif|share|futures|index|depositary_receipt',
                     result[i]['type']
                 )
             }
