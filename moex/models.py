@@ -34,6 +34,8 @@ class Security(models.Model):
                                               ('futures', 'Фьючерс'),
                                               ('index', 'Индекс'),
                                               ('etf_ppif', 'ETF'),
+                                              ('depositary_receipt',
+                                               'Депозитарная расписка'),
                                               ('currency', 'Валюта'), ])
     parce_url = models.URLField(blank=True)
     code = models.CharField(max_length=30, blank=True, unique=True, null=True)

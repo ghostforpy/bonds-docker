@@ -3,6 +3,8 @@
 # from rest_framework.decorators import action
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
+from django.db.models import Q
 from django.db.models import Prefetch
 from django.contrib.auth import get_user_model
 from rest_framework.mixins import ListModelMixin,\
@@ -19,9 +21,17 @@ from .serializers import (SecurityRetrivieSerializer,
                           TradeHistorySerializer,
                           TradeHistoryCreateSerializer,
                           TradeHistorySerializerForPortfolioDetail,
-                          SecurityHistory)
+                          SecurityHistory,
+                          NewSecurityListSerializer,
+                          NewSecurityRetrivieSerializer,
+                          TradeHistoryNewSecurityBuySerializer)
 from ..models import Security, TradeHistory, SecurityPortfolios
-from ..utils import get_security_in_db_history_from_moex
+from ..utils import (get_security_in_db_history_from_moex,
+                     search_new_securities_api,
+                     add_search_securities_to_cache,
+                     prepare_new_security_api,
+                     get_new_security_history_api,
+                     delete_search_query_from_cache)
 from portfolio.models import InvestmentPortfolio
 
 
@@ -54,8 +64,8 @@ class IsOwnerOfObjectForDestroy(IsAuthenticated):
         return obj.owner == request.user
 
 
-class PageNumberPaginationBy5(PageNumberPagination):
-    page_size = 5
+class PageNumberPaginationBy15(PageNumberPagination):
+    page_size = 15
 
 
 class PageNumberPaginationBy50(PageNumberPagination):
@@ -74,14 +84,27 @@ class SecurityViewSet(ListModelMixin,
     """
     Viewset for list and retrivie security model.
     Include url '{id}/follow/ method-post for follow-unfollow securities.
+    Include url 'search-new/?search=query' for search new securities.
     """
     # queryset = Security.objects.all()
-    pagination_class = PageNumberPaginationBy5
+    pagination_class = PageNumberPaginationBy15
 
     def get_queryset(self):
-        queryset = Security.objects.all()
-        if self.action in ['list', 'history']:
+        query = self.request.query_params.get('search') or ''
+        queryset = Security.objects.all().order_by('-last_update', '-id')
+        if self.action in ['history', 'search_new',
+                           'get_new', 'new_security_history']:
             return queryset
+        if self.action in ['list']:
+            return queryset.filter(
+                Q(name__icontains=query) |
+                Q(code__icontains=query) |
+                Q(fullname__icontains=query) |
+                Q(regnumber__icontains=query) |
+                Q(secid__icontains=query) |
+                Q(isin__icontains=query) |
+                Q(emitent__icontains=query)
+            )
         user = self.request.user
         qs_users = get_user_model().objects.all()
         return queryset.prefetch_related(
@@ -99,8 +122,12 @@ class SecurityViewSet(ListModelMixin,
             return SecurityListSerializer
         elif self.action == 'retrieve':
             return SecurityRetrivieSerializer
-        elif self.action == 'history':
+        elif self.action in ['history', 'new_security_history']:
             return SecurityHistory
+        elif self.action == 'search_new':
+            return NewSecurityListSerializer
+        elif self.action == 'get_new':
+            return NewSecurityRetrivieSerializer
         else:
             return SecurityRetrivieSerializer
 
@@ -130,6 +157,26 @@ class SecurityViewSet(ListModelMixin,
         return Response(status=status)
 
     @action(methods=['get'], detail=True,
+            url_path='get-new', url_name='get-new')
+    def get_new(self, request, *args, **kwargs):
+        new_security_isin = kwargs['pk']
+        new_security = prepare_new_security_api(new_security_isin)
+        if new_security:
+            serializer = self.get_serializer(new_security)
+            return Response(serializer.data)
+        return Response(status=response_status.HTTP_404_NOT_FOUND)
+
+    @action(methods=['get'], detail=False,
+            url_path='search-new', url_name='search-new')
+    def search_new(self, request, *args, **kwargs):
+        query = self.request.query_params.get('search')
+        result = search_new_securities_api(query)
+        add_search_securities_to_cache(result)
+        # print(result)
+        serializer = self.get_serializer(result, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=True,
             url_path='history', url_name='history')
     def history(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -150,13 +197,30 @@ class SecurityViewSet(ListModelMixin,
 
         serializer = self.get_serializer(result_history, many=True)
         return Response(serializer.data)
-        return Response(status=response_status.HTTP_200_OK,
-                        data=result_history)
+
+    @action(methods=['get'], detail=True,
+            url_path='new-history', url_name='new-history')
+    def new_security_history(self, request, *args, **kwargs):
+        new_security_isin = kwargs['pk']
+
+        result_history = get_new_security_history_api(new_security_isin)
+
+        result_history = [
+            History(i, result_history[i]) for i in result_history
+        ]
+        self.pagination_class = PageNumberPaginationBy50
+        page = self.paginate_queryset(result_history)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result_history, many=True)
+        return Response(serializer.data)
 
 
 class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
     def get_permissions(self):
-        if self.action in ['portfolio_list', 'create']:
+        if self.action in ['portfolio_list', 'create', 'new_security_buy']:
             permission_classes = [IsOwnerOfPortfolio]
         elif self.action in ['security_list']:
             permission_classes = [IsAuthenticated]
@@ -173,6 +237,8 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
             return TradeHistorySerializer
         if self.action == 'create':
             return TradeHistoryCreateSerializer
+        if self.action == 'new_security_buy':
+            return TradeHistoryNewSecurityBuySerializer
         if self.action == 'list':
             return TradeHistorySerializerForPortfolioDetail
         if self.action in ['portfolio_list', 'security_list']:
@@ -202,7 +268,7 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
                 )
             else:
                 return queryset.none()
-        return queryset  # action = list
+        return queryset  # action = list, new_security_buy
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -243,3 +309,31 @@ class TradeHistoryViewSet(ListModelMixin, GenericViewSet):
             url_path='security-list', url_name='security-list')
     def security_list(self, request, *args, **kwargs):
         return self.list(self, request, *args, **kwargs)
+
+    @action(methods=['post'], detail=False,
+            url_path='new-security-buy', url_name='new-security-buy')
+    def new_security_buy(self, request, *args, **kwargs):
+        data = request.data
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data.copy()
+        security_isin = validated_data.pop('security_isin')
+        new_security = prepare_new_security_api(security_isin)
+        try:
+            new_security.save()
+        except IntegrityError:
+            return Response(status=response_status.HTTP_400_BAD_REQUEST,
+                            data={'data': 'Выполните поиск ещё раз.'})
+        new_object = TradeHistory(
+            **validated_data,
+            security=new_security,
+            owner=self.request.user
+        )
+        create_status = new_object.save()
+        if create_status == 'ok':
+            delete_search_query_from_cache(security_isin)
+            return Response(data={'next_url': new_security.get_absolute_url()},
+                            status=response_status.HTTP_201_CREATED)
+        else:
+            new_security.delete()
+            return Response(status=response_status.HTTP_400_BAD_REQUEST)

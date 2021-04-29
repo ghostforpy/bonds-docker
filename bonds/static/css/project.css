@@ -125,3 +125,10 @@ footer{flex: 0 0 auto;}
   overflow-y: scroll; /* прокрутка по вертикали */
   max-height:400px;
 }
+
+.border_list_security {
+  border:1px solid rgb(0 0 0 / 45%);
+}
+.header_list_security {
+  background-color: rgba(0,0,0,0.17);
+}

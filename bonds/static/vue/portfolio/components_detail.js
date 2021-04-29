@@ -691,7 +691,8 @@ Vue.component('form-trade-securities', {
         let security_type = this.$store.state.trade_security.security_type
           .replace('bond', 'облигаций')
           .replace('share', 'акций')
-          .replace('ppif', 'паёв')
+          .replace(/.*ppif$/, 'паёв')
+          .replace('depositary_receipt', 'депозитарных расписок')
         return `${action} ${security_type} "${shortname}"`;
       }
     },
