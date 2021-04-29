@@ -122,6 +122,7 @@ var app = new Vue({
       <b-input-group class="mt-3">
         <b-form-input v-model="search" placeholder="Введите наименование, ISIN, SECID..."
         type="search"
+        @keyup.enter="handleSearch"
         @update="handleUpdateSearhForm"></b-form-input>
         <b-input-group-append>
           <b-button variant="outline-secondary"
@@ -184,6 +185,7 @@ Vue.component('security-one-card', {
         .replace('index', 'Индекс')
         .replace('etf_ppif', 'ETF')
         .replace('currency', 'Валюта')
+        .replace('depositary_receipt', 'Депозитарная расписка')
       return `${type} "${this.security.name}"`
     },
     price: function () {

@@ -284,6 +284,8 @@ def get_new_security_type(security_type):
         return 'futures'
     elif re.search(r'index', security_type):
         return 'index'
+    elif re.search(r'depositary_receipt', security_type):
+        return 'depositary_receipt'
 
 
 class NewSearchSecurity:
@@ -295,7 +297,6 @@ class NewSearchSecurity:
                  emitent,
                  source,
                  security_type,
-                 uuid: uuid.UUID = None,
                  query: str = None,
                  **kwargs):
         self.secid = secid
@@ -305,7 +306,6 @@ class NewSearchSecurity:
         self.emitent = emitent
         self.source = source
         self.security_type = security_type
-        self.uuid = uuid
         self.query = query
 
 
@@ -318,7 +318,7 @@ def search_new_securities_api(query):
             # delete securities if exist in base
             temp = {
                 i: result_moex[i] for i in result_moex if re.search(
-                    r'bond|etf_ppif|ppif|share|futures|index',
+                    r'bond|etf_ppif|ppif|share|futures|index|depositary_receipt',
                     result_moex[i]['type']
                 )
             }
@@ -332,7 +332,6 @@ def search_new_securities_api(query):
                     emitent=temp[i]['emitent'],
                     source='moex',
                     security_type=get_new_security_type(temp[i]['type']),
-                    uuid=uuid.uuid4(),
                     query=query
                 ) for i in temp
             ]
@@ -350,16 +349,43 @@ def search_new_securities_api(query):
                         name=result_yfinance['name'],
                         emitent=result_yfinance['emitent'],
                         security_type='share',
-                        uuid=uuid.uuid4(),
                         query=query
                     )
                 )
         if result:
             caches['default'].add('moex_search_api_' + query,
-                                  result, timeout=24 * 60 * 60)
+                                  result, timeout=2 * 60 * 60)
     else:
         result = caches['default'].get('moex_search_api_' + query)
     return result
+
+
+def add_search_securities_to_cache(securities):
+    for i in securities:
+        if caches['default'].get('new_security_' + i.isin):
+            pass
+        else:
+            caches['default'].add('new_security_' + i.isin,
+                                  i, timeout=24 * 60 * 60)
+
+
+def prepare_new_security_api(isin):
+    security_item = caches['default'].get('new_security_' + isin)
+    if not security_item:
+        return
+    if security_item.source == 'moex':
+        security = prepare_new_security_by_secid_on_moex(security_item.secid)
+    elif security_item.source == 'yfinance':
+        security = prepare_new_security_by_secid_yfinance(security_item.secid)
+    return security
+
+
+def delete_search_query_from_cache(isin):
+    security_item = caches['default'].get('new_security_' + isin)
+    if not security_item:
+        return
+    query = security_item.query
+    caches['default'].delete('moex_search_api_' + query)
 
 
 def get_new_security_history_from_moex(secid):
@@ -417,6 +443,19 @@ def get_new_security_history(secid):
         return history
     # если ни один метод не вернул status ok
     return {'status': 'no_secid_security'}
+
+
+def get_new_security_history_api(isin):
+    security_item = caches['default'].get('new_security_' + isin)
+    if not security_item:
+        return
+    if security_item.source == 'moex':
+        history = get_new_security_history_from_moex(security_item.secid)
+    elif security_item.source == 'yfinance':
+        history = get_new_security_history_from_yfinance(security_item.secid)
+    if history['status'] == 'ok':
+        return history['result_history']
+    return
 
 
 def get_security_in_db_history_from_moex(security, date_since, date_until):

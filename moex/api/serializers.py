@@ -43,13 +43,36 @@ class SecurityInPortfolioSerializerForSecurityDetail(PortfolioNameUrlMixin):
         exclude = ['security', 'today_price', 'owner']
 
 
-class SecurityRetrivieSerializer(serializers.ModelSerializer):
+class AllUserPortfoliosMixin(serializers.ModelSerializer):
+    all_portfolios = serializers.SerializerMethodField()
+
+    def get_all_portfolios(self, obj):
+        user_portfolios = self.context['request'].user.portfolios.filter(
+            manual=False).defer("id", "title")
+        return {i.id: i.title for i in user_portfolios}
+
+
+class NewSecurityRetrivieSerializer(AllUserPortfoliosMixin):
+    """ Serializer for retrivie one security"""
+    faceunit = serializers.CharField(source='get_faceunit_display')
+
+    class Meta:
+        model = Security
+        exclude = ['parce_url',
+                   'board',
+                   'engine',
+                   'market',
+                   'oldest_date',
+                   'monitor',
+                   'source']
+
+
+class SecurityRetrivieSerializer(AllUserPortfoliosMixin):
     """ Serializer for retrivie one security"""
     faceunit = serializers.CharField(source='get_faceunit_display')
     trades = TradeHistorySerializerForSecurityDetail(many=True)
     portfolios = SecurityInPortfolioSerializerForSecurityDetail(many=True)
     is_followed = serializers.SerializerMethodField()
-    all_portfolios = serializers.SerializerMethodField()
     follow_url = serializers.HyperlinkedIdentityField(
         view_name="api:securities-follow")
 
@@ -65,11 +88,6 @@ class SecurityRetrivieSerializer(serializers.ModelSerializer):
 
     def get_is_followed(self, obj):
         return self.context['request'].user in obj.users_follows.all()
-
-    def get_all_portfolios(self, obj):
-        user_portfolios = self.context['request'].user.portfolios.filter(
-            manual=False).defer("id", "title")
-        return {i.id: i.title for i in user_portfolios}
 
 
 class SecurityListSerializer(serializers.HyperlinkedModelSerializer):
@@ -101,15 +119,14 @@ class NewSecurityListSerializer(serializers.Serializer):
     secid = serializers.CharField()
     isin = serializers.CharField()
     emitent = serializers.CharField()
-    uuid = serializers.UUIDField()
     api_url = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
 
     def get_api_url(self, obj):
-        return reverse('api:securities-get-new', args=[obj.uuid])
+        return reverse('api:securities-get-new', args=[obj.isin])
 
     def get_url(self, obj):
-        return reverse('moex:new_detail_vue', args=[obj.uuid])
+        return reverse('moex:new_detail_vue', args=[obj.isin])
 
 
 class SecurityBuyHyperlink(serializers.HyperlinkedRelatedField):
@@ -204,3 +221,12 @@ class TradeHistoryCreateSerializer(serializers.ModelSerializer):
             return new_object
         else:
             return create_status
+
+
+class TradeHistoryNewSecurityBuySerializer(TradeHistoryCreateSerializer):
+    security_isin = serializers.CharField()
+
+    class Meta(TradeHistoryCreateSerializer.Meta):
+        exclude = TradeHistoryCreateSerializer.Meta.exclude + [
+            'security', 'buy', 'ndfl'
+        ]
