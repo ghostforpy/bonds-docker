@@ -48,8 +48,12 @@
             <li>
               <a class="nav-link" href="{% url 'portfolio:list' %}">Портфели</a>
             </li>
-            <li>
+            <li class="d-inline-flex align-items-center">
               <a class="nav-link" href="{% url 'moex:list' %}">Рынок</a>
+              <div class="input-group d-inline d-md-none d-inline-flex mx-3">
+                <input type="search" id="id_search" class="form-control form-control-sm" placeholder="Наименование, SECID, ISIN..." aria-label="" aria-describedby="button-addon1">
+                <button id="btn_search"class="btn btn-outline-secondary btn-sm" type="button" id="button-addon1">Поиск</button>
+              </div>
             </li>
             <li>
               <a class="nav-link" href="{% url 'breports:main' %}">Отчёты</a>
@@ -196,6 +200,17 @@
 
       <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
       <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+      <script type="text/javascript">
+        $(document).on('click', '#btn_search', function (e) {
+            e.preventDefault();
+            let elem = $(this);
+            var search = $('#id_search').val()
+            var url = '{% url 'moex:list' %}' + `?search=${search}`;
+            document.location.href = url;
+        });
+        
+      
+      </script>
       <script type="text/javascript">
         var csrftoken = '{{ csrf_token }}';
         function csrfSafeMethod(method){
