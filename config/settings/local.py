@@ -11,7 +11,11 @@ SECRET_KEY = env(
     default="NttXndNmgnudwb1d7z683YBcJqtItrWhtWiGMGrI0aQYdt39LEDRJLSfRywhUcWx",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "easynote"]
+NGROK_URL = env(
+    "NGROK_URL",
+    default="error",
+)
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "easynote", NGROK_URL.split('//')[1]]
 
 # CACHES
 # ------------------------------------------------------------------------------
@@ -36,7 +40,7 @@ EMAIL_PORT = 1025
 INSTALLED_APPS = ["whitenoise.runserver_nostatic"] + INSTALLED_APPS  # noqa F405
 
 DEBUG_APP = list()
-#DEBUG_APP += ['django-silk']
+DEBUG_APP += ['django-silk']
 #DEBUG_APP += ['django-debug-toolbar']
 #DEBUG_APP += ['django-queryinspect']
 
