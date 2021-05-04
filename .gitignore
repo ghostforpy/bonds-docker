@@ -275,8 +275,8 @@ bonds/media/
 
 .ipython/
 .env
-.envs/*
-!.envs/.local/
+.envs/
+#!.envs/.local/
 up.sh
 build.sh
 
