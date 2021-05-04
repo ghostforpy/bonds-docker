@@ -69,6 +69,7 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.telegram',
     "django_celery_beat",
     "rest_framework",
     "rest_framework.authtoken",
@@ -83,6 +84,7 @@ LOCAL_APPS = [
     "moex.apps.MoexConfig",
     "informer.apps.InformerConfig",
     "breports.apps.BreportsConfig",
+    "tgbot.apps.TgbotConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -288,14 +290,28 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_AUTHENTICATION_METHOD = "username"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_REQUIRED = True
+#ACCOUNT_EMAIL_REQUIRED = False
+SOCIALACCOUNT_EMAIL_REQUIRED = False
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+#ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 ACCOUNT_ADAPTER = "bonds.users.adapters.AccountAdapter"
 # https://django-allauth.readthedocs.io/en/latest/configuration.html
 SOCIALACCOUNT_ADAPTER = "bonds.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_PROVIDERS = {
+    'telegram': {
+        'TOKEN': env("TELEGRAM_BOT_TOKEN", default="xxx"),
+        "SCOPE": [
+            "first_name",
+            "id"
+        ]
+    }
+}
 
 # django-rest-framework
 # -------------------------------------------------------------------------------
