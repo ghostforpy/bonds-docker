@@ -33,7 +33,6 @@ http:
       middlewares:
         - redirect
         - csrf
-        - no-www-redirectregex
       service: django
 
     web-secure-router:
@@ -42,6 +41,7 @@ http:
       entryPoints:
         - web-secure
       middlewares:
+        - no-www-redirectregex
         - csrf
       service: django
       tls:
@@ -70,7 +70,8 @@ http:
         hostsProxyHeaders: ["X-CSRFToken"]
     no-www-redirectregex:
       redirectRegex:
-        regex: "www\.{1}"
+        permanent: true
+        regex: "www.{1}"
         replacement: ""
 
   services:
