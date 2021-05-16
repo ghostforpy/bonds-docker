@@ -4,7 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-
+python /app/tgbot/set_webhook_url.py
 python /app/manage.py collectstatic --noinput
 
 

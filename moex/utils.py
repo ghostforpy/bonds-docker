@@ -544,3 +544,11 @@ def get_security_by_secid(secid, return_from_db_flag=False):
         if return_from_db_flag:
             return security, False
     return security
+
+
+def get_security_in_db_by_id(id):
+    try:
+        security = Security.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return None
+    return security

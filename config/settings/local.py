@@ -11,11 +11,11 @@ SECRET_KEY = env(
     default="NttXndNmgnudwb1d7z683YBcJqtItrWhtWiGMGrI0aQYdt39LEDRJLSfRywhUcWx",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-NGROK_URL = env(
-    "NGROK_URL",
+WEBHOOK_URL = env(
+    "WEBHOOK_URL",
     default="error",
-)
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "easynote", NGROK_URL.split('//')[1]]
+)  # Telegram webhook url
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "easynote", WEBHOOK_URL.split('//')[1]]
 
 # CACHES
 # ------------------------------------------------------------------------------

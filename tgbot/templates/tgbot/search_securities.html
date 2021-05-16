@@ -1,0 +1,9 @@
+{%load tgbot_extras%}
+Ваш запрос: '{{query}}'.
+Найдено ценных бумаг в {%if base == 'True'%}нашей базе{%else%}других источниках{%endif%}: {{count}}.
+Страница {{page.number}} из {{pages}}.
+{% for item in page %}
+<b>Наименование: {{item.shortname}}</b>
+ISIN: {{item.isin}}{% if item.secid != item.isin %}, SECID: {{item.secid}}{%endif%}
+{%if base == 'True'%}{{item.get_absolute_url | tg_url}}{%else%}/securities_new_{{item.isin}}_{%endif%}
+{% endfor %}
