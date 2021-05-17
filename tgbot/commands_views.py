@@ -1,4 +1,5 @@
 from django.core.cache import caches
+from django.template.loader import render_to_string
 
 
 cache = caches['default']
@@ -8,7 +9,11 @@ modes = {
 
 
 def start(request, bot=None):
-    print('handle start')
+    msg = render_to_string('tgbot/start_page.html')
+    bot.send_message(
+        msg,
+        request.tg_body.chat.id
+    )
 
 
 def help(request, bot=None):
