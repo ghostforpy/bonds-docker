@@ -52,7 +52,7 @@ def prepare_search_msg(query, base='True', page_number=1):
 
 def search_mode(request, bot):
     query = request.tg_body.text
-    match = re.findall(r'[^A-Za-z0-9]{1}', query)
+    match = re.findall(r'[^A-Za-zА-Яа-я0-9]{1}', query)
     empty = True
     if match:
         return bot.send_message(
