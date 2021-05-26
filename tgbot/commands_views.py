@@ -1,6 +1,7 @@
 from django.core.cache import caches
 from django.template.loader import render_to_string
 
+from .available_commands import AVAILABLE_COMMANDS
 
 cache = caches['default']
 modes = {
@@ -9,7 +10,9 @@ modes = {
 
 
 def start(request, bot=None):
-    msg = render_to_string('tgbot/start_page.html')
+    msg = render_to_string('tgbot/start_page.html', context={
+        'commands': AVAILABLE_COMMANDS
+    })
     bot.send_message(
         msg,
         request.tg_body.chat.id
