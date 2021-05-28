@@ -465,6 +465,9 @@ def get_security_in_db_history_from_moex(security, date_since, date_until):
         security_history = security.get_history(date_since,
                                                 date_until,
                                                 format_result='str')
+        caches['default'].add('security_history_by_id' + str(security.id),
+                              security_history, timeout=12 * 60 * 60)
+
     try:
         days = sorted(
             security_history,

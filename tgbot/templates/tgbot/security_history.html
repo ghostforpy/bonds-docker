@@ -1,0 +1,7 @@
+{%load tgbot_extras%}
+Наименование: {{security.shortname}}
+ISIN: {{security.isin}}
+История цен
+{%for day in history %}
+{{day.date}} - {{day.price}} {%security_currency security%}
+{%endfor%}
