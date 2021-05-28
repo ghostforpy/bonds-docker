@@ -10,7 +10,8 @@ from django.template.loader import render_to_string
 
 from .classes import Message, CallbackQuery
 from .types_classes import InlineKeyboard, InlineKeyboardButton
-from .message_views import main_message_handle, main_callback_handle
+from .message_views import main_message_handle
+from .callback_views import main_callback_handle
 
 
 TELEGRAM_URL = "https://api.telegram.org/bot"

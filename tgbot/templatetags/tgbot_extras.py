@@ -22,11 +22,17 @@ def tg_url(url):
 
 
 @register.simple_tag
-def today_price(security):
+def security_currency(security):
     currency = security.main_board_faceunit.replace(
         'РУБ', 'RUB').replace('SUR', 'RUB')
     currency = currency.replace('RUB', '₽').replace(
         'USD', '$').replace('EUR', '€')
+    return currency
+
+
+@register.simple_tag
+def today_price(security):
+    currency = security_currency(security)
     return '{} {}'.format(
         float("{0:.2f}".format(security.today_price)), currency
     )
