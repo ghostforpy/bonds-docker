@@ -313,7 +313,7 @@ def search_new_securities_api(query):
     if not caches['default'].get('moex_search_api_' + query):
         result_moex = moex_search(query)
         securities = Security.objects.all()
-        secids = [i.secid for i in securities]
+        secids = [i.secid.upper() for i in securities]
         if result_moex:
             # delete securities if exist in base
             temp = {
@@ -339,7 +339,7 @@ def search_new_securities_api(query):
             result = list()
         result_yfinance = search_in_yfinance(query)
         if result_yfinance:
-            if query not in secids:
+            if query.upper() not in secids:
                 result.append(
                     NewSearchSecurity(
                         secid=query.upper(),
