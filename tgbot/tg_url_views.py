@@ -39,7 +39,7 @@ def get_new_security_detail(request, bot, isin):
 def get_security_history(request, bot, id):
     security = get_security_in_db_by_id(id)
     msg, buttons = get_msg_and_buttons_security_history(
-        security, page_number=1
+        security, page_number=1, base=True
     )
     bot.send_message(
         msg,
@@ -52,9 +52,15 @@ def get_security_history(request, bot, id):
 def get_new_security_history(request, bot, isin):
     security = prepare_new_security_api(isin)
     if security:
-        #
-        history = get_new_security_history_api(isin)
-        send_msg_security_detail(request, bot, security)
+        msg, buttons = get_msg_and_buttons_security_history(
+            security, page_number=1, base=False
+        )
+        bot.send_message(
+            msg,
+            chat_id=request.tg_body.chat.id,
+            reply_markup=InlineKeyboard([buttons]).to_json()
+
+        )
     else:
         bot.send_message(
             'Ценная бумага не найдена. Повторите поиск.',

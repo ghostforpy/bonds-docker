@@ -25,11 +25,14 @@ def parse_request(request):
 
 
 def get_security_history_paginator(security):
-    result_history = get_security_in_db_history_from_moex(
-        security,
-        None,
-        datetime.now().date()
-    )
+    if security.id:
+        result_history = get_security_in_db_history_from_moex(
+            security,
+            None,
+            datetime.now().date()
+        )
+    else:
+        result_history = get_new_security_history_api(security.isin)
     result_history = [
         History(i, result_history[i]) for i in result_history
     ]
@@ -37,7 +40,7 @@ def get_security_history_paginator(security):
     return paginator
 
 
-def get_msg_and_buttons_security_history(security, page_number):
+def get_msg_and_buttons_security_history(security, page_number, base):
     paginator = get_security_history_paginator(security)
     history = paginator.get_page(page_number)
     msg = render_to_string('tgbot/security_history.html',
@@ -46,12 +49,11 @@ def get_msg_and_buttons_security_history(security, page_number):
                                'history': history
                            })
     buttons = list()
-    base = True
     if history.number > 10:
         buttons.append(InlineKeyboardButton(
             '-10',
             callback_data='mode={}:id={}:page={}:base={}'.format(
-                'security_history', security.id,
+                'security_history', security.id or security.isin,
                 history.number - 10, base
             )
         ))
@@ -59,7 +61,7 @@ def get_msg_and_buttons_security_history(security, page_number):
         buttons.append(InlineKeyboardButton(
             'Prev',
             callback_data='mode={}:id={}:page={}:base={}'.format(
-                'security_history', security.id,
+                'security_history', security.id or security.isin,
                 history.previous_page_number(), base
             )
         ))
@@ -67,14 +69,14 @@ def get_msg_and_buttons_security_history(security, page_number):
         buttons.append(InlineKeyboardButton(
             'Next',
             callback_data='mode={}:id={}:page={}:base={}'.format(
-                'security_history', security.id, history.next_page_number(), base
+                'security_history', security.id or security.isin, history.next_page_number(), base
             )
         ))
     if paginator.num_pages - history.number > 10:
         buttons.append(InlineKeyboardButton(
             '+10',
             callback_data='mode={}:id={}:page={}:base={}'.format(
-                'security_history', security.id, history.number + 10, base
+                'security_history', security.id or security.isin, history.number + 10, base
             )
         ))
     return msg, buttons

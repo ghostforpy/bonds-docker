@@ -24,23 +24,25 @@ class HandlerBotView(View):
     need_auth_message = render_to_string('tgbot/need_auth.html')
 
     def post(self, request, *args, **kwargs):
-       # try:
-        temp = request.tg_body
-        if isinstance(temp, Message):
-            if re.match(r'^/[A-Za-z0-9]+(_[A-Za-z0-9]*)+', temp.text):
-                # '/url_url'
-                self._tg_url_handle(request)
-            elif re.match(r'^/[A-Za-z]*$', temp.text):
-                # '/command'
-                self._command_handle(request)
-            else:
-                self._message_handle(request)
-        elif isinstance(temp, CallbackQuery):
-            self._callback_query_handle(request)
-        """except:
+        def handle():
+            temp = request.tg_body
+            if isinstance(temp, Message):
+                if re.match(r'^/[A-Za-z0-9]+(_[A-Za-z0-9]*)+', temp.text):
+                    # '/url_url'
+                    self._tg_url_handle(request)
+                elif re.match(r'^/[A-Za-z]*$', temp.text):
+                    # '/command'
+                    self._command_handle(request)
+                else:
+                    self._message_handle(request)
+            elif isinstance(temp, CallbackQuery):
+                self._callback_query_handle(request)
+        try:
+            handle()
+        except:
             pass
-        finally:"""
-        return JsonResponse({"ok": "POST request processed"})
+        finally:
+            return JsonResponse({"ok": "POST request processed"})
 
     def is_login_required(self, request):
         if self.login_required and not request.user.is_authenticated:
@@ -72,6 +74,20 @@ class HandlerBotView(View):
         }
         response = requests.post(
             f"{TELEGRAM_URL}{TELEGRAM_BOT_TOKEN}/editMessageText", data=data
+        )
+        # print(response.text)
+
+    @staticmethod
+    def answer_callback_query(message, callback_query_id,
+                              show_alert=True, url=None, cache_time=0):
+        data = {
+            "callback_query_id": callback_query_id,
+            "text": message,
+            "show_alert": show_alert,
+            "cache_time": cache_time,
+        }
+        response = requests.post(
+            f"{TELEGRAM_URL}{TELEGRAM_BOT_TOKEN}/answerCallbackQuery", data=data
         )
         # print(response.text)
 
