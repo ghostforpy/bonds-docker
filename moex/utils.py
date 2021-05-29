@@ -338,7 +338,6 @@ def search_new_securities_api(query):
         else:
             result = list()
         result_yfinance = search_in_yfinance(query)
-        print(result_yfinance)
         if result_yfinance:
             if query.upper() not in secids:
                 result.append(
