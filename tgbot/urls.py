@@ -2,7 +2,7 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 
 from .views import HandlerBotView
-from . import views_auth
+from .auth import views_auth
 
 app_name = 'tgbot'
 

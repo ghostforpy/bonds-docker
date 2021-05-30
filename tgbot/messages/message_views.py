@@ -8,7 +8,7 @@ from moex.utils import (search_new_securities_api,
                         security_search_in_db,
                         add_search_securities_to_cache)
 
-from .types_classes import InlineKeyboard, InlineKeyboardButton
+from ..types_classes import InlineKeyboard, InlineKeyboardButton
 
 cache = caches['default']
 
@@ -52,7 +52,7 @@ def prepare_search_msg(query, base='True', page_number=1):
 
 def search_mode(request, bot):
     query = request.tg_body.text
-    match = re.findall(r'[^A-Za-zА-Яа-я0-9]{1}', query)
+    match = re.findall(r'[^A-Za-zА-Яа-яёЁ0-9]{1}', query)
     empty = True
     if match:
         return bot.send_message(

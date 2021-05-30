@@ -10,8 +10,8 @@ from django.template.loader import render_to_string
 
 from .classes import Message, CallbackQuery
 from .types_classes import InlineKeyboard, InlineKeyboardButton
-from .message_views import main_message_handle
-from .callback_views import main_callback_handle
+from .messages.message_views import main_message_handle
+from .tgcallbacks.callback_views import main_callback_handle
 
 
 TELEGRAM_URL = "https://api.telegram.org/bot"
@@ -39,8 +39,8 @@ class HandlerBotView(View):
                 self._callback_query_handle(request)
         try:
             handle()
-        except:
-            pass
+        except Exception as e:
+            print(e)
         finally:
             return JsonResponse({"ok": "POST request processed"})
 
@@ -115,7 +115,7 @@ class HandlerBotView(View):
     def _command_handle(self, request):
         try:
             func, args, kwargs = resolve(
-                request.tg_body.text, 'tgbot.commands_patterns'
+                request.tg_body.text, 'tgbot.tgcommands.commands_patterns'
             )
         except Resolver404:
             return self.send_message(
@@ -128,7 +128,7 @@ class HandlerBotView(View):
     def _tg_url_handle(self, request):
         try:
             func, args, kwargs = resolve(
-                request.tg_body.text, 'tgbot.tg_url_patterns'
+                request.tg_body.text, 'tgbot.tgurls.tg_url_patterns'
             )
         except Resolver404:
             return self.send_message(

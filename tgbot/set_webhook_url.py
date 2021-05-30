@@ -1,11 +1,11 @@
 import os
 import json
-from sys import argv
+#from sys import argv
 import requests
 
-from django.urls import reverse
-import available_commands
-import sys
+#from django.urls import reverse
+from tgcommands import available_commands
+#import sys
 
 
 AVAILABLE_COMMANDS = available_commands.AVAILABLE_COMMANDS

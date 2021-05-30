@@ -1,7 +1,8 @@
 from django.contrib.auth import authenticate
 from django.utils.deprecation import MiddlewareMixin
 from django.contrib.auth.models import AnonymousUser
-from .utils import parse_request
+
+from ..utils import parse_request
 
 
 class AuthenticationTelegramChatMiddleware(MiddlewareMixin):

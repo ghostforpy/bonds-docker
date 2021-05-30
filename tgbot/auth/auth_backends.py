@@ -2,7 +2,8 @@
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
-from .utils import parse_request
+
+from ..utils import parse_request
 
 
 User = get_user_model()

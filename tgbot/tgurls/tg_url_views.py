@@ -1,12 +1,9 @@
 from django.template.loader import render_to_string
 
-from moex.iss_simple_main import history
 from moex.utils import (prepare_new_security_api,
-                        get_security_in_db_by_id,
-                        get_new_security_history_api,
-                        get_security_in_db_history_from_moex)
-from .utils import get_msg_and_buttons_security_history
-from .types_classes import InlineKeyboard, InlineKeyboardButton
+                        get_security_in_db_by_id)
+from ..utils import get_msg_and_buttons_security_history
+from ..types_classes import InlineKeyboard, InlineKeyboardButton
 
 
 def send_msg_security_detail(request, bot, security):

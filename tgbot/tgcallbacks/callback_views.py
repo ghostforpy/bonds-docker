@@ -1,9 +1,10 @@
 from django.core.cache import caches
 
 from moex.utils import get_security_in_db_by_id, prepare_new_security_api
-from .message_views import prepare_search_msg
-from .types_classes import InlineKeyboard, InlineKeyboardButton
-from .utils import get_msg_and_buttons_security_history
+
+from ..messages.message_views import prepare_search_msg
+from ..types_classes import InlineKeyboard, InlineKeyboardButton
+from ..utils import get_msg_and_buttons_security_history
 
 cache = caches['default']
 
