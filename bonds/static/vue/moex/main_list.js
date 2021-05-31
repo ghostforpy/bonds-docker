@@ -16,7 +16,8 @@ var app = new Vue({
     }
   },
   beforeMount: async function () {
-    this.search = document.location.search.split('=')[1];
+    const tempURL = new URL(document.location)
+    this.search = decodeURI(tempURL.searchParams.get('search'));
     //console.log(this.search)
     if (this.search === undefined) { this.search = '' };
     this.change_url();
