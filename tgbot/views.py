@@ -8,11 +8,11 @@ from django.views import View
 from django.urls import resolve, Resolver404, reverse
 from django.template.loader import render_to_string
 
-from .classes import Message, CallbackQuery
+from .classes import Message, CallbackQuery, InlineQuery
 from .types_classes import InlineKeyboard, InlineKeyboardButton
 from .messages.message_views import main_message_handle
 from .tgcallbacks.callback_views import main_callback_handle
-
+from .inlinequery.views import main_inline_query_handle
 
 TELEGRAM_URL = "https://api.telegram.org/bot"
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "error_token")
@@ -91,6 +91,21 @@ class HandlerBotView(View):
         )
         # print(response.text)
 
+    @staticmethod
+    def answer_inline_query(inline_query_id, results, next_offset, cache_time=0,
+                            is_personal=False):
+        data = {
+            "inline_query_id": inline_query_id,
+            "results": results,
+            "is_personal": is_personal,
+            "next_offset": next_offset,
+            "cache_time": cache_time,
+        }
+        response = requests.post(
+            f"{TELEGRAM_URL}{TELEGRAM_BOT_TOKEN}/answerInlineQuery", data=data
+        )
+        # print(response.text)
+
     def send_need_auth(self):
         login_url = self.request.build_absolute_uri(reverse('signup'))
         socialaccount_connections_url = self.request.build_absolute_uri(
@@ -111,6 +126,10 @@ class HandlerBotView(View):
     def _message_handle(self, request):
         if self.is_login_required(request):
             return main_message_handle(request, self)
+
+    def _inline_query_handle(self, request):
+        if self.is_login_required(request):
+            return main_inline_query_handle(request, self)
 
     def _command_handle(self, request):
         try:

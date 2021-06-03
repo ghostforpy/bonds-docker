@@ -8,7 +8,7 @@ from moex.api.views import History
 from moex.utils import (get_new_security_history_api,
                         get_security_in_db_history_from_moex)
 
-from .classes import Message, CallbackQuery
+from .classes import Message, CallbackQuery, InlineQuery
 from .types_classes import InlineKeyboard, InlineKeyboardButton
 
 
@@ -21,6 +21,9 @@ def parse_request(request):
     elif 'callback_query' in keys:
         t_callback_query = t_data.get('callback_query')
         return CallbackQuery(**t_callback_query)
+    elif 'inline_query' in keys:
+        t_inline_query = t_data.get('inline_query')
+        return InlineQuery(**t_inline_query)
     return None
 
 

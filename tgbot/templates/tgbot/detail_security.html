@@ -1,8 +1,3 @@
+{% extends "tgbot/detail_security_base.html" %}
 {%load tgbot_extras%}
-Наименование: {{security.shortname}}
-Тип: {{security.get_security_type_display}}
-SECID: {{security.secid}}
-ISIN: {{security.isin}}
-Цена: {% today_price security %}
-Эмитент: {{security.emitent}}
-История цен: {% security_history_tg_url security %}
+{% block url%}История цен: {% security_history_tg_url security %}{%endblock url%}

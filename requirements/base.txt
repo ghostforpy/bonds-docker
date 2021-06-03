@@ -9,6 +9,7 @@ celery==4.4.5  # pyup: < 5.0  # https://github.com/celery/celery
 django-celery-beat==2.0.0  # https://github.com/celery/django-celery-beat
 django-import-export # https://github.com/django-import-export/django-import-export
 flower==0.9.4  # https://github.com/mher/flower
+pydantic
 
 # Django
 # ------------------------------------------------------------------------------

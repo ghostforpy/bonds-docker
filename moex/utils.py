@@ -240,7 +240,7 @@ def security_search_in_db(query):
         Q(secid__icontains=query) |
         Q(isin__icontains=query) |
         Q(emitent__icontains=query)
-    )
+    ).order_by('-last_update', '-id')
 
 
 def security_search_in_moex(query):
