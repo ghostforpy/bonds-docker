@@ -114,3 +114,18 @@ class CallbackQuery:
         self.inline_message_id = inline_message_id
         self.chat_instance = chat_instance
         self.data = data
+
+
+class InlineQuery:
+    def __init__(self,
+                 id: int,
+                 user_from: UserFrom = None,
+                 query: str = None,
+                 offset: str = None,
+                 chat_type: str = None,
+                 *args, **kwargs):
+        self.id = id
+        self.user_from = UserFrom(**kwargs['from'])
+        self.query = query
+        self.offset = offset
+        self.chat_type = chat_type

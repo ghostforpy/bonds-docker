@@ -37,6 +37,8 @@ class HandlerBotView(View):
                     self._message_handle(request)
             elif isinstance(temp, CallbackQuery):
                 self._callback_query_handle(request)
+            elif isinstance(temp, InlineQuery):
+                self._inline_query_handle(request)
         try:
             handle()
         except Exception as e:

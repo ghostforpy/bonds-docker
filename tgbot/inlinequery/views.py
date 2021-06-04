@@ -13,8 +13,6 @@ from moex.utils import (search_new_securities_api,
                         security_search_in_db,
                         add_search_securities_to_cache)
 
-from ..classes import InlineQueryResultArticle, InputTextMessageContent
-
 #cache = caches['default']
 
 
