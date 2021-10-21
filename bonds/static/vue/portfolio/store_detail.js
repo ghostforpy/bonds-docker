@@ -26,7 +26,8 @@ const store = new Vuex.Store({
     portfolio_visible: false,
     spiner_visible: true,
     errors_visible: false,
-    errors: null
+    errors: null,
+    date_picker_visible: false
 
   },
   mutations: {
@@ -82,6 +83,12 @@ const store = new Vuex.Store({
         state.portfolio_info.owner_url = data.owner_url;
         state.portfolio_info.owner_name = data.owner_name;
       };
+    },
+    date_picker_shown(state) {
+      state.date_picker_visible = true
+    },
+    date_picker_hidden(state) {
+      state.date_picker_visible = false
     },
     removeItemFromPortfolioInvests(state, id) {
       state.portfolio_invests = state.portfolio_invests.filter(

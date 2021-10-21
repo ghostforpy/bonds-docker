@@ -196,6 +196,11 @@ Vue.component('portfolio-invests', {
     },
     ever_trade_securities: function () {
       return this.$store.state.ever_trade_securities;
+    },
+    styleObject: function () {
+      return {
+        'min-height': this.$store.state.date_picker_visible && this.portfolio_invests_list.length < 2 ? '400px' : '0px'
+      }
     }
   },
   methods: {
@@ -214,7 +219,7 @@ Vue.component('portfolio-invests', {
         <b-button variant="secondary" class="mt-4 mb-2 col-12" v-b-toggle.collapseHistoryPortfolio>
         История движения денежных средств
         </b-button>
-        <b-collapse id="collapseHistoryPortfolio" class="container-in-collapse">
+        <b-collapse id="collapseHistoryPortfolio" class="container-in-collapse" v-bind:style="styleObject">
         <add-portfolio-invests
         :ever_trade_securities="ever_trade_securities"
         :portfolio_id=portfolio_id
@@ -398,6 +403,12 @@ Vue.component('add-portfolio-invests', {
 
       return true
     },
+    sh: function () {
+      this.$store.commit('date_picker_shown');
+    },
+    hd: function () {
+      this.$store.commit('date_picker_hidden');
+    },
     addInvest: function () {
       let elem = this;
       let formData = new FormData();
@@ -450,6 +461,8 @@ Vue.component('add-portfolio-invests', {
           :date-format-options="date_format_options"
           :max="today()"
           v-bind:class="{ 'is-invalid': date_invalid  }"
+          @shown="sh"
+          @hidden="hd"
           v-model="date" size="sm" class="mt-1 mb-2" required></b-form-datepicker>
         </div>
         <div class="col-md-4">
