@@ -54,6 +54,7 @@ class BrokerReport:
             self.parser = parser_class(filename)
         except WrongParser:
             parser_not_found = True
+            AVAILEBLE_PARSERS.remove(parser_class)
             for i in AVAILEBLE_PARSERS:
                 try:
                     self.parser = i(filename)
@@ -139,8 +140,8 @@ class BrokerReport:
             for i in currency_list:
                 try:
                     self_attr[i].extend(other_attr[i])
-                except IndexError:
-                    continue
+                except KeyError:
+                    self_attr[i] = other_attr[i]
                 try:
                     self_attr[i] = list(set(self_attr[i]))
                 except TypeError:  # пустой список
@@ -180,8 +181,13 @@ class BrokerReport:
             i.writeoff = sum([k.count for k in transactions_writeoff])
             # если по облигации было полное погашение,
             # исходящий остаток будет равен сумме входящего и зачисления
-            amortisations = [
-                k for k in self.amortisations['RUB'] if k.full and k.isin == i.isin]
+            try:
+                amortisations = [
+                    k for k in self.amortisations['RUB'] if k.full and k.isin == i.isin
+                    ]
+            except KeyError:
+                # отсутствуют амортизации по облигации
+                amortisations = None
             if amortisations:
                 i.writeoff = i.crediting + i.incoming_balance
         self.securities_movement.extend(differense)  # дописываем разницу
@@ -522,7 +528,7 @@ class BrokerReport:
             for i in list(result.keys()):
                 if i.date < since:
                     del result[i]
-        if to != datetime.now().date() and not to is None:
+        if to != datetime.now().date() and to is not None:
             for i in list(result.keys()):
                 if i.date > to:
                     del result[i]
