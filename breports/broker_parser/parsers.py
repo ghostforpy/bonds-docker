@@ -23,7 +23,6 @@ class TinkoffParserXLS:
         self.filename = filename
         self.book = tinkoff_xls_scripts.get_book(self.filename)
         self.sheet = self._get_sheet()
-
         if not self.verify():
             raise WrongParser
 
@@ -60,6 +59,7 @@ class TinkoffParserXLS:
 
     def verify(self):
         if not tinkoff_xls_scripts.verify_broker_name(self.sheet):
+            print('not verify')
             return False
         return True
 
@@ -80,6 +80,9 @@ class TinkoffParserXLS:
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = list()
         for i in data:
+            if i[0].startswith('Сокращенное'):
+                # пропуск строк наименования колонок
+                continue
             temp = dict()
             temp['shortname'] = i[0]
             temp['secid'] = i[1]
@@ -103,6 +106,9 @@ class TinkoffParserXLS:
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = dict()
         for i in data:
+            if i[0].startswith('Валюта'):
+                # пропуск строк наименований столбцов
+                continue
             temp = dict()
             temp['currency'] = i[0]
             temp['incoming_balance'] = return_decimal(i[1])
@@ -119,6 +125,9 @@ class TinkoffParserXLS:
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = list()
         for i in data:
+            if i[0].startswith('Сокращенное'):
+                # пропуск строк наименования колонок
+                continue
             temp = dict()
             temp['shortname'] = i[0]
             temp['secid'] = i[1]
@@ -158,11 +167,17 @@ class TinkoffParserXLS:
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = list()
         for i in data:
+            if i[0].startswith('Номер'):
+                # пропуск строк наименования колонок
+                continue
             temp = dict()
             temp['deal_number'] = i[0]
             temp['order_number'] = i[1]
-            temp['date'] = datetime.strptime(i[2], "%d.%m.%Y").date()
-            temp['time'] = datetime.strptime(i[3], "%H:%M:%S").time()
+            try:
+                temp['date'] = datetime.strptime(i[2], "%d.%m.%Y").date()
+                temp['time'] = datetime.strptime(i[3], "%H:%M:%S").time()
+            except ValueError:
+                continue
             temp['stock_market'] = i[4]
             temp['market_mode'] = i[5]
             temp['action'] = i[6]

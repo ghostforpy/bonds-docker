@@ -6,6 +6,7 @@ import re
 DIR_TO_FILE = 'broker_reports'
 SHEET_NAME = 'broker_rep'
 BROKER_NAME = 'Брокер: АО «Тинькофф Банк», ИНН/КПП 7710140679/773401001'
+BROKER_NAME2 = 'Брокер: АО «Тинькофф Банк», ИНН/КПП 7710140679/771301001'
 BROKER_NAME_ROW = 1
 PERIOD_ROW = 5
 SECTIONS = {
@@ -74,7 +75,7 @@ def get_broker_name(sheet):
 
 def verify_broker_name(sheet):
     name = get_broker_name(sheet)
-    return name == BROKER_NAME
+    return name in [BROKER_NAME, BROKER_NAME2]
 
 
 def get_period(sheet):
@@ -144,6 +145,9 @@ def get_row_slice_of_section(sheet, section):
         if row_or_col_is_empty(row, is_row=True):
             # пропуск пустых строк
             continue
+        # научиться пропускать лишние строки
+        # first_cell_type = sheet.cell(rownum, 0)
+        # print(first_cell_type)
         result.append(row)
     return result
 
@@ -180,9 +184,11 @@ def get_data_by_section(sheet, section, append_row_names=False):
     # при анализе секции 2 происходит удаление пустых столбцов,
     # изза этого смещается таблица
     if section in CURRENCIES:
-        if len(result[0]) != 7:
+        if len(result[0]) == 4:
             [i.insert(0, '') for i in result]
             [i.insert(0, '') for i in result]
+        elif len(result[0]) == 6:
+            [i.append('') for i in result]
     if section == '4.1':
         if len(result[0]) != 8:
             [i.insert(3, '') for i in result]
