@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% load moex_extras %}
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/daterangepicker/daterangepicker.css' %}">
 <link rel="stylesheet" href="{% static 'css/toast/toast.css' %}">
@@ -91,6 +91,50 @@
                 </div>
                 {% endcomment %}
             </div>
+            <button type="button" class="btn btn-secondary mt-4 mb-2 col-12" id="PortfolioButton" data-toggle="collapse" data-target="#collapsePortfolios" aria-expanded="false" aria-controls="collapsePortfolios">
+                Портфели
+            </button>
+            <div class="collapse history-table" id="collapsePortfolios">
+                <div class="row">
+                    <div class="col-md-2 d-none d-md-block">
+                        <p>Наименование</p>
+                    </div>
+                    <div class="col-md-2 d-none d-md-block">
+                        <p>Инвестиции</p>
+                    </div>
+                    <div class="col-md-2 d-none d-md-block">
+                        <p>Текущий баланс</p>
+                    </div>
+                    <div class="col-md-2 d-none d-md-block">
+                        Доходность
+                    </div>
+                    <div class="col-md-2 d-none d-md-block">
+                    Годовая доходность
+                    </div>
+                </div>
+                {% for portfolio in portfolios %}
+                    <div class="dropdown-divider"></div>
+                    <div class="row">
+                        <div class="col-md-2 mt-1 mb-1">
+                            <a class="btn btn-secondary btn-sm" href="{{ portfolio.get_absolute_url }}">{{ portfolio.title}}</a>
+                        </div>
+                        <div class="col-md-2 mt-1 mb-1">
+                            <span class="d-md-none">Инвестиции: </span>{{ portfolio.invest_cash}}
+                        </div>
+                        <div class="col-md-2 mt-1 mb-1">
+                            <span class="d-md-none">Текущий баланс: </span>{{ portfolio.today_cash}}<br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{{ portfolio.change_today_cash | return_color_and_fas_bootstrap:True }}"><span class="d-md-none d-inline"></span>({{portfolio.change_today_cash}}%)</span>
+                        </div>
+                        <div class="col-md-2 mt-1 mb-1">
+                            <span class="d-md-none">Доходность: </span><span class="{{ portfolio.percent_profit | return_color_and_fas_bootstrap }}">{{ portfolio.percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{{ portfolio.change_percent_profit | return_color_and_fas_bootstrap:True }}"><span class="d-md-none d-inline"></span>({{portfolio.change_percent_profit}}%)</span>
+                        </div>
+                        <div class="col-md-2 mt-1 mb-1">
+                        <span class="d-md-none">Годовая доходность: </span><span class="{{ portfolio.year_percent_profit | return_color_and_fas_bootstrap }}">{{ portfolio.year_percent_profit }}%</span><br class="d-none d-md-inline"><span class="d-md-none d-inline"> </span><span class="{{ portfolio.change_year_percent_profit | return_color_and_fas_bootstrap:True }}"><span class="d-md-none d-inline"></span>({{portfolio.change_year_percent_profit}}%)</span>
+                        </div>
+                    </div>
+                    
+                {% endfor %}
+            </div>
+
         </div>
     </div>
 </div>

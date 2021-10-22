@@ -32,6 +32,7 @@ def detail_vklad(request):
                   'vklad/detail.html',
                   {'vklad': vklad,
                    'invests': invests,
+                   'portfolios': portfolios,
                    # 'form': form,
                    'user': user})
 
