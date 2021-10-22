@@ -848,6 +848,12 @@ Vue.component('form-trade-securities', {
       this.count = 0;
       this.count_invalid = false;
       this.total_cost = 0
+    },
+    showModal: function () {
+      if (this.$store.state.trade_security.security_type != 'bond') {
+        this.nkd = 0;
+        this.calc_total_cost()
+      }
     }
   },
   template: `
@@ -855,7 +861,8 @@ Vue.component('form-trade-securities', {
       id="modal-buy-security"
       centered
       v-bind:title="computed_title"
-      @ok="handleOk">
+      @ok="handleOk"
+      @shown="showModal">
         <label for="datepicker">Дата:</label>
         <b-form-datepicker
         id="datepicker"
