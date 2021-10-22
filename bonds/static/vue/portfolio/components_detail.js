@@ -813,6 +813,7 @@ Vue.component('form-trade-securities', {
             variant: 'success',
             solid: true
           })
+          elem.clearModalForm()
         },
         function_error_response_other = function (error) {
           const h = elem.$createElement;
@@ -834,6 +835,19 @@ Vue.component('form-trade-securities', {
       this.$nextTick(() => {
         this.$bvModal.hide('modal-buy-security')
       })
+    },
+    clearModalForm: function () {
+      this.date = null;
+      this.date_invalid = false;
+      this.price = 0;
+      this.price_invalid = false;
+      this.comission = 0;
+      this.comission_invalid = false;
+      this.nkd = 0;
+      this.nkd_invalid = false;
+      this.count = 0;
+      this.count_invalid = false;
+      this.total_cost = 0
     }
   },
   template: `
