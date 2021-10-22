@@ -14,10 +14,10 @@
         <div class="col-md-4">
             <p>Всего инвестиций: <span id="invest_cash">{{vklad.invest_cash}}</span></p>
             <p>Текущий баланс: <span id="today_cash">{{vklad.today_cash}}</span></p>
-            <p>Остаток: <span id="ostatok">{{vklad.ostatok}}</span></p>
+       {% comment "" %}<p>Остаток: <span id="ostatok">{{vklad.ostatok}}</span></p>{% endcomment %} 
             <p>Доходность: <span id="percent_profit">{{vklad.percent_profit}}</span></p>
             <p>Годовая доходность: <span id="year_percent_profit">{{vklad.year_percent_profit}}</span></p>
-            <a class="mb-4 refresh-vklad btn btn-info btn-sm" href="{% url 'vklad:refresh_vklad' vklad.id %}">Обновить</a>
+        {% comment "" %}<a class="mb-4 refresh-vklad btn btn-info btn-sm" href="{% url 'vklad:refresh_vklad' vklad.id %}">Обновить</a>{% endcomment %} 
 </div>
 
         <div class="col-md-8">
@@ -25,6 +25,34 @@
             История пополнений и снятий
             </button>
             <div class="collapse history-table" id="collapseHistoryVklad">
+                {% for i in invests %}
+                    <div class="row align-items-center">
+                        <div class="col-9">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {{ i.date }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ i.cash }} {{ i.get_currency_display }}
+                                    {% if i.currency != 'SUR' %}</br>({{ i.cash_in_rub }} РУБ){% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ i.get_action_display }}
+                                    {% if i.security %}
+                                        </br>
+                                        <a class="btn btn-warning btn-sm" href="{% url 'moex:detail' i.security.id %}">{{ i.security.shortname }}</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <a class="btn btn-secondary btn-sm" href="{% url 'portfolio:detail' i.portfolio.id %}">{{ i.portfolio.title }}</a>
+                        </div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                
+                {% endfor %}
+                {% comment "перечень инвест позиций вклада" %}
                 {% for i in vklad.vklads.all %}
                     <div class="row align-items-center">
                         <div class="col-9">
@@ -46,6 +74,9 @@
                     </div>
                     <div class="dropdown-divider"></div>
                 {% endfor %}
+                {% endcomment %}
+
+                {% comment "форма добавления на вклад" %}
                 <div class="row align-items-center">
                     <div class="col-9">
                             <div class="row align-items-center">
@@ -58,6 +89,7 @@
                         <a id="add_vklad" class="btn btn-success btn-sm mt-1 mb-2" href="{% url 'vklad:add_vklad' vklad.id %}">Добавить</a>
                     </div>
                 </div>
+                {% endcomment %}
             </div>
         </div>
     </div>

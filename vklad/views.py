@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+import portfolio
+from portfolio.models import PortfolioInvestHistory
 from .forms import FormVkladInvestHistory
 from .models import UserVklad, VkladInvestHistory
 from django.core.exceptions import ObjectDoesNotExist
@@ -21,11 +23,16 @@ def updated_vklad(vklad):
 def detail_vklad(request):
     user = request.user
     vklad = user.vklad
-    form = FormVkladInvestHistory()
+    # form = FormVkladInvestHistory()
+    portfolios = user.portfolios.all()
+    invests = PortfolioInvestHistory.objects.filter(
+        portfolio__in=portfolios
+    ).select_related('security', 'portfolio')
     return render(request,
                   'vklad/detail.html',
                   {'vklad': vklad,
-                   'form': form,
+                   'invests': invests,
+                   # 'form': form,
                    'user': user})
 
 
