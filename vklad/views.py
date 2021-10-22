@@ -28,11 +28,13 @@ def detail_vklad(request):
     invests = PortfolioInvestHistory.objects.filter(
         portfolio__in=portfolios
     ).select_related('security', 'portfolio')
+    trades = user.trades.select_related('security', 'portfolio').all()
     return render(request,
                   'vklad/detail.html',
                   {'vklad': vklad,
                    'invests': invests,
                    'portfolios': portfolios,
+                   'trades': trades,
                    # 'form': form,
                    'user': user})
 
