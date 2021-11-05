@@ -190,8 +190,8 @@ def create_portfolio_by_broker_report(portfolio, br):
             security=security,
             count=i.outgoing_balance,
             today_price=security.today_price,
-            total_cost=i.outgoing_balance * security.today_price,
-            total_cost_in_rub=i.outgoing_balance * security.today_price
+            total_cost=i.outgoing_balance * Decimal(security.today_price),
+            total_cost_in_rub=i.outgoing_balance * Decimal(security.today_price)
         )
         if security.main_board_faceunit != 'SUR':
             valute = get_security(
