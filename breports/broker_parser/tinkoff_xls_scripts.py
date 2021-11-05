@@ -70,7 +70,7 @@ def return_sheets(book):
 
 def get_broker_name(sheet):
     row = sheet.row_values(BROKER_NAME_ROW)
-    return row[0]
+    return row[0] or row[1]
 
 
 def verify_broker_name(sheet):
