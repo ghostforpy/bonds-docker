@@ -92,7 +92,7 @@ def get_row_of_section_name(sheet, section):
     count = 1 if section in CURRENCIES else 0
     for rownum in range(sheet.nrows):
         row = sheet.row_values(rownum)
-        c_el = row[0]
+        c_el = row[0] or row[1]
         if c_el.startswith(section):
             if count:
                 # пропуск первого вхождения для подразделов из раздела 2.
