@@ -173,44 +173,45 @@ class TinkoffParserXLS:
             temp = dict()
             temp['deal_number'] = i[0]
             temp['order_number'] = i[1]
+            temp['execution_sign'] = i[2]
             try:
-                temp['date'] = datetime.strptime(i[2], "%d.%m.%Y").date()
-                temp['time'] = datetime.strptime(i[3], "%H:%M:%S").time()
+                temp['date'] = datetime.strptime(i[3], "%d.%m.%Y").date()
+                temp['time'] = datetime.strptime(i[4], "%H:%M:%S").time()
             except ValueError:
                 continue
-            temp['stock_market'] = i[4]
-            temp['market_mode'] = i[5]
-            temp['action'] = i[6]
-            temp['shortname'] = i[7]
+            temp['stock_market'] = i[5]
+            temp['market_mode'] = i[6]
+            temp['action'] = i[7]
+            temp['shortname'] = i[8]
             try:
-                temp['isin'] = self.secutities_dict_ISIN_by_shortname[i[7]]
+                temp['isin'] = self.secutities_dict_ISIN_by_shortname[i[8]]
             except KeyError:
                 temp['isin'] = ''
-            temp['code'] = i[8]
-            temp['price'] = return_decimal(i[9])
-            temp['currency'] = i[10]
-            temp['count'] = return_decimal(i[11])
-            temp['total_cost_without_nkd'] = return_decimal(i[12])
-            temp['nkd'] = return_decimal(i[13])
-            temp['total_cost'] = return_decimal(i[14])
-            temp['setlement_currency'] = i[15]
-            temp['broker_commission'] = return_decimal(i[16])
-            temp['commission_currency'] = i[17]
+            temp['code'] = i[9]
+            temp['price'] = return_decimal(i[10])
+            temp['currency'] = i[11]
+            temp['count'] = return_decimal(i[12])
+            temp['total_cost_without_nkd'] = return_decimal(i[13])
+            temp['nkd'] = return_decimal(i[14])
+            temp['total_cost'] = return_decimal(i[15])
+            temp['setlement_currency'] = i[16]
+            temp['broker_commission'] = return_decimal(i[17])
+            temp['commission_currency'] = i[18]
             try:
-                temp['stock_market_commission'] = return_decimal(i[18])
+                temp['stock_market_commission'] = return_decimal(i[19])
             except InvalidOperation:
                 for k in range(24, 18, -1):
                     i[k] = i[k-1]
-            temp['stock_market_commission_currency'] = i[19]
-            temp['clearing_center_commission'] = return_decimal(i[20])
-            temp['clearing_center_commission_currency'] = i[21]
+            temp['stock_market_commission_currency'] = i[20]
+            temp['clearing_center_commission'] = return_decimal(i[21])
+            temp['clearing_center_commission_currency'] = i[22]
             try:
-                temp['repo_rate_percent'] = return_decimal(i[22])
+                temp['repo_rate_percent'] = return_decimal(i[23])
             except InvalidOperation:
                 temp['repo_rate_percent'] = ''
-            temp['contractor'] = i[23]
-            temp['execution_date'] = datetime.strptime(i[24], "%d.%m.%Y").date()
-            temp['ihash'] = hash(tuple(i[:22]))
+            temp['contractor'] = i[24]
+            temp['execution_date'] = datetime.strptime(i[25], "%d.%m.%Y").date()
+            temp['ihash'] = hash(tuple(i[:23]))
             result.append(temp)
         return result
 

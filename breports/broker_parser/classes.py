@@ -1007,6 +1007,7 @@ class Transaction(SimpleHashMixin):
     def __init__(self,
                  deal_number: str = None,
                  order_number: str = None,
+                 execution_sign: str = None,
                  date: date = None,
                  time: time = None,
                  stock_market: str = None,
