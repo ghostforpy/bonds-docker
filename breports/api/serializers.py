@@ -3,10 +3,10 @@ from rest_framework import serializers
 from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 from config.settings.base import APPS_DIR
-from moex.api.serializers import SecurityRetrivieSerializer
+from moex.api.serializers import SimpleSecurityRetrivieSerializer
 from ..models import BReport
 
-#from bonds.users.api.serializers import UserSerializer
+# from bonds.users.api.serializers import UserSerializer
 # from moex.api.serializers import SecurityInPortfolioSerializer,\
 #    TradeHistorySerializerForPortfolioDetail
 
@@ -78,10 +78,10 @@ class IncomeCertificateSerializer(SimpleBReportUploadSerializer):
         return data
 
 
-class SecuritySerializer(SecurityRetrivieSerializer):
+class SecuritySerializer(SimpleSecurityRetrivieSerializer):
 
-    class Meta(SecurityRetrivieSerializer.Meta):
-        exclude = SecurityRetrivieSerializer.Meta.exclude + [
+    class Meta(SimpleSecurityRetrivieSerializer.Meta):
+        exclude = SimpleSecurityRetrivieSerializer.Meta.exclude + [
             'accint',
             'change_price_percent',
             'code',

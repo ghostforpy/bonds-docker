@@ -67,6 +67,21 @@ class NewSecurityRetrivieSerializer(AllUserPortfoliosMixin):
                    'source']
 
 
+class SimpleSecurityRetrivieSerializer(serializers.ModelSerializer):
+    """ Serializer for retrivie one security"""
+    faceunit = serializers.CharField(source='get_faceunit_display')
+
+    class Meta:
+        model = Security
+        exclude = ['parce_url',
+                   'board',
+                   'engine',
+                   'market',
+                   'oldest_date',
+                   'monitor',
+                   'source']
+
+
 class SecurityRetrivieSerializer(AllUserPortfoliosMixin):
     """ Serializer for retrivie one security"""
     faceunit = serializers.CharField(source='get_faceunit_display')
