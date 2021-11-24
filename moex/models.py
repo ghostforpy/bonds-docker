@@ -21,7 +21,13 @@ from .utils_yfinance import get_history_by_secid
 refresh_price_security = django.dispatch.Signal(providing_args=["price"])
 # Модель ценных бумаг
 
+currency_choises = [('SUR', 'РУБ'),
+                    ('USD', 'USD'),
+                    ('EUR', 'EUR'),
+                    ('GBP', 'GBP'),
+                    ('CNY', 'CNY')]
 
+                    
 class Security(models.Model):
     name = models.CharField(max_length=50, unique=True)
     url = models.URLField(blank=True)
@@ -81,21 +87,13 @@ class Security(models.Model):
     # валюта номинала
     faceunit = models.CharField(max_length=20,
                                 default='SUR',
-                                choices=[('SUR', 'РУБ'),
-                                         ('USD', 'USD'),
-                                         ('EUR', 'EUR'),
-                                         ('GBP', 'GBP'),
-                                         ('CNY', 'CNY')],
+                                choices=currency_choises,
                                 blank=True,
                                 null=True)
     # валюта на основном режиме торгов
     main_board_faceunit = models.CharField(max_length=20,
                                            default='SUR',
-                                           choices=[('SUR', 'РУБ'),
-                                                    ('USD', 'USD'),
-                                                    ('EUR', 'EUR'),
-                                                    ('GBP', 'GBP'),
-                                                    ('CNY', 'CNY')],
+                                           choices=currency_choises,
                                            blank=True,
                                            null=True)
     # Сумма купона, в валюте номинала
@@ -564,11 +562,17 @@ def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
 
 def upload(security, date, oldest_date):
     history = security.get_history(date, oldest_date, format_result='date')
-    for i in history:
+    """for i in history:
         newitem = SecurityHistory(name=security,
                                   date=i,
                                   price=history[i]['CLOSE'])
-        newitem.save()
+        newitem.save()"""
+    history = [
+        SecurityHistory(name=security,
+                        date=i,
+                        price=history[i]['CLOSE']) for i in history
+    ]
+    SecurityHistory.objects.bulk_create(history)
 
 
 # @receiver(pre_save, sender=TradeHistory)
