@@ -201,7 +201,8 @@ class TradeHistorySerializerForPortfolioDetail(serializers.HyperlinkedModelSeria
                                            read_only=True)
     security_url = serializers.CharField(source='security.get_absolute_url')
     security_faceunit = serializers.CharField(
-        source='security.get_main_board_faceunit_display')
+        #source='security.get_main_board_faceunit_display')
+        source='get_currency_display')
     id = serializers.IntegerField(read_only=True)
     url_for_delete = serializers.HyperlinkedIdentityField(
         view_name='api:securities-trade-history-detail'

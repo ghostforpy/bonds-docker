@@ -304,6 +304,13 @@ Vue.component('form-trade-securities', {
       date: null,
       date_invalid: false,
       price: 0,
+      main_board_faceunit: null,
+      custom_currency: null,
+      list_custom_currency: [
+        { value: 'SUR', text: '₽' },
+        { value: 'USD', text: '$' },
+        { value: 'EUR', text: '€' }
+      ],
       price_invalid: false,
       comission: 0,
       comission_invalid: false,
@@ -329,7 +336,7 @@ Vue.component('form-trade-securities', {
   updated: function () {
     //console.log('updated')
   },
-  mounted: function () {
+  created: function () {
     var elem = this;
     this.$root.$on('bv::modal::show', (bvEvent, modalId) => {
       //console.log('Modal is about to be shown', bvEvent, modalId);
@@ -337,6 +344,10 @@ Vue.component('form-trade-securities', {
       elem.price = elem.$store.state.trade_security_price;
       elem.calc_total_cost();
     })
+    let trade_security = this.$store.state.security_info;
+    this.main_board_faceunit = trade_security.main_board_faceunit;
+    this.custom_currency = trade_security.main_board_faceunit.replace('RUB', 'SUR');
+    //elem.custom_currency = elem.currency();
   },
   computed: {
     computed_title: function () {
@@ -361,11 +372,12 @@ Vue.component('form-trade-securities', {
       }
     },
     currency: function () {
-      let trade_security = this.$store.state.security_info;
-      if (trade_security) {
-        return currency_sign(trade_security.main_board_faceunit);
-      }
-      return null
+      //let trade_security = this.$store.state.security_info;
+      //if (trade_security) {
+      //  return currency_sign(trade_security.main_board_faceunit);
+      //}
+      //return null
+      return currency_sign(this.custom_currency);
     },
     security_type: function () {
       let trade_security = this.$store.state.security_info;
@@ -450,6 +462,7 @@ Vue.component('form-trade-securities', {
       formData.append('price', elem.price);
       formData.append('nkd', elem.nkd);
       formData.append('ndfl', 0);
+      formData.append('currency', elem.custom_currency);
       let trade_security_id = elem.$store.state.security_id;
       formData.append('security', trade_security_id);
       formData.append('buy', elem.$store.state.trade_security_action == 'buy');
@@ -520,6 +533,11 @@ Vue.component('form-trade-securities', {
         class="mb-2"
         v-bind:class="{ 'is-invalid': price_invalid  }"
         @update="calc_total_cost"></b-form-input>
+        <label for="portfolio">Валюта:</label>
+        <b-form-select id="currency"
+        class="mb-2"
+        v-model="custom_currency"
+        :options="list_custom_currency"></b-form-select>
         <label for="comission">Комиссия ({{currency}}):</label>
         <b-form-input 
         id="comission" 
@@ -611,7 +629,8 @@ Vue.component('security-trades-one-row', {
     }
   },
   beforeMount: function () {
-    this.currency = this.$store.state.security_info.main_board_faceunit;
+    //this.currency = this.$store.state.security_info.main_board_faceunit;
+    this.currency = this.one_row.currency.replace('SUR', 'RUB');
   },
   computed: {
     computed_count: function () {

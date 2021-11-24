@@ -175,6 +175,13 @@ Vue.component('form-trade-securities', {
       date: null,
       date_invalid: false,
       price: 0,
+      main_board_faceunit: null,
+      custom_currency: null,
+      list_custom_currency: [
+        { value: 'SUR', text: '₽' },
+        { value: 'USD', text: '$' },
+        { value: 'EUR', text: '€' }
+      ],
       price_invalid: false,
       comission: 0,
       comission_invalid: false,
@@ -201,7 +208,7 @@ Vue.component('form-trade-securities', {
   updated: function () {
     //console.log('updated')
   },
-  mounted: function () {
+  created: function () {
     var elem = this;
     this.$root.$on('bv::modal::show', (bvEvent, modalId) => {
       //console.log('Modal is about to be shown', bvEvent, modalId);
@@ -209,6 +216,10 @@ Vue.component('form-trade-securities', {
       elem.price = elem.$store.state.trade_security_price;
       elem.calc_total_cost();
     })
+    let trade_security = this.$store.state.security_info;
+    this.main_board_faceunit = trade_security.main_board_faceunit;
+    this.custom_currency = trade_security.main_board_faceunit;
+    //elem.custom_currency = elem.currency();
   },
   computed: {
     computed_title: function () {
@@ -222,11 +233,13 @@ Vue.component('form-trade-securities', {
       return `${action} ${security_type} "${shortname}"`;
     },
     currency: function () {
-      let trade_security = this.$store.state.security_info;
-      if (trade_security) {
-        return currency_sign(trade_security.main_board_faceunit);
-      }
-      return null
+      //let trade_security = this.$store.state.security_info;
+      //if (trade_security) {
+      //return currency_sign(trade_security.main_board_faceunit);
+      //  return currency_sign(el.main_board_faceunit);
+      //}
+      //return null
+      return currency_sign(this.custom_currency);
     },
     security_type: function () {
       let trade_security = this.$store.state.security_info;
@@ -305,6 +318,9 @@ Vue.component('form-trade-securities', {
       formData.append('count', elem.count);
       formData.append('price', elem.price);
       formData.append('nkd', elem.nkd);
+
+      formData.append('currency', elem.custom_currency);
+
       formData.append('security_isin', elem.$store.state.security_info.isin);
       let config = {
         method: 'post',
@@ -377,6 +393,11 @@ Vue.component('form-trade-securities', {
         class="mb-2"
         v-bind:class="{ 'is-invalid': price_invalid  }"
         @update="calc_total_cost"></b-form-input>
+        <label for="portfolio">Валюта:</label>
+        <b-form-select id="currency"
+        class="mb-2"
+        v-model="custom_currency"
+        :options="list_custom_currency"></b-form-select>
         <label for="comission">Комиссия ({{currency}}):</label>
         <b-form-input 
         id="comission" 

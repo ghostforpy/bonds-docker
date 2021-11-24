@@ -27,7 +27,7 @@ currency_choises = [('SUR', 'РУБ'),
                     ('GBP', 'GBP'),
                     ('CNY', 'CNY')]
 
-                    
+
 class Security(models.Model):
     name = models.CharField(max_length=50, unique=True)
     url = models.URLField(blank=True)
@@ -351,6 +351,14 @@ class SecurityPortfolios(models.Model):
     total_cost_in_rub = models.DecimalField(max_digits=17,
                                             decimal_places=7,
                                             default=0)
+    custom_currency = models.CharField(
+        'Валюта пользователя',
+        max_length=20,
+        default='SUR',
+        choices=currency_choises,
+        blank=True,
+        null=True
+        )
 
     class Meta:
         ordering = ['id']
@@ -384,6 +392,13 @@ class TradeHistory(models.Model):
     # при продаже бумаг учитывать НДФЛ
     ndfl = models.DecimalField(max_digits=20, decimal_places=7,
                                default=0)
+    currency = models.CharField(
+        max_length=20,
+        default='SUR',
+        choices=currency_choises,
+        blank=True,
+        null=True
+        )
 
     class Meta:
         ordering = ['-date', '-id']
@@ -391,14 +406,16 @@ class TradeHistory(models.Model):
     def save(self, *args, **kwargs):
         if self.buy:
             total_cost = self.price * self.count + self.commission + self.nkd
-            if self.security.main_board_faceunit != 'SUR':
+            #  if self.security.main_board_faceunit != 'SUR':
+            if self.currency != 'SUR':
                 portfolio = self.portfolio
                 try:
                     valute = portfolio.securities.filter(
                         security__security_type__exact='currency'
                     ).filter(
-                        security__name__istartswith=self.security.
-                        main_board_faceunit
+                        #  security__name__istartswith=self.security.
+                        #  main_board_faceunit
+                        security__name__istartswith=self.currency
                     ).get()
                     ostatok = valute.count
                 except ObjectDoesNotExist:
@@ -440,14 +457,16 @@ class TradeHistory(models.Model):
                 return 'need more security in portfolio'
         else:
             total_cost = self.commission + self.count * self.price + self.ndfl
-            if self.security.main_board_faceunit != 'SUR':
+            #  if self.security.main_board_faceunit != 'SUR':
+            if self.currency != 'SUR':
                 portfolio = self.portfolio
                 try:
                     valute = portfolio.securities.filter(
                         security__security_type__exact='currency'
                     ).filter(
-                        security__name__istartswith=self.security.
-                        main_board_faceunit
+                        #  security__name__istartswith=self.security.
+                        #  main_board_faceunit
+                        security__name__istartswith=self.currency
                     ).get()
                     ostatok = valute.count
                 except ObjectDoesNotExist:
@@ -522,12 +541,15 @@ def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
         instance.commission * (-1) ** (not instance.buy) + \
         instance.ndfl * (-1) ** (not instance.buy)
     if created:
-        if security.main_board_faceunit != 'SUR':
+        #  if security.main_board_faceunit != 'SUR':
+        if instance.currency != 'SUR':
             valute = portfolio.securities.filter(
                 security__security_type__exact='currency'
             ).filter(
-                security__name__istartswith=security.
-                main_board_faceunit
+                #  security__name__istartswith=security.
+                #  main_board_faceunit
+                security__name__istartswith=instance.currency
+
             ).get()
             valute.count = valute.count + total_cost * (-1) ** (instance.buy)
             valute.total_cost = valute.count * valute.security.today_price
@@ -536,12 +558,14 @@ def refresh_portfolio_ostatok(sender, instance, created=False, **kwargs):
         else:
             portfolio.ostatok += total_cost * (-1) ** (instance.buy)
     else:
-        if security.main_board_faceunit != 'SUR':
+        #  if security.main_board_faceunit != 'SUR':
+        if instance.currency != 'SUR':
             valute = portfolio.securities.filter(
                 security__security_type__exact='currency'
             ).filter(
-                security__name__istartswith=security.
-                main_board_faceunit
+                #  security__name__istartswith=security.
+                #  main_board_faceunit
+                security__name__istartswith=instance.currency
             ).get()
             valute.count = valute.count + total_cost * (-1) ** (not instance.buy)
             valute.total_cost = valute.count * valute.security.today_price
