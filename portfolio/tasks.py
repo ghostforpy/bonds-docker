@@ -12,4 +12,7 @@ from django.core.mail import send_mail
 def refresh_portfolio_changes(self):
     portfolios = InvestmentPortfolio.objects.all()
     for i in portfolios:
-        i.refresh_portfolio_changes()
+        try:
+            i.refresh_portfolio_changes()
+        except Exception:
+            continue
