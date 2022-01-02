@@ -29,6 +29,7 @@ class TinkoffParserXLS:
         self.period = tinkoff_xls_scripts.get_period(self.sheet)
         self.secutities_dict_ISIN_by_shortname = tinkoff_xls_scripts. \
             get_secutities_dict_ISIN_by_shortname(self.sheet)
+        self.securities_info = self._get_securities_info()
         self.transactions = self._get_transactions()
         self.outstanding_transactions = self._get_outstanding_transactions()
 
@@ -51,7 +52,7 @@ class TinkoffParserXLS:
 
         self.money_movement = self._get_money_movement()
 
-        self.securities_info = self._get_securities_info()
+        #self.securities_info = self._get_securities_info()
         self.repo_transactions = self._get_repo_transactions()
         self.profit_repo = self._get_profit_repo()
         self.outstanding_repo_transactions = self._get_outstanding_repo_transactions()
@@ -141,6 +142,20 @@ class TinkoffParserXLS:
                 temp['facevalue'] = None
             temp['currency'] = i[7]
             result.append(temp)
+        # проверка на дублирование информации о ценных бумагах
+        # при участии в IPO появляется 2 строки в информации,
+        # в одной из которых вместо SECID стоит ISIN
+        isins = [i['isin'] for i in result]
+        if len(set(isins)) != len(result):
+            for isin in isins:
+                if isins.count(isin) > 1:
+                    temp = [i for i in result if i['isin'] != isin]
+                    t = [i for i in result if i['isin'] == isin]
+                    for i in t:
+                        if i['secid'] != i['isin'] and i['isin'] != '' and i['secid'] != '':
+                            temp.append(i)
+                            break
+            result = temp
         return result
 
     def _get_broker_tax_operations(self):
@@ -166,10 +181,23 @@ class TinkoffParserXLS:
     def _return_transactions(self, data):
         return_decimal = tinkoff_xls_scripts.return_decimal_replase_comma_to_dot
         result = list()
+        # пропуск строк наименования колонок
+        data = [i for i in data if not(i[0].startswith('Номер') or i[1].startswith('Номер'))]
         for i in data:
-            if i[0].startswith('Номер'):
-                # пропуск строк наименования колонок
-                continue
+            # удаление лишних колонок с '' при необходимости
+            if i[0] == '':
+                i.pop(0)
+                k = len(i) - 2
+            else:
+                k = len(i) - 1
+            if i[1] == '':
+                while k > 0:
+                    try:
+                        i.pop(k)
+                        k -= 2
+                    except IndexError:
+                        break
+            
             temp = dict()
             temp['deal_number'] = i[0]
             temp['order_number'] = i[1]
@@ -187,7 +215,14 @@ class TinkoffParserXLS:
                 temp['isin'] = self.secutities_dict_ISIN_by_shortname[i[8]]
             except KeyError:
                 temp['isin'] = ''
-            temp['code'] = i[9]
+            # Если номер поручения состоит не из цифр, тогда считаем,
+            # что это поручение при участии в IPO,
+            # тогда нужно поменять код бумаги в разделе транзакции ISIN > SECID
+            if i[0].isdigit():
+                temp['code'] = i[9]
+            else:
+                s = [i for i in self.securities_info if i['isin'] == temp['isin']]
+                temp['code'] = s[0]['secid']
             temp['price'] = return_decimal(i[10])
             temp['currency'] = i[11]
             temp['count'] = return_decimal(i[12])

@@ -169,9 +169,9 @@ def get_data_by_section(sheet, section, append_row_names=False):
     except LastRow:
         return False
     result = list()
-    if append_row_names:
-        row_names = get_column_names_in_section(sheet, section)
-        result.append(row_names)
+    #if append_row_names:
+    row_names = get_column_names_in_section(sheet, section)
+    result.append(row_names)
     for i in data:
         result.append(i)
     if not result:
@@ -192,6 +192,8 @@ def get_data_by_section(sheet, section, append_row_names=False):
     if section == '4.1':
         if len(result[0]) != 8:
             [i.insert(3, '') for i in result]
+    if not append_row_names:
+        result.pop(0)
     return result
 
 

@@ -539,7 +539,10 @@ def get_security_by_secid(secid, return_from_db_flag=False):
     # return_from_db_flag устанавливается, если нужно знать
     # имеется ли ценная бумага в базе
     try:
-        security = Security.objects.get(secid=secid)
+        security = Security.objects.get(
+            secid=secid
+            #Q(secid=secid) | Q(isin=secid)
+            )
         if return_from_db_flag:
             return security, True
     except ObjectDoesNotExist:
