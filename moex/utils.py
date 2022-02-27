@@ -545,7 +545,7 @@ def get_security_by_secid(secid, return_from_db_flag=False):
             )
         if return_from_db_flag:
             return security, True
-    except ObjectDoesNotExist:
+    except (ObjectDoesNotExist, Security.DoesNotExist):
         security = get_or_prepare_new_security_by_secid(secid)
         if return_from_db_flag:
             return security, False
