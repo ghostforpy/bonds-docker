@@ -1,4 +1,4 @@
-version: '3'
+version: '3.5'
 
 volumes:
   production_postgres_data: {}
@@ -63,9 +63,9 @@ services:
 #    image: bonds_production_celerybeat
 #    command: /start-celerybeat
 
-  flower:
-    <<: *django
-    image: bonds_production_flower
-    command: /start-flower
+#  flower:
+#    <<: *django
+#    image: bonds_production_flower
+#    command: /start-flower
 
   
