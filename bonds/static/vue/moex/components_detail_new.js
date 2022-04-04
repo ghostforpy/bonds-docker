@@ -168,6 +168,7 @@ function currency_sign(currency) {
     .replace('РУБ', '₽')
     .replace('USD', '$')
     .replace('EUR', '€')
+    .replace('CNY', '¥')
 };
 Vue.component('form-trade-securities', {
   data: function () {
@@ -180,7 +181,8 @@ Vue.component('form-trade-securities', {
       list_custom_currency: [
         { value: 'SUR', text: '₽' },
         { value: 'USD', text: '$' },
-        { value: 'EUR', text: '€' }
+        { value: 'EUR', text: '€' },
+        { value: 'CNY', text: '¥' }
       ],
       price_invalid: false,
       comission: 0,

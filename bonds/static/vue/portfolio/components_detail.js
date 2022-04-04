@@ -4,6 +4,7 @@ function currency_sign(currency) {
     .replace('РУБ', '₽')
     .replace('USD', '$')
     .replace('EUR', '€')
+    .replace('CNY', '¥')
 };
 function return_RUB_locale(elem) {
   return parseFloat(elem)
@@ -337,7 +338,8 @@ Vue.component('add-portfolio-invests', {
       list_currency: [
         { value: 'SUR', text: 'РУБ' },
         { value: 'USD', text: 'USD' },
-        { value: 'EUR', text: 'EUR' }
+        { value: 'EUR', text: 'EUR' },
+        { value: 'CNY', text: 'CNY' }
       ],
       selected_action: 'vp',
       list_action: [
