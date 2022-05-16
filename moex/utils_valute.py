@@ -13,7 +13,7 @@ def get_cbr_xml_daily_curses(date=None):
         date = datetime.now().date()
     str_date = date.strftime('%d.%m.%Y').split('.')
     if not caches['default'].get('daily_curses_' + '.'.join(str_date)):
-        url = 'http://www.cbr.ru/scripts/XML_daily.asp?date_req={}/{}/{}'\
+        url = 'https://www.cbr.ru/scripts/XML_daily.asp?date_req={}/{}/{}'\
             .format(*str_date)
         try:
             r = requests.get(url)
@@ -25,7 +25,7 @@ def get_cbr_xml_daily_curses(date=None):
             code_id = valute.get('ID')
             char_code = valute.find('CharCode').text
             num_code = valute.find('NumCode').text
-            value = float(valute.find('Value').text.replace(',', '.'))
+            value = float(valute.find('Value').text.replace(',', '.')) / float(valute.find('Nominal').text)
             name = valute.find('Name').text
             result[char_code] = {'Value': value,
                                  'Name': name,
@@ -64,8 +64,7 @@ def get_valute_history(valute, date_since=None, date_until=None):
     code_id = get_valute_code(valute)
     date_since = date_since.strftime('%d/%m/%Y')
     date_until = date_until.strftime('%d/%m/%Y')
-    print(date_since, date_until, code_id)
-    url = 'http://www.cbr.ru/scripts/XML_dynamic.asp?'
+    url = 'https://www.cbr.ru/scripts/XML_dynamic.asp?'
     url += 'date_req1={}&date_req2={}&VAL_NM_RQ={}'\
         .format(date_since, date_until, code_id)
     try:
@@ -76,6 +75,7 @@ def get_valute_history(valute, date_since=None, date_until=None):
     result = dict()
     for record in root.findall('Record'):
         date = record.get('Date')
-        value = record.find('Value').text.replace(',', '.')
-        result[date] = value
+        nominal = record.get('Nominal')
+        value = float(record.find('Value').text.replace(',', '.')) / float(nominal)
+        result[date] = str(value)
     return result
