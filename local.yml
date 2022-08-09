@@ -13,7 +13,7 @@ services:
     container_name: django_bonds
     depends_on:
       - postgres
-      - mailhog
+     # - mailhog
     volumes:
       - .:/app
     env_file:
@@ -37,11 +37,11 @@ services:
     env_file:
       - ./.envs/.local/.postgres
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.0
-    container_name: mailhog_bonds
-    ports:
-      - "8025:8025"
+  # mailhog:
+  #   image: mailhog/mailhog:v1.0.0
+  #   container_name: mailhog_bonds
+  #   ports:
+  #     - "8025:8025"
 
   redis:
     image: redis:5.0
@@ -54,7 +54,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - mailhog
+      #- mailhog
     ports: []
     command: /start-celeryworker
 
@@ -65,7 +65,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - mailhog
+      #- mailhog
     ports: []
     command: /start-celerybeat
 
